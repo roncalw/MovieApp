@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import {movieType} from "../screens/Home"
 
 import { RouteProp } from '@react-navigation/native'
@@ -16,6 +16,7 @@ type PropsType = {
 }
 
 const placeholderImage = require('../../assets/images/placeholder.png');
+const height = Dimensions.get('screen').height;
 
 export default function MovieDetail({ navigation, route }: PropsType) {
     const movieId = route.params.id;
@@ -36,7 +37,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       });
     }, [movieId]);
 
-    const movieDetailImage = movieDetail?.poster_path;
+    const movieImageURL = movieDetail?.poster_path;
 
     return (
     <React.Fragment>
@@ -45,8 +46,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         <Image
           style={styles.image}
           source = {
-                movieDetailImage
-                ? {uri: 'https://image.tmdb.org/t/p/w500'+movieDetail.poster_path}
+                movieImageURL
+                ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
                 : placeholderImage
               }
         />
@@ -60,7 +61,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
 const styles = StyleSheet.create({
   image: {
-    height: 200,
-    width: 120
+    height: height / 2.5,
   }
 })
