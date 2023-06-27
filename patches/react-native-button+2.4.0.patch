@@ -1,0 +1,19 @@
+diff --git a/node_modules/react-native-button/Button.js b/node_modules/react-native-button/Button.js
+index fb7cf46..f1a6774 100644
+--- a/node_modules/react-native-button/Button.js
++++ b/node_modules/react-native-button/Button.js
+@@ -5,11 +5,13 @@ import {
+   Text,
+   TouchableOpacity,
+   View,
+-  ViewPropTypes,
++  
+ } from 'react-native';
+ 
+ import coalesceNonElementChildren from './coalesceNonElementChildren';
+ 
++import { ViewPropTypes } from 'deprecated-react-native-prop-types'; 
++
+ const systemButtonOpacity = 0.2;
+ 
+ export default class Button extends Component {

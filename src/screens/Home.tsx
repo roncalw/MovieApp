@@ -15,12 +15,20 @@ import { RootStackParamList } from '../../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 
+type movieGenres = {
+  id: number,
+  name: string
+}
+
 export type movieType = {
     id: number;
     original_title: string;
     original_language: string;
     release_date: string;
     poster_path: string;
+    vote_average: number;
+    overview: string;
+    genres: movieGenres[];
   }
 
 type movieImage = string;

@@ -1,0 +1,41 @@
+diff --git a/node_modules/react-native-star-rating/StarButton.js b/node_modules/react-native-star-rating/StarButton.js
+index b6db613..0325a70 100644
+--- a/node_modules/react-native-star-rating/StarButton.js
++++ b/node_modules/react-native-star-rating/StarButton.js
+@@ -1,6 +1,6 @@
+ // React and react native imports
+ import React, { Component } from 'react';
+-import { Image, StyleSheet, ViewPropTypes } from 'react-native';
++import { Image, StyleSheet } from 'react-native';
+ import PropTypes from 'prop-types';
+ import { createIconSetFromIcoMoon } from 'react-native-vector-icons';
+ 
+@@ -18,6 +18,8 @@ import OcticonsIcons from 'react-native-vector-icons/Octicons';
+ import ZocialIcons from 'react-native-vector-icons/Zocial';
+ import SimpleLineIconsIcons from 'react-native-vector-icons/SimpleLineIcons';
+ 
++import { ViewPropTypes } from 'deprecated-react-native-prop-types';
++
+ const iconSets = {
+   Entypo: EntypoIcons,
+   EvilIcons: EvilIconsIcons,
+diff --git a/node_modules/react-native-star-rating/StarRating.js b/node_modules/react-native-star-rating/StarRating.js
+index 7aecc95..c75c1d8 100644
+--- a/node_modules/react-native-star-rating/StarRating.js
++++ b/node_modules/react-native-star-rating/StarRating.js
+@@ -1,12 +1,14 @@
+ // React and react native imports
+ import React, { Component } from 'react';
+-import { View, ViewPropTypes, StyleSheet } from 'react-native';
++import { View, StyleSheet } from 'react-native';
+ import PropTypes from 'prop-types';
+ import { View as AnimatableView } from 'react-native-animatable';
+ 
+ // Local file imports
+ import StarButton from './StarButton';
+ 
++import { ViewPropTypes } from 'deprecated-react-native-prop-types';
++
+ const ANIMATION_TYPES = [
+   'bounce',
+   'flash',
