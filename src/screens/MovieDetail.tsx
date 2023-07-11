@@ -11,6 +11,8 @@ import Error from '../../components/Error';
 import StarRating  from 'react-native-star-rating';
 import dateFormat from 'dateformat';
 import PlayButton from '../../components/PlayButton';
+import VideoPlayer from 'react-native-video-controls';
+import Video from '../../components/Video';
 
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
@@ -53,6 +55,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const videoShown = () => {
       setModalVisible(!modalVisible)
+      //setModalVisible(modalVisible => {return !modalVisible} )
     }
 
     return (
@@ -96,11 +99,12 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       {!loaded && (<ActivityIndicator size="large" />) }
       {error && (<Error />)}
       {loaded && (
-        <Modal animationType='slide' visible={modalVisible}>
+        <Modal 
+          supportedOrientations={['portrait', 'landscape']}
+          animationType='slide' 
+          visible={modalVisible}>
           <View style={styles.videoModal}>
-            <Pressable onPress={() => videoShown()}>
-              <Text>Close Modal</Text>
-            </Pressable>
+            <Video onClose={videoShown} />
           </View>
         </Modal>)}
       
