@@ -4,7 +4,7 @@ import {movieType} from "../screens/Home"
 
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App'
+import { RootStackParamList } from '../../components/MainNavigation'
 import { getMovie } from '../services/MovieServices';
 import { AxiosError } from 'axios';
 import Error from '../../components/Error';

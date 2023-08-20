@@ -11,7 +11,7 @@ import {
 import { SliderBox } from "react-native-image-slider-box";
 import List from '../../components/List';
 import Error from '../../components/Error';
-import { RootStackParamList } from '../../App';
+import { RootStackParamList } from '../../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 

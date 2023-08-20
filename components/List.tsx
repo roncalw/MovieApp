@@ -1,7 +1,7 @@
 import {View, Text, FlatList, StyleSheet} from 'react-native';
 import { movieType } from '../src/screens/Home';
 import Card from './Card';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type listProps = {
@@ -13,7 +13,6 @@ export type listProps = {
 export default function List( {navigation, title, content }: listProps) {
 
     const _renderItem: React.FC<{item: movieType}> = ({item}) => {
-        console.log('Rendering Item ' + item.original_title);
         return (
             <Card navigation={navigation} item={item}/>
         );
@@ -42,6 +41,7 @@ const styles = StyleSheet.create({
     text: {
           fontSize: 20,
           fontWeight: 'bold',
-          paddingBottom: 20,
+          padding: 10,
+          paddingBottom: 15,
     }
   })

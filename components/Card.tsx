@@ -1,7 +1,7 @@
 import React from 'react'
 import {Image, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import { movieType } from '../src/screens/Home';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type cardProps = {

@@ -3,6 +3,7 @@ import {Image, SafeAreaView, StyleSheet, TouchableOpacity, View} from 'react-nat
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ParamListBase } from '@react-navigation/native';
+import Colors from '../theme/Color';
 
 export type navBarProps = {
     navigation: NativeStackNavigationProp<ParamListBase>;
@@ -24,14 +25,14 @@ export default function Navbar({navigation, mainBool}: navBarProps) {
                             onPress={() => {
                                 navigation.navigate('Search');
                             }}>
-                            <Icon name={'search-outline'} size={30} color={'#fff'} />
+                            <Icon name={'search-outline'} size={30} color={Colors.white} />
                         </TouchableOpacity>
                     </View>
                 ) : 
                 (
                     <View>
                         <TouchableOpacity onPress={() => {navigation.goBack()}}>
-                            <Icon name={'chevron-back'} size={40} color={'#fff'} />
+                            <Icon name={'chevron-back'} size={40} color={Colors.lightGray} />
                         </TouchableOpacity>
                     </View>
                 )
