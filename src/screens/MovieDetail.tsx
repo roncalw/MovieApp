@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity } from 'react-native';
 import {movieType} from "../screens/Home"
 
 import { RouteProp } from '@react-navigation/native'
@@ -13,6 +13,7 @@ import dateFormat from 'dateformat';
 import PlayButton from '../../components/PlayButton';
 import VideoPlayer from 'react-native-video-controls';
 import Video from '../../components/Video';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
@@ -100,9 +101,15 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       {error && (<Error />)}
       {loaded && (
         <Modal 
+          onRequestClose={() => setModalVisible(false)}
           supportedOrientations={['portrait', 'landscape']}
           animationType='slide' 
           visible={modalVisible}>
+
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Icon name={'chevron-back'} size={40} color={'black'} />
+            </TouchableOpacity>
+
           <View style={styles.videoModal}>
             <Video onClose={videoShown} />
           </View>
@@ -150,8 +157,13 @@ const styles = StyleSheet.create({
     right: 20,
   },
   videoModal: {
-    flex: 1,
-    justifyContent: 'center',
+    //flex: 1,
+    //justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalHeaderCloseText: {
+    textAlign: "center",
+    paddingLeft: 5,
+    paddingRight: 5
   }
 })
