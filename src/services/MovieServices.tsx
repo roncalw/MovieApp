@@ -46,3 +46,9 @@ export const searchMovieTV = async (query: string, type: string) => {
         )
     return resp.data.results;
 }
+
+// Get Movie Trailers
+export const getMovieTrailers = async (id: number) => {
+    const resp = await axios.get (`${apiUrl}/movie/${id}/videos?${apiKey}`)
+    return resp.data;
+}

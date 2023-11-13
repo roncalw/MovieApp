@@ -5,7 +5,7 @@ import {movieType} from "../screens/Home"
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation'
-import { getMovie } from '../services/MovieServices';
+import { getMovie, getMovieTrailers } from '../services/MovieServices';
 import { AxiosError } from 'axios';
 import Error from '../../components/Error';
 import StarRating  from 'react-native-star-rating';
@@ -20,6 +20,16 @@ type PropsType = {
   route: RouteProp<RootStackParamList, 'MovieDetail'>
 } 
 
+type movieTrailerJson = {
+  id: string;
+  results: movieTrailerType[];
+}
+type movieTrailerType = {
+  id: string;
+  key: string | undefined;
+  name: string;
+}
+
 const placeholderImage = require('../../assets/images/placeholder.png');
 const height = Dimensions.get('screen').height;
 
@@ -27,10 +37,11 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const movieId = route.params.id;
 
     const [movieDetail, setMovieDetail] = useState<movieType>();
+    const [movieTrailers, setMovieTrailers] = useState<movieTrailerJson>();
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<AxiosError | boolean>(false);
 
-    useEffect(() => {
+    /*useEffect(() => {
       getMovie(movieId).then(movieDetail => {
         setMovieDetail(movieDetail);
         setLoaded(true);
@@ -40,7 +51,34 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         setLoaded(true);
         console.log(err);
       });
+    }, [movieId]);*/
+
+
+    const getData = () => {
+      return Promise.all([
+        getMovie(movieId),
+        getMovieTrailers(movieId)
+      ]);
+    }
+
+
+    useEffect( () => {
+      getData().then(
+        ([
+          movieDetailData,
+          movieTrailersData
+        ]) => {
+          setMovieDetail(movieDetailData);
+          setMovieTrailers(movieTrailersData);     
+        }
+      ).catch(() => {
+        setError(true);
+      }).finally(() => {
+          setLoaded(true);
+      });
+
     }, [movieId]);
+
 
     const movieImageURL = movieDetail?.poster_path;
     const movieTitle = movieDetail?.original_title;
@@ -58,6 +96,14 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       setModalVisible(!modalVisible)
       //setModalVisible(modalVisible => {return !modalVisible} )
     }
+
+    const movieTrailerKey = movieTrailers?.results[0] ? movieTrailers?.results[0].key : '0000';
+
+    console.log(movieTitle);
+
+    console.log(movieId);
+
+    console.log(movieTrailerKey);
 
     return (
     <React.Fragment>
@@ -111,7 +157,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
             </TouchableOpacity>
 
           <View style={styles.videoModal}>
-            <Video onClose={videoShown} />
+            <Video keyId={movieTrailerKey} />
           </View>
         </Modal>)}
       
