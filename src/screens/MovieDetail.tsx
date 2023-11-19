@@ -150,14 +150,15 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           onRequestClose={() => setModalVisible(false)}
           supportedOrientations={['portrait', 'landscape']}
           animationType='slide' 
-          visible={modalVisible}>
+          visible={modalVisible}
+          style={{ margin: 0, padding: 0 }}>
 
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Icon name={'chevron-back'} size={40} color={'black'} />
             </TouchableOpacity>
 
           <View style={styles.videoModal}>
-            <Video keyId={movieTrailerKey} />
+            <Video onClose={videoShown} keyId={movieTrailerKey} />
           </View>
         </Modal>)}
       

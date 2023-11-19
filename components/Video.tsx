@@ -1,6 +1,6 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import { Alert, Platform, Text, View } from 'react-native';
+import { Alert, Platform, Text, View, useWindowDimensions } from 'react-native';
 
 /*
 type callBackFuntion = {
@@ -9,23 +9,23 @@ type callBackFuntion = {
 */
 
 type localProps = {
-
+  onClose: () => void;
   keyId?: string | undefined;
 }
 
-export default function Video({keyId}: localProps) {
+export default function Video({keyId, onClose}: localProps) {
 
-  //console.log(keyId);
-/*
+  const windowDimensions = useWindowDimensions();
+
   const [playing, setPlaying] = useState(false);
 
     const onStateChange = useCallback((state: string) => {
         if (state === "ended") {
           setPlaying(false);
-          Alert.alert("video has finished playing!");
+          //Alert.alert("Video has finished playing!");
+          onClose();
         }
       }, []);
-      */
     
     return (
       <View>
@@ -34,10 +34,11 @@ export default function Video({keyId}: localProps) {
         { keyId != '0000' && (
 
           <YoutubePlayer
-              height={300}
-              width={300}
-              play={false}
+              height={windowDimensions.height}
+              width={windowDimensions.width * .8}
+              play={true}
               videoId={keyId}
+              onChangeState={onStateChange}
           />
         )}
 
