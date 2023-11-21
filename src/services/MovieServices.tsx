@@ -27,6 +27,30 @@ export const getFamilyMovies = async () => {
     return resp.data.results;
 }
 
+// Get Comedy
+export const getComedyMovies = async () => {
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=35`)
+    return resp.data.results;
+}
+
+// Get Drama
+export const getDramaMovies = async () => {
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=18`)
+    return resp.data.results;
+}
+
+// Get Crime
+export const getCrimeMovies = async () => {
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=80`)
+    return resp.data.results;
+}
+
+// Get Music
+export const getMusicMovies = async () => {
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=10402`)
+    return resp.data.results;
+}
+
 // Get Documentaries
 export const getDocumentaryMovies = async () => {
     const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=99`)
@@ -40,7 +64,10 @@ export const getMovie = async (id: number) => {
 }
 
 // Search for Movie or TV by Keyword
+// TV has been removed from the home page temporarily until the movie detail page can also work with the tv details.
+// Therefore, will be leaving this signature the same, but then not using the type parameter until the app starts using TV again
 export const searchMovieTV = async (query: string, type: string) => {
+    type="movie";
     const resp = await axios.get (
         `${apiUrl}/search/${type}?${apiKey}&query=${query}`
         )

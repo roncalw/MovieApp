@@ -1,12 +1,16 @@
 import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
-import {ActivityIndicator, Dimensions, ScrollView, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import { 
           getPopularMovies, 
           getUpcomingMovies,
           getPopularTV,
           getFamilyMovies,
-          getDocumentaryMovies
+          getComedyMovies,
+          getDocumentaryMovies,
+          getDramaMovies,
+          getMusicMovies,
+          getCrimeMovies
 } from '../services/MovieServices';
 import { SliderBox } from "react-native-image-slider-box";
 import List from '../../components/List';
@@ -31,21 +35,26 @@ export type movieType = {
     genres: movieGenres[];
   }
 
-type movieImage = string;
+type movieImage = [string, movieType];
+
+type movieImagesArray = movieImage[];
 
 const dimensions = Dimensions.get('screen');
 
-console.log(dimensions);
-
+//console.log(dimensions);
 
 const Home = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-    const [movieImages, setMovieImages] = useState<movieImage[]>([]);
+    const [movieImages, setMovieImages] = useState<movieImage[]>([] );
     const [popularMovies, setPopularMovies] = useState<movieType[]>([] );
-    const [popularTV, setPopularTV] = useState<movieType[]>([] );
+    //const [popularTV, setPopularTV] = useState<movieType[]>([] );
     const [familyMovies, setFamilyMovies] = useState<movieType[]>([] );
+    const [comedyMovies, setComedyMovies] = useState<movieType[]>([] );
+    const [dramaMovies, setDramaMovies] = useState<movieType[]>([] );
+    const [crimeMovies, setCrimeMovies] = useState<movieType[]>([] );
+    const [musicMovies, setMusicMovies] = useState<movieType[]>([] );
     const [documentaryMovies, setDocumentaryMovies] = useState<movieType[]>([] );
 
     const [error, setError] = useState<AxiosError | boolean>(false);
@@ -57,6 +66,10 @@ const Home = () => {
         getPopularMovies(),
         //getPopularTV(),
         getFamilyMovies(),
+        getComedyMovies(),
+        getDramaMovies(),
+        getCrimeMovies(),
+        getMusicMovies(),
         getDocumentaryMovies(),
       ]);
     }
@@ -68,18 +81,26 @@ const Home = () => {
           popularMoviesData,
           //popularTVData,
           familyMoviesData,
+          comedyMovieData,
+          dramaMovieData,
+          crimeMovieData,
+          musicMovieData,
           documentaryMoviesData,
         ]) => {
-          const movieImagesArray: movieImage[] = [];
+          let myMovieImagesArray: movieImagesArray = [];
 
           movieImagesData.forEach((movie: movieType ) => {
-              movieImagesArray.push('https://image.tmdb.org/t/p/w500'+movie.poster_path)
+            myMovieImagesArray.push(['https://image.tmdb.org/t/p/w500'+movie.poster_path,movie])
           });
 
-          setMovieImages(movieImagesArray);
+          setMovieImages(myMovieImagesArray);
           setPopularMovies(popularMoviesData);
           //setPopularTV(popularTVData);
           setFamilyMovies(familyMoviesData);
+          setComedyMovies(comedyMovieData);
+          setDramaMovies(dramaMovieData);
+          setCrimeMovies(crimeMovieData);
+          setMusicMovies(musicMovieData);
           setDocumentaryMovies(documentaryMoviesData);          
         }
       ).catch(() => {
@@ -105,6 +126,15 @@ const Home = () => {
 
     }, []);
 
+    const handleImagePress = (index: number) => {
+      console.log(`Image ${index + 1}: ${movieImages[index][1].original_title}`);
+
+      const item = movieImages[index][1];
+
+      return 1 && navigation.navigate('MovieDetail', {id: item.id});
+
+    };
+
     return (
       <React.Fragment>
         {loaded && !error &&  
@@ -114,11 +144,12 @@ const Home = () => {
             { movieImages && ( 
               <View style={ styles.sliderContainer}>
                 <SliderBox
-                  images={movieImages}
+                  images={movieImages.map((image) => image[0])}
                   dotStyle={styles.sliderStyle}
                   sliderBoxHeight={dimensions.height / 1.5}
                   autoplay={true}
                   circleLoop={true}
+                  onCurrentImagePressed={handleImagePress}
                   />
               </View>)
             }
@@ -149,6 +180,46 @@ const Home = () => {
                   navigation={navigation}
                   title = "Family Movies"
                   content={familyMovies}
+                />
+              </View >) 
+            }
+            {/* Comedy Movies */}
+            { comedyMovies && (
+              <View style={ styles.carousel}>
+                <List
+                  navigation={navigation}
+                  title = "Comedy Movies"
+                  content={comedyMovies}
+                />
+              </View >) 
+            }
+            {/* Drama Movies */}
+            { dramaMovies && (
+              <View style={ styles.carousel}>
+                <List
+                  navigation={navigation}
+                  title = "Drama Movies"
+                  content={dramaMovies}
+                />
+              </View >) 
+            }
+            {/* Crime Movies */}
+            { crimeMovies && (
+              <View style={ styles.carousel}>
+                <List
+                  navigation={navigation}
+                  title = "Crime Movies"
+                  content={crimeMovies}
+                />
+              </View >) 
+            }
+            {/* Music Movies */}
+            { musicMovies && (
+              <View style={ styles.carousel}>
+                <List
+                  navigation={navigation}
+                  title = "Music Movies"
+                  content={musicMovies}
                 />
               </View >) 
             }

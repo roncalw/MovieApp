@@ -41,18 +41,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<AxiosError | boolean>(false);
 
-    /*useEffect(() => {
-      getMovie(movieId).then(movieDetail => {
-        setMovieDetail(movieDetail);
-        setLoaded(true);
-        console.log(movieDetail.id);
-      }).catch((err) => {
-        setError(true);
-        setLoaded(true);
-        console.log(err);
-      });
-    }, [movieId]);*/
-
 
     const getData = () => {
       return Promise.all([
@@ -119,9 +107,11 @@ export default function MovieDetail({ navigation, route }: PropsType) {
               }
         />
         <View style={styles.scrollViewContainer}>
+        {movieTrailerKey != '0000' && (
           <View style={styles.playButton}>
             <PlayButton handlePress={videoShown}/>
           </View>
+        )}
           {movieTitle && (
           <Text style={styles.movieTitle}>{movieTitle}</Text>)}
           {movieGenres && (

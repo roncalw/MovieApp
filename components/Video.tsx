@@ -2,12 +2,6 @@ import React, {useCallback, useEffect, useState} from 'react';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Alert, Platform, Text, View, useWindowDimensions } from 'react-native';
 
-/*
-type callBackFuntion = {
-    onClose: () => void;
-}
-*/
-
 type localProps = {
   onClose: () => void;
   keyId?: string | undefined;
