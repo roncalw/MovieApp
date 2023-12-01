@@ -12,6 +12,9 @@ export const getPopularMovies = async () =>{
 // Get Upcoming Movies
 export const getUpcomingMovies = async () => {
     const resp = await axios.get (`${apiUrl}/movie/upcoming?${apiKey}`)
+
+    //const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&with_genres=16,35,10751&without_genres=12,14,878,53,28,10402&year=2008`)
+
     return resp.data.results;
 }
 

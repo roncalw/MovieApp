@@ -143,7 +143,9 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           visible={modalVisible}
           style={{ margin: 0, padding: 0 }}>
 
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}              
+              style={{ marginTop: 50 }}>
               <Icon name={'chevron-back'} size={40} color={'black'} />
             </TouchableOpacity>
 
