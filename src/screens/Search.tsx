@@ -7,6 +7,7 @@ import Card from "../../components/Card";
 
 import { RootStackParamList } from "../../components/MainNavigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Navbar from "../../components/Navbar";
 
 type searchProps = {
     navigation:  NativeStackNavigationProp<RootStackParamList>
@@ -37,6 +38,7 @@ function Search({ navigation }: searchProps) {
     return (
         <React.Fragment>
             <SafeAreaView>
+            <Navbar navigation={navigation} mainBool={false}/>  
                 <View style={styles.container}>
                     <View style={styles.form}>
                         <TextInput

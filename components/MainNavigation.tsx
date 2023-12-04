@@ -5,9 +5,11 @@ import Navbar from './Navbar';
 import Home from '../src/screens/Home';
 import MovieDetail from '../src/screens/MovieDetail';
 import Search  from '../src/screens/Search';
+import Drawer from './Drawer';
 
 
 export type RootStackParamList = {
+    Drawer: undefined;
     Home: undefined, // undefined because you aren't passing any params to the home screen
     MovieDetail: { id: number }; 
     Search: undefined;
@@ -20,10 +22,14 @@ export default function MainNavigation() {
 
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+    screenOptions={{
+      headerShown: false
+    }}
+  >
         <Stack.Screen 
-          name="Home" 
-          component={Home}
+          name="Drawer" 
+          component={Drawer}
           options={{
             headerTransparent: true,
             header: ({navigation}) => <Navbar navigation={navigation} mainBool={true}/>

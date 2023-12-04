@@ -14,6 +14,7 @@ import PlayButton from '../../components/PlayButton';
 import VideoPlayer from 'react-native-video-controls';
 import Video from '../../components/Video';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Navbar from '../../components/Navbar';
 
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
@@ -97,7 +98,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     <React.Fragment>
     <View>
       {loaded && !error && (
-        <ScrollView>        
+        <ScrollView style={{ marginTop: 50 }}>
+          <Navbar navigation={navigation} mainBool={false}/>        
         <Image
           style={styles.image}
           source = {

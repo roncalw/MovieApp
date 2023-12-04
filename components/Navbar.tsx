@@ -13,20 +13,24 @@ export type navBarProps = {
 export default function Navbar({navigation, mainBool}: navBarProps) {
 
     return (
-        <SafeAreaView>
+        <SafeAreaView style={{ height: 50, marginBottom: -60, zIndex: 99}}>
             { mainBool ? 
                 (
                     <View style={styles.mainNav}>
+                        <View style={{ width: '90%', paddingLeft: 5}}>
                         <Image
                             source={require('../assets/images/placeholder.png')}
                             style={styles.logo} 
                         />
+                        </View>
+                        <View style={{ width: '10%'}}>
                         <TouchableOpacity
                             onPress={() => {
                                 navigation.navigate('Search');
                             }}>
                             <Icon name={'search-outline'} size={30} color={Colors.white} />
                         </TouchableOpacity>
+                        </View>
                     </View>
                 ) : 
                 (

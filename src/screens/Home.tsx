@@ -18,6 +18,7 @@ import Error from '../../components/Error';
 import { RootStackParamList } from '../../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import Navbar from '../../components/Navbar';
 
 type movieGenres = {
   id: number,
@@ -143,6 +144,7 @@ const Home = () => {
             {/* Upcoming Movies */}
             { movieImages && ( 
               <View style={ styles.sliderContainer}>
+                <Navbar navigation={navigation} mainBool={true}/>
                 <SliderBox
                   images={movieImages.map((image) => image[0])}
                   dotStyle={styles.sliderStyle}
