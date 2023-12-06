@@ -25,6 +25,21 @@ type movieGenres = {
   name: string
 }
 
+type cast = {
+  cast: movieCastProfile[];
+}
+
+export type movieCastProfile = {
+  id: number,
+  adult: number,
+  gender: number,
+  known_for_department: string,
+  name: string,
+  original_name: string,
+  profile_path: string,
+  character: string
+}
+
 export type movieType = {
     id: number;
     original_title: string;
@@ -34,6 +49,7 @@ export type movieType = {
     vote_average: number;
     overview: string;
     genres: movieGenres[];
+    credits: cast;
   }
 
 type movieImage = [string, movieType];

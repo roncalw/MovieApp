@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity } from 'react-native';
-import {movieType} from "../screens/Home"
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList } from 'react-native';
+import {movieType, movieCastProfile } from "../screens/Home"
 
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -72,7 +72,9 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const movieImageURL = movieDetail?.poster_path;
     const movieTitle = movieDetail?.original_title;
     const movieGenres = movieDetail?.genres;
-    const movieVoteAverage = movieDetail?.vote_average
+    const movieVoteAverage = movieDetail?.vote_average;
+    const movieAppCast =   movieDetail?.credits.cast;
+
     let movieStarRating = 1;
     if (movieVoteAverage){
       movieStarRating = movieDetail.vote_average / 2
@@ -88,11 +90,35 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const movieTrailerKey = movieTrailers?.results[0] ? movieTrailers?.results[0].key : '0000';
 
-    console.log(movieTitle);
+    //console.log(movieTitle);
 
     console.log(movieId);
 
-    console.log(movieTrailerKey);
+    const _renderItem: React.FC<{item: movieCastProfile}> = ({item}) => {
+      return (
+        <View style={{alignItems: 'center' }}>
+          <View style={{width: 140}}>
+              <Image
+                  style={styles.profile}
+                  source={
+                      item.profile_path
+                      ? {uri: 'https://image.tmdb.org/t/p/w500'+item.profile_path}
+                      : placeholderImage
+                  }
+              />
+          </View>
+
+          <View style={{width: 120}}>
+            <Text style={{fontWeight: 'bold'}}>{item.name}</Text>
+          </View>
+
+          <View style={{width: 120}}>
+            <Text>{item.character}</Text>
+          </View>
+
+        </View>
+      );
+  }; 
 
     return (
     <React.Fragment>
@@ -132,6 +158,15 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           />
           <Text style={styles.overviewContainer}>{movieOverview}</Text>
           <Text style={styles.releaseDateContainer}>{'Release Date: ' + movieReleaseDate}</Text>
+          {movieAppCast && (
+          <View style={styles.profileContainer}>
+            <FlatList 
+                data={movieAppCast}
+                horizontal={true}
+                renderItem={_renderItem}
+            />
+          </View>
+          )}
         </View>
         </ScrollView>
       )} 
@@ -206,5 +241,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingLeft: 5,
     paddingRight: 5
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    marginBottom: 20
+  },
+  profile: {
+      height: 200,
+      width: 125,
+      borderRadius: 20,
   }
 })
