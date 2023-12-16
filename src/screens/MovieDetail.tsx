@@ -301,7 +301,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                       {
                         movieAppWatchProviders.map(name => {
                           return (
-                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+                                    <View key={name.provider_id} style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                       <Image
                                           style={{height: 30, width: 30,borderRadius: 5,}}
                                           source={
@@ -310,7 +310,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}} key={name.provider_id}>{name.provider_name}</Text>
+                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -327,7 +327,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                       {
                         movieAppProductionCompanies.map((name: production_company) => {
                           return (
-                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+                                    <View  key={name.id} style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                       <Image
                                           style={{height: 30, width: 30,borderRadius: 5,}}
                                           source={
@@ -336,7 +336,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}} key={name.id}>{name.name}</Text>
+                                      <Text style={{marginLeft: 10}}>{name.name}</Text>
                                     </View>
                                 )
                         })
@@ -351,7 +351,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                     <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee'}}>
                       {
                         movieAppProductionCountries.map((name: production_country) => {
-                          return <Text style={{marginLeft: 10}}>-{name.name}-</Text>
+                          return <Text key={name.iso_3166_1} style={{marginLeft: 10}}>-{name.name}-</Text>
                         })
                       }
                     </View>)}
