@@ -83,3 +83,9 @@ export const getMovieTrailers = async (id: number) => {
     const resp = await axios.get (`${apiUrl}/movie/${id}/videos?${apiKey}`)
     return resp.data;
 }
+
+// Get Watch Providers
+export const getMovieWatchProviders = async (id: number) => {
+    const resp = await axios.get (`${apiUrl}/movie/${id}/watch/providers?${apiKey}`)
+    return resp.data;
+}

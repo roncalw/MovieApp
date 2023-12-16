@@ -25,8 +25,20 @@ type movieGenres = {
   name: string
 }
 
-type cast = {
-  cast: movieCastProfile[];
+type credits = {
+  cast: movieCastProfile[],
+  crew: movieCrewProfile[]
+}
+
+export type movieCrewProfile = {
+  id: number,
+  adult: number,
+  gender: number,
+  known_for_department: string,
+  name: string,
+  original_name: string,
+  profile_path: string,
+  job: string
 }
 
 export type movieCastProfile = {
@@ -48,9 +60,62 @@ export type movieType = {
     poster_path: string;
     vote_average: number;
     overview: string;
+    budget: number;
+    revenue: number;
+    runtime: number;
     genres: movieGenres[];
-    credits: cast;
+    credits: credits;
+    release_dates: release_date_results; 
+    production_companies: production_company[];
+    production_countries: production_country[];
   }
+
+  export type production_company = {
+    id: number;
+    logo_path: string;
+    name: string;
+    origin_country: string;
+  }
+
+  export type production_country = {
+    iso_3166_1: string;
+    name: string;
+  }
+
+  export type release_date_results = {
+    results: release_date_country[];
+  }
+
+  export type release_date_country = {
+    iso_3166_1: string;
+    release_dates: release_details[]
+  }
+
+  export type release_details = {
+    certification: string;
+    note: string;
+    type: number; 
+  }
+
+
+  export type US = {
+    US: rent
+  }
+
+  export type rent = {
+    rent: movieWatchProviderType[],
+  }
+
+  export type movieWatchProvidersType = {
+      results: US;
+    }
+
+  export type movieWatchProviderType = {
+      logo_path: string;
+      provider_id: number;
+      provider_name: string;
+    }
+
 
 type movieImage = [string, movieType];
 
