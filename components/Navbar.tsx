@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ParamListBase } from '@react-navigation/native';
 import Colors from '../theme/Color';
+import CustomHeaderLeft from './CustomHeaderLeft';
 
 export type navBarProps = {
     navigation: NativeStackNavigationProp<ParamListBase>;
@@ -18,12 +19,15 @@ export default function Navbar({navigation, mainBool}: navBarProps) {
                 (
                     <View style={styles.mainNav}>
                         <View style={{ width: '90%', paddingLeft: 5}}>
+                        <CustomHeaderLeft  />
+                        </View>
+                        {/* <View style={{ width: '90%', paddingLeft: 5}}>
                         <Image
                             source={require('../assets/images/placeholder.png')}
                             style={styles.logo} 
                         />
-                        </View>
-                        <View style={{ width: '10%'}}>
+                        </View> */}
+                        <View style={{ width: '10%', height: 50, paddingTop: 10, marginTop: 70}}>
                         <TouchableOpacity
                             onPress={() => {
                                 navigation.navigate('Search');
@@ -51,7 +55,7 @@ const styles = StyleSheet.create( {
         justifyContent: 'space-between',
         flexDirection: 'row',
         padding: 10,
-        alignItems: 'center',
+        alignItems: 'center'
     },    
     logo: {
       width: 50,

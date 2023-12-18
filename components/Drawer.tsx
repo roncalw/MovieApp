@@ -55,7 +55,7 @@ const Drawer = () => {
         )
       }}
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         drawerActiveBackgroundColor: '#eeee',
         //drawerActiveTintColor: '#000',
         drawerInactiveBackgroundColor: 'white',

@@ -1,26 +1,24 @@
 import React from 'react';
 import { View, TouchableOpacity, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Replace with your icon library
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 
 const CustomHeaderLeft: React.FC = () => {
   const navigation = useNavigation();
 
   const openDrawer = () => {
-    navigation.dispatch(DrawerActions.openDrawer());
+    //console.log('Touched')
+    navigation.dispatch(DrawerActions.toggleDrawer());
   };
 
   const placeholderImage = require('../assets/images/placeholder.png');
 
 
   return (
-    <TouchableOpacity onPress={openDrawer}>
-      <View style={{ padding: 10 }}>
+    <TouchableOpacity style={{borderColor: 'red', borderWidth: 0, width: 60, height: 70, marginTop:70}} onPress={openDrawer}>
         <Image
-            style={{height: 30, width: 30, marginLeft: 5}}
+            style={{height: 50, width: 50, marginLeft: 5, marginTop: 10}}
             source={placeholderImage}
         />
-      </View>
     </TouchableOpacity>
   );
 };
