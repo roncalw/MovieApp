@@ -10,6 +10,8 @@ import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomHeaderLeft from './CustomHeaderLeft';
+import SearchByRating from '../src/screens/SearchByRating';
+import SearchByDate from '../src/screens/SearchByDate';
 
 const Drawer = () => {
 
@@ -99,6 +101,35 @@ const Drawer = () => {
           )
         }}
       />
+      <Drawer.Screen
+        name='SearchByRating'
+        component={SearchByRating}
+        options={{
+          title: 'Search By Rating(s)',
+          drawerIcon: ({focused, size}) => (
+            <Icon
+              name='gear'
+              size={size}
+              color={focused ? '#7cc' : '#ccc'}
+            />
+          )
+        }}
+      />
+      <Drawer.Screen
+        name='SearchByDate'
+        component={SearchByDate}
+        options={{
+          title: 'Search By Date',
+          drawerIcon: ({focused, size}) => (
+            <Icon
+              name='gear'
+              size={size}
+              color={focused ? '#7cc' : '#ccc'}
+            />
+          )
+        }}
+      />
+
     </Drawer.Navigator>
   )
 }

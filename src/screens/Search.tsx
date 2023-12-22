@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { FlatList, SafeAreaView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { searchMovieTV } from "../services/MovieServices";
 import { movieType } from "./Home";
 import Card from "../../components/Card";
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
+
 
 import { RootStackParamList } from "../../components/MainNavigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,6 +16,8 @@ type searchProps = {
 }
 
 function Search({ navigation }: searchProps) {
+    const [isChecked, setIsChecked] = useState(false);
+
 
     const _renderItem: React.FC<{ item: movieType; }> = ({ item }) => {
         return (
@@ -36,9 +40,12 @@ function Search({ navigation }: searchProps) {
     }
 
     return (
-        <React.Fragment>
-            <SafeAreaView>
-            <Navbar navigation={navigation} mainBool={false}/>  
+        <SafeAreaView style={{flexDirection: 'column'}}>
+            <View style={{height: '5%', borderWidth: 0, borderColor: 'blue'}}>
+                <Navbar navigation={navigation} mainBool={false}/>  
+            </View>
+
+            <View style={{height: '10%', borderWidth: 0, borderColor: 'red', }}>
                 <View style={styles.container}>
                     <View style={styles.form}>
                         <TextInput
@@ -54,14 +61,20 @@ function Search({ navigation }: searchProps) {
                         <Icon name={'search-outline'} size={30} />
                     </TouchableOpacity>
                 </View>
+            </View>
+
+            <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow'}}>
                 <View style={styles.searchItems}>
                     <FlatList
                         numColumns={3}
                         data={searchResults}
                         renderItem={_renderItem} />
                 </View>
-            </SafeAreaView>
-        </React.Fragment>
+            </View>
+
+
+        </SafeAreaView>
+
     );
 }
 
@@ -79,13 +92,12 @@ const styles = StyleSheet.create({
     },
     container: {
         padding: 8,
-        paddingTop: 60,
         flexDirection: 'row',
         alignItems: 'center'
     },
     searchItems: {
         padding: 8,
-    }
+    },
   });
 
 export default Search;
