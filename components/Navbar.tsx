@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image, SafeAreaView, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ParamListBase } from '@react-navigation/native';
@@ -8,43 +8,82 @@ import CustomHeaderLeft from './CustomHeaderLeft';
 
 export type navBarProps = {
     navigation: NativeStackNavigationProp<ParamListBase>;
-    mainBool: boolean
+    page: string
 }
 
-export default function Navbar({navigation, mainBool}: navBarProps) {
+export default function Navbar({navigation, page}: navBarProps) {
+
+    let view;
+if (page === 'home') {
+    view = (
+        <View style={styles.mainNav}>
+            <View style={{ width: '90%', paddingLeft: 5}}>
+                <CustomHeaderLeft  />
+            </View>
+            {/* <View style={{ width: '90%', paddingLeft: 5}}>
+            <Image
+                source={require('../assets/images/placeholder.png')}
+                style={styles.logo} 
+            />
+            </View> */}
+            <View style={{ width: '10%', height: 50, paddingTop: 10, marginTop: 70}}>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Search');
+                    }}>
+                    <Icon name={'search-outline'} size={30} color={Colors.white} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+} else if (page === 'sbd') {
+    view = (
+        <View style={styles.mainNav}>
+            <View style={{ width: '15%', paddingLeft: 5}}>
+                <CustomHeaderLeft  />
+            </View>
+            {/* <View style={{ width: '90%', paddingLeft: 5}}>
+            <Image
+                source={require('../assets/images/placeholder.png')}
+                style={styles.logo} 
+            />
+            </View> */}
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center',}}>
+                <Text style={{marginLeft: 20, color: '#771F14', fontSize: 24}}>Search by Dates</Text>
+            </View>
+            <View style={{width: '15%', }}></View>
+        </View>
+    );
+} else if (page === 'sbr') {
+    view = (
+        <View style={styles.mainNav}>
+            <View style={{ width: '30%', paddingLeft: 5}}>
+                <CustomHeaderLeft  />
+            </View>
+            {/* <View style={{ width: '90%', paddingLeft: 5}}>
+            <Image
+                source={require('../assets/images/placeholder.png')}
+                style={styles.logo} 
+            />
+            </View> */}
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70}}>
+                <Text style={{marginLeft: 20}}>Search by Rating(s)</Text>
+            </View>
+        </View>
+    );
+} else {
+    view = (
+        <View>
+            <TouchableOpacity onPress={() => {navigation.goBack()}}>
+                <Icon name={'chevron-back'} size={40} color={Colors.lightGray} />
+            </TouchableOpacity>
+        </View>
+    );
+}
 
     return (
         <SafeAreaView style={{ height: 50, marginBottom: -60, zIndex: 99}}>
-            { mainBool ? 
-                (
-                    <View style={styles.mainNav}>
-                        <View style={{ width: '90%', paddingLeft: 5}}>
-                        <CustomHeaderLeft  />
-                        </View>
-                        {/* <View style={{ width: '90%', paddingLeft: 5}}>
-                        <Image
-                            source={require('../assets/images/placeholder.png')}
-                            style={styles.logo} 
-                        />
-                        </View> */}
-                        <View style={{ width: '10%', height: 50, paddingTop: 10, marginTop: 70}}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate('Search');
-                            }}>
-                            <Icon name={'search-outline'} size={30} color={Colors.white} />
-                        </TouchableOpacity>
-                        </View>
-                    </View>
-                ) : 
-                (
-                    <View>
-                        <TouchableOpacity onPress={() => {navigation.goBack()}}>
-                            <Icon name={'chevron-back'} size={40} color={Colors.lightGray} />
-                        </TouchableOpacity>
-                    </View>
-                )
-            }
+            {view}
         </SafeAreaView>
     );
 };

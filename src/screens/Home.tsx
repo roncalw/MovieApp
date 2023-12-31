@@ -225,7 +225,7 @@ const Home = () => {
             {/* Upcoming Movies */}
             { movieImages && ( 
               <View style={ styles.sliderContainer}>
-                <Navbar navigation={navigation} mainBool={true}/>
+                <Navbar navigation={navigation} page={'home'}/>
                 <SliderBox
                   images={movieImages.map((image) => image[0])}
                   dotStyle={styles.sliderStyle}

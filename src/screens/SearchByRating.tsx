@@ -6,16 +6,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { movieType } from './Home';
-import { searchMovieTV } from '../services/MovieServices';
+import { getMoviesByRating, searchMovieTV } from '../services/MovieServices';
 import Card from '../../components/Card';
 import Icon from "react-native-vector-icons/Ionicons";
 
 
-interface IRating {
-    id: string;
-    label: string;
-    isChecked: boolean;
-  }
 
 const SearchByRating = () => {
     const [isChecked, setIsChecked] = useState(false);
@@ -31,18 +26,25 @@ const SearchByRating = () => {
     const [text, onChangeText] = useState('');
     const [searchResults, setSearchResults] = useState<movieType[]>([]);
 
-    function onSubmit(query: string) {
+    function onSubmit(ratings: string) {
         Promise.all(
-        [searchMovieTV(query, 'movie'), searchMovieTV(query, 'tv') ]
+        [getMoviesByRating(ratings) ]
         
         )
-        .then(([movies, tv]) => {
-            const data:movieType[] = [...movies, ...tv];
+        .then(([movies]) => {
+            const data:movieType[] = [...movies];
             setSearchResults(data);
         });
     }
 
-    const [ratings, setRatings] = useState<IRating[]>([
+
+    type movieRating = {
+        id: string;
+        label: string;
+        isChecked: boolean;
+    }
+
+    const [ratings, setRatings] = useState<movieRating[]>([
       { id: 'G', label: 'G', isChecked: false },
       { id: 'PG', label: 'PG', isChecked: false },
       { id: 'PG-13', label: 'PG-13', isChecked: false },
@@ -58,13 +60,17 @@ const SearchByRating = () => {
   
     const selectedRatings = ratings.filter((rating) => rating.isChecked);
 
+    const loadMore = () => {
+        console.log('Load More')
+      };
+
     return (
         <SafeAreaView style={{flexDirection: 'column'}}>
             <View style={{height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 70, marginTop: -15}}>
-                <Navbar navigation={navigation} mainBool={true}/>  
+                <Navbar navigation={navigation} page={'sbr'}/>  
             </View>
 
-            <View style={{height: '8%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: -15}}>
+            <View style={{height: '8%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: -25}}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={{ marginLeft: 8 }}>Search by rating(s): {selectedRatings
@@ -99,7 +105,7 @@ const SearchByRating = () => {
                     </View>
                     <TouchableOpacity
                         onPress={() => {
-                            onSubmit(text);
+                            onSubmit('R|G');
                         } }>
                         <Icon name={'search-outline'} size={30} />
                     </TouchableOpacity>
@@ -111,7 +117,8 @@ const SearchByRating = () => {
                     <FlatList
                         numColumns={3}
                         data={searchResults}
-                        renderItem={_renderItem} />
+                        renderItem={_renderItem}
+                        onEndReached={loadMore} />
                 </View>
             </View>
 

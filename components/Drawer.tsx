@@ -115,20 +115,23 @@ const Drawer = () => {
           )
         }}
       />
-      <Drawer.Screen
-        name='SearchByDate'
-        component={SearchByDate}
-        options={{
-          title: 'Search By Date',
-          drawerIcon: ({focused, size}) => (
-            <Icon
-              name='gear'
-              size={size}
-              color={focused ? '#7cc' : '#ccc'}
-            />
-          )
-        }}
-      />
+
+<Drawer.Screen
+    name='SearchByDate'
+    component={SearchByDate}
+    initialParams={{ directNavigation: true }}
+    options={{
+      title: 'Search By Date',
+      drawerIcon: ({ focused, size }) => (
+        <Icon
+          name='gear'
+          size={size}
+          color={focused ? '#7cc' : '#ccc'}
+        />
+      ),
+      headerShown: false,
+    }}
+  />
 
     </Drawer.Navigator>
   )

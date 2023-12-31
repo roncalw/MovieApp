@@ -97,6 +97,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       }
     })
 
+
     let movieRating: string = '';
 
     const jsonString = JSON.stringify(movieReleaseDateCountry);
@@ -120,7 +121,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       movieStarRating = movieDetail.vote_average / 2
     } 
     const movieOverview = movieDetail?.overview;
-    const movieReleaseDate = dateFormat(movieDetail?.release_date, 'mmmm dS, yyyy');
+    const movieReleaseDate = dateFormat(movieDetail?.release_date, 'mmmm dS, yyyy', true);
     const [modalVisible, setModalVisible] = useState(false);
 
     const videoShown = () => {
@@ -133,7 +134,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     //console.log(movieTitle);
 
     console.log(movieId);
-    console.log(movieAppProductionCompanies);
+
 
     //console.log(movieAppWatchProviders);
 
@@ -192,7 +193,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         <View>
           {loaded && !error && (
             <ScrollView style={{ marginTop: 50 }}>
-                <Navbar navigation={navigation} mainBool={false}/>        
+                <Navbar navigation={navigation} page={'movieDetail'}/>        
                   <Image
                     style={styles.image}
                     source = {

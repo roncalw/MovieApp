@@ -89,3 +89,19 @@ export const getMovieWatchProviders = async (id: number) => {
     const resp = await axios.get (`${apiUrl}/movie/${id}/watch/providers?${apiKey}`)
     return resp.data;
 }
+
+// Get Movies by Rating
+export const getMoviesByRating = async (movieRatings: string) => {
+    //Add paramater for LTE date for release date (was pulling dates back from 2026)
+    //Add paramater for paging
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.lte=2023-12-31&sort_by=popularity.desc&page=1`)
+    return resp.data.results;
+}
+
+// Get Movies by Date
+export const getMoviesByDate = async (movieRatings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number) => {
+    //Add paramater for paging
+    console.log(`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&sort_by=popularity.desc&page=${pageNum}`);
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&sort_by=popularity.desc&page=${pageNum}`)
+    return resp.data.results;
+}

@@ -42,7 +42,7 @@ function Search({ navigation }: searchProps) {
     return (
         <SafeAreaView style={{flexDirection: 'column'}}>
             <View style={{height: '5%', borderWidth: 0, borderColor: 'blue'}}>
-                <Navbar navigation={navigation} mainBool={false}/>  
+                <Navbar navigation={navigation} page={'search'}/>  
             </View>
 
             <View style={{height: '10%', borderWidth: 0, borderColor: 'red', }}>
