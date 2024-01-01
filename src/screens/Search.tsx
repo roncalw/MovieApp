@@ -39,10 +39,18 @@ function Search({ navigation }: searchProps) {
         });
     }
 
+    const Separator = () => {
+        return <View style={{height: 5, backgroundColor: 'transparent'}} />;
+      };
+
     return (
         <SafeAreaView style={{flexDirection: 'column'}}>
-            <View style={{height: '5%', borderWidth: 0, borderColor: 'blue'}}>
-                <Navbar navigation={navigation} page={'search'}/>  
+
+
+            <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 95, marginTop: -15}}>
+                <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
+                  <Navbar navigation={navigation} page={'search'}/>
+                </View>
             </View>
 
             <View style={{height: '10%', borderWidth: 0, borderColor: 'red', }}>
@@ -50,9 +58,10 @@ function Search({ navigation }: searchProps) {
                     <View style={styles.form}>
                         <TextInput
                             style={styles.input}
-                            placeholder={'Search Movie or TV'}
+                            placeholder={'Search Movie Title'}
                             onChangeText={onChangeText}
-                            value={text} />
+                            value={text} 
+                             clearButtonMode="while-editing"/>
                     </View>
                     <TouchableOpacity
                         onPress={() => {
@@ -63,12 +72,13 @@ function Search({ navigation }: searchProps) {
                 </View>
             </View>
 
-            <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow'}}>
+            <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow', marginTop: -10}}>
                 <View style={styles.searchItems}>
                     <FlatList
                         numColumns={3}
                         data={searchResults}
-                        renderItem={_renderItem} />
+                        renderItem={_renderItem} 
+                        ItemSeparatorComponent={Separator} />
                 </View>
             </View>
 

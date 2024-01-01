@@ -87,7 +87,12 @@ const SearchByDate = () => {
 
 
     const handleItemSelected = (itemValue: string, itemLabel: string) => {
+      console.log('Genre change made');
+      setSearchResults([]);
+      setPage(1);
+
       const isSelected = selectedItems.includes(itemValue);
+
       if (isSelected) {
         setSelectedItems(prevSelectedItems =>
           prevSelectedItems.filter(item => item !== itemValue)
@@ -110,7 +115,7 @@ const SearchByDate = () => {
  //   }, [selectedItems]);
 
     useEffect(() => {
-      console.log(`from selected labels: ${selectedLabels}`); // Log the updated selectedItems immediately after state update
+      //console.log(`from selected labels: ${selectedLabels}`); // Log the updated selectedItems immediately after state update
     }, [selectedLabels]);
 
     //For the query to the database
@@ -142,6 +147,10 @@ const SearchByDate = () => {
     ]);
 
     const handleRatingChange = (id: string) => {
+      console.log('Ratings change made');
+      setSearchResults([]);
+      setPage(1);
+
       const updatedRatings = ratings.map((rating) =>
         rating.id === id ? { ...rating, isChecked: !rating.isChecked } : rating
       );
@@ -165,10 +174,10 @@ const SearchByDate = () => {
 
 
     function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number) {
-      console.log(beginDate);
-      console.log(endDate);
-      console.log(pageNum);
-      console.log(caller);
+      //console.log(beginDate);
+      //console.log(endDate);
+      //console.log(pageNum);
+      //console.log(caller);
 
         if (caller === 'submit') {
             setSearchResults([]);
@@ -195,7 +204,7 @@ const SearchByDate = () => {
     const [page, setPage] = useState(1); // Current page
 
     const loadMore = () => {
-      console.log('Load More')
+      //console.log('Load More')
 
       const nextPage = page + 1; // Increment the page for the next fetch
       setPage(nextPage);
@@ -266,7 +275,7 @@ const SearchByDate = () => {
   
     const previousYearDate = getPreviousYearDate();
 
-    console.log(previousYearDate);
+    //console.log(previousYearDate);
 
 //=========================================================================    BEGIN DATE - BEGIN DATE CODE    =========================================================================
 
@@ -287,6 +296,10 @@ const SearchByDate = () => {
 
   
     const handleDateChangeBegin = (_: Event, date?: Date) => {
+      console.log('Begin Date change made');
+      setSearchResults([]);
+      setPage(1);
+
       if (date) {
         setSelectedDateBegin(date);
         //setTimeout(() => {
@@ -321,6 +334,10 @@ const SearchByDate = () => {
     }
   
     const handleDateChangeEnd = (_: Event, date?: Date) => {
+      console.log('End Date change made');
+      setSearchResults([]);
+      setPage(1);
+
       if (date) {
         setSelectedDateEnd(date);
         //setTimeout(() => {
@@ -336,15 +353,22 @@ const SearchByDate = () => {
     const closeDatePickerEnd = () => {
       setShowDatePickerEnd(false);
     };
+
+    const Separator = () => {
+        return <View style={{height: 5, backgroundColor: 'transparent'}} />;
+      };
   
     return (
         <SafeAreaView style={{flexDirection: 'column'}}>
+
+{/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
 
 {/* ===============================================================================================================================================================================================
 ============================================================================  ROW 1 --- 5% Height !!! NAVBAR !!! ================================================================
 ===================================================================================================================================================================================================  */}
 
-                                                                                                {/* NAVBAR */}
+{/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
+
 
             <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
                 <View style={{width:'90%', borderWidth: 0, borderColor: 'red', }}>
@@ -355,20 +379,28 @@ const SearchByDate = () => {
                     onPress={() => {
                         onSubmit('submit', ratingsAsString, queryDateBegin, queryDateEnd, genreString, page);
                     }}
-                    style={{marginTop: 45, }}>
+                    style={{marginTop: 45, marginLeft: -20}}>
                     <Icon name={'search-outline'} size={30} />
                   </TouchableOpacity>
                 </View>
             </View>
 
-{/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE DATE PICKERS !!!  ======================================================    */}
+{/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
+
+{/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE DATE BUTTONS !!!  ======================================================    */}
+
+{/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
 
 
-            <View style={{height: '8%', borderWidth: 0, borderColor: 'green', padding: 0, }}>
+
+            <View style={{height: '8%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: 25}}>
 
                 <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 0}}>
 
     {/* COLUMN 1 --- 50% Width */}
+
+    {/* ======================================================================================  !!! FROM DATE !!!  ===============================================================    */}
+
 
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '50%', borderWidth: 0, paddingLeft: 0, paddingRight: 0, marginTop: -5 }}>
 
@@ -418,6 +450,9 @@ const SearchByDate = () => {
                     </View>
 
     {/* COLUMN 2 --- 50% Width */}
+
+        {/* ======================================================================================  !!! TO DATE !!!  ===============================================================    */}
+
 
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '50%', borderWidth: 0, marginTop: -5 }}>
 
@@ -471,17 +506,22 @@ const SearchByDate = () => {
 
             </View>
 
+{/* ========================================================================  GENRES AND MOVIE RATINGS !!!  ===============================================================    */}
+
 {/* ========================================================================  ROW 3 --- 8% Height   !!!  GENRES AND MOVIE RATINGS !!!  ======================================================    */}
 
+{/* ========================================================================  GENRES AND MOVIE RATINGS !!!  ===============================================================    */}
 
-              {/* ============================================================         !!!         GENRES      !!!  ======================================================    */}
 
 
-            <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: -5}}>
+              {/* ============================================================     GENRES    !!!   GENRES      GENRES      !!!  ======================================================    */}
+
+
+            <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 15}}>
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
-                            <TouchableOpacity onPress={openPicker} style={{ padding: 10, height: 45}}>
+                            <TouchableOpacity onPress={openPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
                               <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Genre(s)</Text>
                             </TouchableOpacity>
 
@@ -521,25 +561,23 @@ const SearchByDate = () => {
 
                                 </View>
 
-
-
                             {/* BUTTON TO CLOSE GENRE PICKER */}
-                            <TouchableOpacity onPress={closePicker}>
-                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
+                            <TouchableOpacity onPress={closePicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                              <Text style={{alignSelf: 'center', }}>Close</Text>
                             </TouchableOpacity>
                                 
                             </Modal>
                             
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150 }}>
-                              <Text>
-                                {selectedLabels.join(" | ")}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150, height: 50, borderWidth: 0, paddingLeft: 1, marginTop: -7 }}>
+                              <Text style={{marginTop: -25}} numberOfLines={2} ellipsizeMode="tail">
+                                {selectedLabels.join(" | ").split(" | ").sort().join(" | ")}
                               </Text>
                             </View>
 
                     </View>
                 </View>
 
-              {/* ============================================================         !!!         RATINGS      !!!  ======================================================    */}
+              {/* ============================================================     RATINGS    !!!   RATINGS     RATINGS      !!!  ======================================================    */}
 
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
@@ -584,8 +622,8 @@ const SearchByDate = () => {
 
                             </Modal>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150 }}>
-                                <Text style={{ marginLeft: 8 }}>{ratingsAsString}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150, height: 50, borderWidth: 0, padding: 1, marginTop: -7 }}>
+                                <Text style={{ marginLeft: 8, marginTop: -25 }}>{ratingsAsString}</Text>
                             </View>
 
                     </View>
@@ -594,7 +632,7 @@ const SearchByDate = () => {
 
 {/* =====================================================================  ROW 4 --- 75% Height   !!!  SEARCH RESULTS !!!   ======================================================    */}
 
-            <View style={{height: '75%', borderWidth: 0, borderColor: 'purple'}}>
+            <View style={{height: '75%', borderWidth: 0, borderColor: 'purple', marginTop: -15}}>
                 <View style={styles.searchItems}>
                     <FlatList
                         numColumns={3}
@@ -602,6 +640,7 @@ const SearchByDate = () => {
                         renderItem={_renderItem}
                         onEndReached={loadMore}
                         keyExtractor={(item) => item.id.toString()} // Use id as a unique key
+                        ItemSeparatorComponent={Separator}
                         />
                 </View>
             </View>

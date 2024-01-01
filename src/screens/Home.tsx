@@ -20,6 +20,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import Navbar from '../../components/Navbar';
 
+export type movieType = {
+  id: number;
+  original_title: string;
+  original_language: string;
+  release_date: string;
+  poster_path: string;
+  vote_average: number;
+  overview: string;
+  budget: number;
+  revenue: number;
+  runtime: number;
+  genres: movieGenres[];
+  credits: credits;
+  release_dates: release_date_results; 
+  production_companies: production_company[];
+  production_countries: production_country[];
+}
+
 type movieGenres = {
   id: number,
   name: string
@@ -51,24 +69,6 @@ export type movieCastProfile = {
   profile_path: string,
   character: string
 }
-
-export type movieType = {
-    id: number;
-    original_title: string;
-    original_language: string;
-    release_date: string;
-    poster_path: string;
-    vote_average: number;
-    overview: string;
-    budget: number;
-    revenue: number;
-    runtime: number;
-    genres: movieGenres[];
-    credits: credits;
-    release_dates: release_date_results; 
-    production_companies: production_company[];
-    production_countries: production_country[];
-  }
 
   export type production_company = {
     id: number;

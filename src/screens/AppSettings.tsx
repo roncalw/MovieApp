@@ -1,48 +1,63 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React, { useState } from 'react'
-import Navbar from '../../components/Navbar'
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../components/MainNavigation';
-import BouncyCheckbox from 'react-native-bouncy-checkbox';
-
-
-interface IRating {
-  id: string;
-  label: string;
-  isChecked: boolean;
-}
+import React, { useState } from 'react';
+import { View, TextInput, Button, Alert, Text, SafeAreaView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AppSettings = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [inputText, setInputText] = useState('');
+  const [savedText, setSavedText] = useState('');
 
-  const [ratings, setRatings] = useState<IRating[]>([
-    { id: 'G', label: 'G', isChecked: false },
-    { id: 'PG', label: 'PG', isChecked: false },
-    { id: 'PG-13', label: 'PG-13', isChecked: false },
-    { id: 'R', label: 'R', isChecked: false },
-  ]);
-
-  const handleRatingChange = (id: string) => {
-    const updatedRatings = ratings.map((rating) =>
-      rating.id === id ? { ...rating, isChecked: !rating.isChecked } : rating
-    );
-    setRatings(updatedRatings);
+  const saveToStorage = async () => {
+    try {
+      await AsyncStorage.setItem('savedText', inputText);
+      Alert.alert('Saved!', 'Text saved to local storage.');
+    } catch (error) {
+      console.error('Error saving to local storage:', error);
+    }
   };
 
-  const selectedRatings = ratings.filter((rating) => rating.isChecked);
+  const retrieveFromStorage = async () => {
+    try {
+      const retrievedText = await AsyncStorage.getItem('savedText');
+      setSavedText(retrievedText || '');
+    } catch (error) {
+      console.error('Error retrieving from local storage:', error);
+    }
+  };
+
+  const clearStorage = async () => {
+    try {
+      await AsyncStorage.removeItem('savedText');
+      setSavedText('');
+      Alert.alert('Cleared!', 'Content cleared from local storage.');
+    } catch (error) {
+      console.error('Error clearing local storage:', error);
+    }
+  };
 
 
   return (
-    <View style={{flexDirection: 'column'}}>
-      <View style={{height: '15%'}}>
-          <Navbar navigation={navigation} mainBool={true}/>
-      </View>
+    <SafeAreaView style={{flexDirection: 'column'}}>
 
-      <View style={{height: '85%', borderWidth: 1, borderColor: 'red'}}>
-        <Text>App Settings</Text>
+    <View>
+      <TextInput
+        style={{ borderWidth: 1, borderColor: 'gray', padding: 10 }}
+        placeholder="Type here..."
+        onChangeText={(text) => setInputText(text)}
+        value={inputText}
+      />
+      <Button title="Save to Local Storage" onPress={saveToStorage} />
+
+      <Button title="Retrieve from Local Storage" onPress={retrieveFromStorage} />
+
+      <Button title="Clear Local Storage" onPress={clearStorage} />
+
+      <View style={{ marginTop: 20 }}>
+        <Text>Saved Text:</Text>
+        <Text>{savedText}</Text>
       </View>
     </View>
+
+    </SafeAreaView>
   )
 }
 

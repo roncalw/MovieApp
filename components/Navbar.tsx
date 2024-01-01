@@ -48,27 +48,24 @@ if (page === 'home') {
                 style={styles.logo} 
             />
             </View> */}
-            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center',}}>
-                <Text style={{marginLeft: 20, color: '#771F14', fontSize: 24}}>Search by Dates</Text>
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
+                <Text style={{marginLeft: 40, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Dates</Text>
             </View>
             <View style={{width: '15%', }}></View>
         </View>
     );
-} else if (page === 'sbr') {
+} else if (page === 'search') {
     view = (
         <View style={styles.mainNav}>
-            <View style={{ width: '30%', paddingLeft: 5}}>
-                <CustomHeaderLeft  />
+            <View style={{ width: '15%', marginTop: 65, height: 40}} >
+                <TouchableOpacity onPress={() => {navigation.goBack()}}>
+                    <Icon name={'chevron-back'} size={40} color={Colors.black} />
+                </TouchableOpacity>
             </View>
-            {/* <View style={{ width: '90%', paddingLeft: 5}}>
-            <Image
-                source={require('../assets/images/placeholder.png')}
-                style={styles.logo} 
-            />
-            </View> */}
-            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70}}>
-                <Text style={{marginLeft: 20}}>Search by Rating(s)</Text>
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
+                <Text style={{marginLeft: 5, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Movie Title(s)</Text>
             </View>
+            <View style={{width: '15%', }}></View>
         </View>
     );
 } else {
