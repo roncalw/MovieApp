@@ -17,6 +17,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Navbar from '../../components/Navbar';
 import { formatCurrency } from "../utilities/formatCurrency"
 import Colors from '../../theme/Color';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
@@ -93,23 +95,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         video: boolean | undefined;
         vote_average: number | undefined;
         vote_count: number | undefined;
-    }
-
-    const localMovieStore: localMovieStoreType = {
-        id: movieDetail?.id,
-        adult: movieDetail?.adult,
-        backdrop_path: movieDetail?.backdrop_path,
-        genres: movieDetail?.genres.map(genre => genre.id),
-        original_language: movieDetail?.original_language,
-        original_title: movieDetail?.original_title,
-        overview: movieDetail?.overview,
-        popularity: movieDetail?.popularity,
-        poster_path: movieDetail?.poster_path,
-        release_date: movieDetail?.release_date,
-        title: movieDetail?.title,
-        video: movieDetail?.video,
-        vote_average: movieDetail?.vote_average,
-        vote_count: movieDetail?.vote_count
     }
 
     // useEffect(() => {
@@ -230,10 +215,90 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const [isFilled, setIsFilled] = useState(false);
 
+    // Your JSON object
+    const localMovieStore: localMovieStoreType = {
+      id: movieDetail?.id,
+      adult: movieDetail?.adult,
+      backdrop_path: movieDetail?.backdrop_path,
+      genres: movieDetail?.genres.map(genre => genre.id),
+      original_language: movieDetail?.original_language,
+      original_title: movieDetail?.original_title,
+      overview: movieDetail?.overview,
+      popularity: movieDetail?.popularity,
+      poster_path: movieDetail?.poster_path,
+      release_date: movieDetail?.release_date,
+      title: movieDetail?.title,
+      video: movieDetail?.video,
+      vote_average: movieDetail?.vote_average,
+      vote_count: movieDetail?.vote_count
+    };
+
+
     const toggleHeartIcon = () => {
       setIsFilled(!isFilled);
-      console.log('The heart was clicked on!')
-      console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`);
+      console.log('The heart was clicked on!');
+
+      AsyncStorage.getItem('movieData')
+      .then((data) => {
+        let movieArray1 = data ? JSON.parse(data) : [];
+        console.log(movieArray1);
+      });
+
+
+      if (!isFilled) {
+
+        const saveMovieData = async (movieData: localMovieStoreType): Promise<void> => {
+          try {
+            const data = await AsyncStorage.getItem('movieData');
+            let movieArray: localMovieStoreType[] = data ? JSON.parse(data) : [];
+        
+            // Check if the movie with the same ID exists in the array
+            const existingMovie = movieArray.find(movie => movie.id === movieData.id);
+        
+            if (!existingMovie) {
+              // Push the new movie object into the array
+              movieArray.push(movieData);
+        
+              // Save the updated array back to AsyncStorage
+              await AsyncStorage.setItem('movieData', JSON.stringify(movieArray));
+              console.log('Movie data saved successfully!');
+            } else {
+              console.log('Movie with the same ID already exists.');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
+        
+        // Call the function to save the movie object
+        saveMovieData(localMovieStore);
+
+
+        } else {
+
+          const removeMovieById = async (movieId: number | undefined): Promise<void> => {
+            try {
+              const data = await AsyncStorage.getItem('movieData');
+              let movieArray: localMovieStoreType[] = data ? JSON.parse(data) : [];
+          
+              // Filter the movieArray to exclude the movie with the given ID
+              const updatedMovieArray = movieArray.filter(movie => movie.id !== movieId);
+          
+              // Save the updated array back to AsyncStorage
+              await AsyncStorage.setItem('movieData', JSON.stringify(updatedMovieArray));
+              console.log('Movie removed successfully!');
+            } catch (error) {
+              console.error('Error:', error);
+            }
+          };
+          
+          // Specify the ID of the movie you want to remove
+          const movieIdToRemove = localMovieStore.id; // Replace with the desired movie ID
+          
+          // Call the function to remove the movie by ID
+          removeMovieById(movieIdToRemove);
+          
+        }
     };
 
 
