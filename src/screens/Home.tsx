@@ -22,16 +22,22 @@ import Navbar from '../../components/Navbar';
 
 export type movieType = {
   id: number;
-  original_title: string;
+  adult: boolean;
+  backdrop_path: string;
+  genres: movieGenres[];
   original_language: string;
-  release_date: string;
-  poster_path: string;
-  vote_average: number;
+  original_title: string;
   overview: string;
+  popularity: number;
+  poster_path: string;
+  release_date: string;
+  title: string;
+  video: boolean;
+  vote_average: number;
+  vote_count: number;
   budget: number;
   revenue: number;
   runtime: number;
-  genres: movieGenres[];
   credits: credits;
   release_dates: release_date_results; 
   production_companies: production_company[];

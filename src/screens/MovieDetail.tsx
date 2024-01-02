@@ -16,6 +16,7 @@ import Video from '../../components/Video';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Navbar from '../../components/Navbar';
 import { formatCurrency } from "../utilities/formatCurrency"
+import Colors from '../../theme/Color';
 
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
@@ -77,6 +78,45 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     }, [movieId]);
 
 
+    type localMovieStoreType = {
+        id: number | undefined;
+        adult: boolean | undefined;
+        backdrop_path: string | undefined;
+        genres: number[] | undefined;
+        original_language: string | undefined;
+        original_title: string | undefined;
+        overview: string | undefined;
+        popularity: number | undefined;
+        poster_path: string | undefined;
+        release_date: string | undefined;
+        title: string | undefined;
+        video: boolean | undefined;
+        vote_average: number | undefined;
+        vote_count: number | undefined;
+    }
+
+    const localMovieStore: localMovieStoreType = {
+        id: movieDetail?.id,
+        adult: movieDetail?.adult,
+        backdrop_path: movieDetail?.backdrop_path,
+        genres: movieDetail?.genres.map(genre => genre.id),
+        original_language: movieDetail?.original_language,
+        original_title: movieDetail?.original_title,
+        overview: movieDetail?.overview,
+        popularity: movieDetail?.popularity,
+        poster_path: movieDetail?.poster_path,
+        release_date: movieDetail?.release_date,
+        title: movieDetail?.title,
+        video: movieDetail?.video,
+        vote_average: movieDetail?.vote_average,
+        vote_count: movieDetail?.vote_count
+    }
+
+    // useEffect(() => {
+    //     console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
+    //   }, [movieDetail]);
+
+
     const movieImageURL = movieDetail?.poster_path;
     const movieTitle = movieDetail?.original_title;
     const movieGenres = movieDetail?.genres;
@@ -96,7 +136,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         movieReleaseDateCountry = release_dates;
       }
     })
-
 
     let movieRating: string = '';
 
@@ -133,7 +172,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     //console.log(movieTitle);
 
-    console.log(movieId);
+    // console.log(movieId);
 
 
     //console.log(movieAppWatchProviders);
@@ -188,6 +227,17 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       );
     }; 
 
+
+    const [isFilled, setIsFilled] = useState(false);
+
+    const toggleHeartIcon = () => {
+      setIsFilled(!isFilled);
+      console.log('The heart was clicked on!')
+      console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`);
+    };
+
+
+
     return (
       <React.Fragment>
         <View>
@@ -203,22 +253,58 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                         }
                   />
                 <View style={styles.scrollViewContainer}>
-                  {movieTrailerKey != '0000' && (
-                    <View style={styles.playButton}>
-                      <PlayButton handlePress={videoShown}/>
+
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', position: 'absolute', top: -25, paddingRight: 25, paddingLeft: 15 }}>
+                      <View style={{flex: 1,  alignItems: 'flex-start', borderWidth: 0, marginTop: 5 }}>
+                          <Pressable
+                                    onPress={toggleHeartIcon}>
+                                          <View
+                                            style={{
+                                              width: 50,
+                                              height: 50,
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                            }}
+                                          >
+                                            <Icon
+                                              name={isFilled ? 'heart' : 'heart-outline'}
+                                              size={50}
+                                              color={isFilled ? 'red' : 'red'} // Fill color for the heart icon
+                                              style={{
+                                                position: 'absolute',
+                                                zIndex: 1,
+                                              }}
+                                            />
+                                            <Icon
+                                              name="heart-outline"
+                                              size={50}
+                                              color={'red'} // Outline color for the heart icon
+                                              style={{
+                                                position: 'relative',
+                                                zIndex: 0,
+                                              }}
+                                            />
+                                          </View>
+                            </Pressable>
+                      </View>
+                      <View style={{flex: 1,  alignItems: 'flex-end', borderWidth: 0 }}>
+                        {movieTrailerKey != '0000' && (
+                              <PlayButton handlePress={videoShown}/>
+                          )}
+                      </View>
                     </View>
-                  )}
+
                     {movieTitle && (
-                    <Text style={styles.movieTitle}>{movieTitle}</Text>)}
+                      <Text style={styles.movieTitle}>{movieTitle}</Text>)}
 
                     {movieGenres && (
-                    <View style={styles.genresContainer}>
-                      {
-                        movieGenres.map(genre => {
-                          return <Text style={styles.genre} key={genre.id}>{genre.name}</Text>
-                        })
-                      }
-                    </View>)}
+                      <View style={styles.genresContainer}>
+                        {
+                          movieGenres.map(genre => {
+                            return <Text style={styles.genre} key={genre.id}>{genre.name}</Text>
+                          })
+                        }
+                      </View>)}
 
                     <StarRating
                       disabled={true}
@@ -416,7 +502,7 @@ const styles = StyleSheet.create({
   genresContainer: {
     flexDirection: 'row',
     alignContent: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20
   },
   genre: {
@@ -429,7 +515,7 @@ const styles = StyleSheet.create({
   movieTitle: {
     fontSize: 24 ,
     fontWeight: 'bold',
-    marginTop: 10,
+    marginTop: 23,
     marginBottom: 10,
   },
   overviewContainer: {

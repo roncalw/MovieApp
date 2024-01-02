@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { searchMovieTV } from "../services/MovieServices";
@@ -38,6 +38,10 @@ function Search({ navigation }: searchProps) {
             setSearchResults(data);
         });
     }
+
+    // useEffect(() => {
+    //     console.log(`Search Results: ${JSON.stringify(searchResults)}`); // Log the updated selectedItems immediately after state update
+    //   }, [searchResults]);
 
     const Separator = () => {
         return <View style={{height: 5, backgroundColor: 'transparent'}} />;
