@@ -238,11 +238,11 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       setIsFilled(!isFilled);
       console.log('The heart was clicked on!');
 
-      AsyncStorage.getItem('movieData')
-      .then((data) => {
-        let movieArray1 = data ? JSON.parse(data) : [];
-        console.log(movieArray1);
-      });
+      // AsyncStorage.getItem('movieData')
+      // .then((data) => {
+      //   let movieArray1 = data ? JSON.parse(data) : [];
+      //   console.log(movieArray1);
+      // });
 
 
       if (!isFilled) {

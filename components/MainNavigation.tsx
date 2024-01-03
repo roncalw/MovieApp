@@ -32,7 +32,7 @@ export default function MainNavigation() {
           component={Drawer}
           options={{
             headerTransparent: true,
-            header: ({navigation}) => <Navbar navigation={navigation} mainBool={true}/>
+            header: ({navigation}) => <Navbar navigation={navigation} page={''}/>
           }} 
         />
         <Stack.Screen 
@@ -40,7 +40,7 @@ export default function MainNavigation() {
           component={MovieDetail} 
           options={{
             headerTransparent: true,
-            header: ({navigation}) => <Navbar navigation={navigation} mainBool={false}/>
+            header: ({navigation}) => <Navbar navigation={navigation} page={'movieDetail'}/>
           }} 
         />
         <Stack.Screen 
@@ -48,7 +48,7 @@ export default function MainNavigation() {
           component={Search} 
           options={{
             headerTransparent: true,
-            header: ({navigation}) => <Navbar navigation={navigation} mainBool={false}/>
+            header: ({navigation}) => <Navbar navigation={navigation} page={'search'}/>
           }} 
         />
       </Stack.Navigator>

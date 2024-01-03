@@ -11,6 +11,8 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomHeaderLeft from './CustomHeaderLeft';
 import SearchByDate from '../src/screens/SearchByDate';
+import MovieieFavorites from '../src/screens/MovieFavorites';
+import MovieFavorites from '../src/screens/MovieFavorites';
 
 const Drawer = () => {
 
@@ -87,20 +89,21 @@ const Drawer = () => {
         }}
       />
       <Drawer.Screen
-        name='AppSettings'
-        component={AppSettings}
+        name='MovieFavorites'
+        component={MovieFavorites}
+        initialParams={{ directNavigation: true }}
         options={{
-          title: 'AppSettings',
+          title: 'Movie Favorites',
           drawerIcon: ({focused, size}) => (
             <Icon
               name='gear'
               size={size}
               color={focused ? '#7cc' : '#ccc'}
             />
-          )
+          ),
+          headerShown: false,
         }}
       />
-
       <Drawer.Screen
           name='SearchByDate'
           component={SearchByDate}
@@ -115,6 +118,20 @@ const Drawer = () => {
               />
             ),
             headerShown: false,
+          }}
+        />
+        <Drawer.Screen
+          name='AppSettings'
+          component={AppSettings}
+          options={{
+            title: 'AppSettings',
+            drawerIcon: ({focused, size}) => (
+              <Icon
+                name='gear'
+                size={size}
+                color={focused ? '#7cc' : '#ccc'}
+              />
+            )
           }}
         />
 
