@@ -35,7 +35,7 @@ const MovieFavorites = () => {
       if (retrievedText) {
         setMovieData(JSON.parse(retrievedText))
       }
-      console.log(movieData);
+      //console.log(movieData);
     } catch (error) {
       console.error('Error retrieving from local storage:', error);
     }
@@ -54,15 +54,6 @@ const MovieFavorites = () => {
     }
   }, [isFocused]);
   
-
-  const clearStorage = async () => {
-    try {
-      await AsyncStorage.removeItem('movieData');
-      Alert.alert('Cleared!', 'Content cleared from local storage.');
-    } catch (error) {
-      console.error('Error clearing local storage:', error);
-    }
-  };
 
   type SearchByDateParamList = {
     MovieFavorites: { directNavigation?: boolean };
@@ -84,24 +75,12 @@ const MovieFavorites = () => {
     
     
                 <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
-                    <View style={{width:'90%', borderWidth: 0, borderColor: 'red', }}>
+                    <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
                       <Navbar navigation={navigation} page={'movieFavorites'}/>
-                    </View>
-                    <View style={{width:'10%', height: 100,}}>
-                      <TouchableOpacity
-
-                        style={{marginTop: 45, marginLeft: -20}}>
-                        <Icon name={'search-outline'} size={30} />
-                      </TouchableOpacity>
                     </View>
                 </View>
 
     <View>
-      <Button title="Retrieve from Local Storage" onPress={retrieveFromStorage} />
-
-      <Button title="Clear Local Storage" onPress={clearStorage} />
-
-
 
       <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow', marginTop: -10}}>
                 <View style={styles.searchItems}>

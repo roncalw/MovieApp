@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList } from 'react-native';
 import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country } from "../screens/Home"
 
-import { RouteProp } from '@react-navigation/native'
+import { RouteProp, useIsFocused } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation'
 import { getMovie, getMovieTrailers, getMovieWatchProviders } from '../services/MovieServices';
@@ -79,6 +79,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     }, [movieId]);
 
+    const isFocused = useIsFocused();
+    
 
     type localMovieStoreType = {
         id: number | undefined;
@@ -215,27 +217,85 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const [isFilled, setIsFilled] = useState(false);
 
-    // Your JSON object
-    const localMovieStore: localMovieStoreType = {
-      id: movieDetail?.id,
-      adult: movieDetail?.adult,
-      backdrop_path: movieDetail?.backdrop_path,
-      genres: movieDetail?.genres.map(genre => genre.id),
-      original_language: movieDetail?.original_language,
-      original_title: movieDetail?.original_title,
-      overview: movieDetail?.overview,
-      popularity: movieDetail?.popularity,
-      poster_path: movieDetail?.poster_path,
-      release_date: movieDetail?.release_date,
-      title: movieDetail?.title,
-      video: movieDetail?.video,
-      vote_average: movieDetail?.vote_average,
-      vote_count: movieDetail?.vote_count
-    };
+    const [localMovieStore, setLocalMovieStore] = useState<localMovieStoreType>();
+
+
+
+    const updateLocalMovieStore = useCallback(() => {
+      if (movieDetail) {
+        const updatedLocalMovieStore: localMovieStoreType = {
+          id: movieDetail?.id,
+          adult: movieDetail?.adult,
+          backdrop_path: movieDetail?.backdrop_path,
+          genres: movieDetail?.genres.map(genre => genre.id),
+          original_language: movieDetail?.original_language,
+          original_title: movieDetail?.original_title,
+          overview: movieDetail?.overview,
+          popularity: movieDetail?.popularity,
+          poster_path: movieDetail?.poster_path,
+          release_date: movieDetail?.release_date,
+          title: movieDetail?.title,
+          video: movieDetail?.video,
+          vote_average: movieDetail?.vote_average,
+          vote_count: movieDetail?.vote_count
+        };
+        setLocalMovieStore(updatedLocalMovieStore);
+      }
+    }, [movieDetail]);
+
+
+    useEffect(() => {
+      updateLocalMovieStore();
+    }, [movieDetail, updateLocalMovieStore]);
+
+    // // Your JSON object
+    // const localMovieStore: localMovieStoreType = {
+    //   id: movieDetail?.id,
+    //   adult: movieDetail?.adult,
+    //   backdrop_path: movieDetail?.backdrop_path,
+    //   genres: movieDetail?.genres.map(genre => genre.id),
+    //   original_language: movieDetail?.original_language,
+    //   original_title: movieDetail?.original_title,
+    //   overview: movieDetail?.overview,
+    //   popularity: movieDetail?.popularity,
+    //   poster_path: movieDetail?.poster_path,
+    //   release_date: movieDetail?.release_date,
+    //   title: movieDetail?.title,
+    //   video: movieDetail?.video,
+    //   vote_average: movieDetail?.vote_average,
+    //   vote_count: movieDetail?.vote_count
+    // };
+
+    const checkHeartIcon = () => {
+
+      const checkMovieData = async (movieId: number | undefined): Promise<void> => {
+        try {
+          const data = await AsyncStorage.getItem('movieData');
+          let movieArray: localMovieStoreType[] = data ? JSON.parse(data) : [];
+      
+          // Check if the movie with the same ID exists in the array
+          const existingMovie = movieArray.find(movie => movie.id === movieId);
+      
+          if (existingMovie) {
+            // Push the new movie object into the array
+            setIsFilled(true);
+            console.log('Movie is a favorite!');
+          } else {
+            setIsFilled(false);
+            console.log(`Movie is not a favorite.${movieId}`);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+      if (localMovieStore)
+      {checkMovieData(localMovieStore.id);}
+
+    }
 
 
     const toggleHeartIcon = () => {
-      setIsFilled(!isFilled);
+      console.log(isFilled);
       console.log('The heart was clicked on!');
 
       // AsyncStorage.getItem('movieData')
@@ -243,7 +303,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       //   let movieArray1 = data ? JSON.parse(data) : [];
       //   console.log(movieArray1);
       // });
-
 
       if (!isFilled) {
 
@@ -271,7 +330,9 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         };
         
         // Call the function to save the movie object
-        saveMovieData(localMovieStore);
+        if (localMovieStore)
+
+        {saveMovieData(localMovieStore);}
 
 
         } else {
@@ -293,13 +354,26 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           };
           
           // Specify the ID of the movie you want to remove
-          const movieIdToRemove = localMovieStore.id; // Replace with the desired movie ID
+          if (localMovieStore) {
+
+          const movieIdToRemove = localMovieStore.id; // Replace with the desired movie ID}
           
           // Call the function to remove the movie by ID
-          removeMovieById(movieIdToRemove);
+          removeMovieById(movieIdToRemove);}
           
-        }
+        };
+
+        setIsFilled(() => !isFilled);
     };
+
+
+
+    //checkHeartIcon();
+
+    useEffect(() => {
+      checkHeartIcon();
+      console.log('Ran check heart icon');
+  }, [localMovieStore]);
 
 
 
