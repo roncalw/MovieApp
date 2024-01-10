@@ -26,6 +26,7 @@ export default function List( {navigation, title, content }: listProps) {
             <View>
             <FlatList 
                 data={content}
+                keyExtractor = {(item, index) => `${index}`}
                 horizontal={true}
                 renderItem={_renderItem}
             />

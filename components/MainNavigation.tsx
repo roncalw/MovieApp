@@ -5,14 +5,16 @@ import Navbar from './Navbar';
 import Home from '../src/screens/Home';
 import MovieDetail from '../src/screens/MovieDetail';
 import Search  from '../src/screens/Search';
+import PrivacyPolicy from '../src/screens/PrivacyPolicy';
 import Drawer from './Drawer';
 
 
 export type RootStackParamList = {
-    Drawer: undefined;
+    Drawer: undefined,
     Home: undefined, // undefined because you aren't passing any params to the home screen
-    MovieDetail: { id: number }; 
-    Search: undefined;
+    MovieDetail: { id: number },
+    Search: undefined,
+    PrivacyPolicy: undefined;
   };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,6 +51,14 @@ export default function MainNavigation() {
           options={{
             headerTransparent: true,
             header: ({navigation}) => <Navbar navigation={navigation} page={'search'}/>
+          }} 
+        />
+        <Stack.Screen 
+          name="PrivacyPolicy" 
+          component={PrivacyPolicy} 
+          options={{
+            headerTransparent: true,
+            header: ({navigation}) => <Navbar navigation={navigation} page={'privacyPolicy'}/>
           }} 
         />
       </Stack.Navigator>

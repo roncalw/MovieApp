@@ -81,6 +81,7 @@ function Search({ navigation }: searchProps) {
                     <FlatList
                         numColumns={3}
                         data={searchResults}
+                        keyExtractor = {(item, index) => `${index}`}
                         renderItem={_renderItem} 
                         ItemSeparatorComponent={Separator} />
                 </View>

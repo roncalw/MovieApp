@@ -47,7 +47,7 @@ const Home = () => {
       });
 
     }, []);
-    console.log('Testing this here thing right now');
+    //console.log('Testing this here thing right now');
     return (
         <View
           style={{

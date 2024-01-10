@@ -16,7 +16,7 @@ const CustomHeaderLeft: React.FC = () => {
   return (
     <TouchableOpacity style={{borderColor: 'red', borderWidth: 0, width: 60, height: 70, marginTop:70}} onPress={openDrawer}>
         <Image
-            style={{height: 50, width: 50, marginLeft: 5, marginTop: 10}}
+            style={{height: 40, width: 40, marginLeft: 10, marginTop: 17}}
             source={placeholderImage}
         />
     </TouchableOpacity>

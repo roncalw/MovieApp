@@ -11,7 +11,7 @@ export type cardProps = {
 
 const placeholderImage = require('../assets/images/placeholder.png');
 
-export default function Card( {navigation, item }: cardProps) {
+const Card = React.memo(({ navigation, item }: cardProps) => {
 
     return (
         <TouchableOpacity 
@@ -31,7 +31,10 @@ export default function Card( {navigation, item }: cardProps) {
             )}
         </TouchableOpacity>
     ) 
-}
+});
+
+export default Card;
+
 
 const styles = StyleSheet.create({
     container: {

@@ -23,7 +23,7 @@ const MovieFavorites = () => {
     return (
         <Card navigation={navigation} item={item} />
     );
-};
+  };
 
 
   const [movieData, setMovieData] = useState<movieType[]>([]);
@@ -61,6 +61,10 @@ const MovieFavorites = () => {
   
   type SearchByDateRouteProp = RouteProp<SearchByDateParamList, 'MovieFavorites'>;
 
+  const Separator = () => {
+    return <View style={{height: 5, backgroundColor: 'transparent'}} />;
+  };
+
 
   return (
     <SafeAreaView style={{flexDirection: 'column'}}>
@@ -74,23 +78,22 @@ const MovieFavorites = () => {
     {/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
     
     
-                <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
-                    <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
-                      <Navbar navigation={navigation} page={'movieFavorites'}/>
-                    </View>
-                </View>
-
-    <View>
-
-      <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow', marginTop: -10}}>
-                <View style={styles.searchItems}>
-                    <FlatList
-                        numColumns={3}
-                        data={movieData}
-                        renderItem={_renderItem} />
-                </View>
+        <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
+            <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
+              <Navbar navigation={navigation} page={'movieFavorites'}/>
             </View>
-            </View>
+        </View>
+
+
+        <View style={{height: '95%', borderWidth: 0, borderColor: 'yellow', marginTop: 25}}>
+                <FlatList
+                    numColumns={3}
+                    data={movieData}
+                    keyExtractor = {(item, index) => `${index}`}
+                    renderItem={_renderItem}
+                    //keyExtractor={(item) => item.id.toString()} // Use id as a unique key
+                    ItemSeparatorComponent={Separator} />
+        </View>
 
     </SafeAreaView>
   )

@@ -215,7 +215,7 @@ const Home = () => {
     }, []);
 
     const handleImagePress = (index: number) => {
-      console.log(`Image ${index + 1}: ${movieImages[index][1].original_title}`);
+      //console.log(`Image ${index + 1}: ${movieImages[index][1].original_title}`);
 
       const item = movieImages[index][1];
 
@@ -232,6 +232,9 @@ const Home = () => {
             { movieImages && ( 
               <View style={ styles.sliderContainer}>
                 <Navbar navigation={navigation} page={'home'}/>
+
+
+
                 <SliderBox
                   images={movieImages.map((image) => image[0])}
                   dotStyle={styles.sliderStyle}
@@ -240,6 +243,9 @@ const Home = () => {
                   circleLoop={true}
                   onCurrentImagePressed={handleImagePress}
                   />
+
+
+
               </View>)
             }
           {/* Popular Movies */}

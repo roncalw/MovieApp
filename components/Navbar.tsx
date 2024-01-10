@@ -73,6 +73,46 @@ if (page === 'home') {
             </View>
         </View>
     );
+} else if (page === 'appSettings') {
+    view = (
+        <View style={styles.mainNav}>
+            <View style={{ width: '15%', paddingLeft: 5}}>
+                <CustomHeaderLeft  />
+            </View>
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
+                <Text style={{marginLeft: 0, color: '#771F14', fontSize: 24, marginTop: -10}}>Movie Settings</Text>
+            </View>
+            <View style={{ width: '15%', height: 50, paddingTop: 10, marginTop: 70}}>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Search');
+                    }}>
+                    <Icon name={'search-outline'} size={30} color={Colors.black} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+} else if (page === 'privacyPolicy') {
+    view = (
+        <View style={styles.mainNav}>
+            <View style={{ width: '15%', marginTop: 65, height: 40}} >
+                <TouchableOpacity onPress={() => {navigation.goBack()}}>
+                    <Icon name={'chevron-back'} size={40} color={Colors.black} />
+                </TouchableOpacity>
+            </View>
+            <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
+                <Text style={{marginLeft: 0, color: '#771F14', fontSize: 24, marginTop: -10}}>Privacy Policy</Text>
+            </View>
+            <View style={{ width: '15%', height: 50, paddingTop: 10, marginTop: 70}}>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Search');
+                    }}>
+                    <Icon name={'search-outline'} size={30} color={Colors.black} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 } else if (page === 'search') {
     view = (
         <View style={styles.mainNav}>
@@ -82,7 +122,7 @@ if (page === 'home') {
                 </TouchableOpacity>
             </View>
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
-                <Text style={{marginLeft: 5, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Movie Title(s)</Text>
+                <Text style={{marginLeft: 5, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Movie Title</Text>
             </View>
             <View style={{width: '15%', }}></View>
         </View>

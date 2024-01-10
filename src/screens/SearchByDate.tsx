@@ -87,7 +87,7 @@ const SearchByDate = () => {
 
 
     const handleItemSelected = (itemValue: string, itemLabel: string) => {
-      console.log('Genre change made');
+      //console.log('Genre change made');
       setSearchResults([]);
       setPage(1);
 
@@ -147,7 +147,7 @@ const SearchByDate = () => {
     ]);
 
     const handleRatingChange = (id: string) => {
-      console.log('Ratings change made');
+      //console.log('Ratings change made');
       setSearchResults([]);
       setPage(1);
 
@@ -296,7 +296,7 @@ const SearchByDate = () => {
 
   
     const handleDateChangeBegin = (_: Event, date?: Date) => {
-      console.log('Begin Date change made');
+      //console.log('Begin Date change made');
       setSearchResults([]);
       setPage(1);
 
@@ -334,7 +334,7 @@ const SearchByDate = () => {
     }
   
     const handleDateChangeEnd = (_: Event, date?: Date) => {
-      console.log('End Date change made');
+      //console.log('End Date change made');
       setSearchResults([]);
       setPage(1);
 
@@ -637,9 +637,10 @@ const SearchByDate = () => {
                     <FlatList
                         numColumns={3}
                         data={searchResults}
+                        keyExtractor = {(item, index) => `${index}`}
                         renderItem={_renderItem}
                         onEndReached={loadMore}
-                        keyExtractor={(item) => item.id.toString()} // Use id as a unique key
+                        //keyExtractor={(item) => item.id.toString()} // Use id as a unique key
                         ItemSeparatorComponent={Separator}
                         />
                 </View>

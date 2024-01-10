@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "android": "npx react-native run-android",
-    "ios": "npx react-native run-ios",
+    "COMMENT STATEMENT FOR THE ios SHORTCUT BELOW": "The npx react-native run-ios --simulator='iPhone 15 Pro Max' commmand requires the device to be booted 1st, so the ios shortcut boots up the device 1st before running using the xcode command line, i got the list of the UUIDs by running the xcrun simctl list devices command",
+    "ios": "xcrun simctl boot D1EB5D51-FC01-4128-B8B0-23F3DF2D189A && npx react-native run-ios --simulator='iPhone 15 Pro Max'",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",

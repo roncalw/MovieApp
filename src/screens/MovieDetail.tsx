@@ -35,7 +35,7 @@ type movieTrailerType = {
   name: string;
 }
 
-const placeholderImage = require('../../assets/images/placeholder.png');
+const placeholderImage = require('../../assets/images/PicNotFoundV2.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
 
@@ -100,12 +100,12 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     }
 
     // useEffect(() => {
-    //     console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
+    // console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
     //   }, [movieDetail]);
 
 
     const movieImageURL = movieDetail?.poster_path;
-    const movieTitle = movieDetail?.original_title;
+    const movieTitle = movieDetail?.title;
     const movieGenres = movieDetail?.genres;
     const movieVoteAverage = movieDetail?.vote_average;
     const movieAppCast = movieDetail?.credits.cast;
@@ -279,10 +279,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           if (existingMovie) {
             // Push the new movie object into the array
             setIsFilled(true);
-            console.log('Movie is a favorite!');
+            //console.log('Movie is a favorite!');
           } else {
             setIsFilled(false);
-            console.log(`Movie is not a favorite.${movieId}`);
+            //console.log(`Movie is not a favorite.${movieId}`);
           }
         } catch (error) {
           console.error('Error:', error);
@@ -295,8 +295,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
 
     const toggleHeartIcon = () => {
-      console.log(isFilled);
-      console.log('The heart was clicked on!');
+      //console.log(isFilled);
+      //console.log('The heart was clicked on!');
 
       // AsyncStorage.getItem('movieData')
       // .then((data) => {
@@ -320,7 +320,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         
               // Save the updated array back to AsyncStorage
               await AsyncStorage.setItem('movieData', JSON.stringify(movieArray));
-              console.log('Movie data saved successfully!');
+              //console.log('Movie data saved successfully!');
             } else {
               console.log('Movie with the same ID already exists.');
             }
@@ -347,7 +347,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           
               // Save the updated array back to AsyncStorage
               await AsyncStorage.setItem('movieData', JSON.stringify(updatedMovieArray));
-              console.log('Movie removed successfully!');
+              //console.log('Movie removed successfully!');
             } catch (error) {
               console.error('Error:', error);
             }
@@ -372,7 +372,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     useEffect(() => {
       checkHeartIcon();
-      console.log('Ran check heart icon');
+      //console.log('Ran check heart icon');
   }, [localMovieStore]);
 
 
