@@ -142,6 +142,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const movieAppWatchProviders = movieWatchProviders?.results?.US?.rent;
 
+    const movieAppFlatrateWatchProviders = movieWatchProviders?.results?.US?.flatrate;
+
+    //console.log(movieAppFlatrateWatchProviders);
+
     let movieStarRating = 1;
     if (movieVoteAverage){
       movieStarRating = movieDetail.vote_average / 2
@@ -509,14 +513,59 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
                 </View>
 
+{/* ======================================================================================================================================================== */}
+{/*                                                                         STREAMING ON SECTION                                                             */}
+{/* ======================================================================================================================================================== */}
+
 
                 <Text style={styles.textLabel}>Streaming on ...</Text>
+
+
+
+                                                            {/*                    FLAT RATES                      */}
+
+
+                {!movieAppFlatrateWatchProviders && (
+
+                    <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
+                      <View><Text>Subscription:</Text></View>
+                      <Text>(Not available)</Text>
+                    </View>
+
+                    )}
+
+                  {movieAppFlatrateWatchProviders && (
+
+                    <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
+                      <View><Text>Subscription:</Text></View>
+                      {
+                        movieAppFlatrateWatchProviders.map(name => {
+                          return (
+                                    <View key={name.provider_id} style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+                                      <Image
+                                          style={{height: 30, width: 30,borderRadius: 5,}}
+                                          source={
+                                              name.logo_path
+                                              ? {uri: 'https://image.tmdb.org/t/p/w500'+name.logo_path}
+                                              : placeholderImage
+                                          }
+                                      />
+                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                    </View>
+                                )
+                        })
+                      }
+                    </View>)}
+
+
+                                                            {/*                    RENT                      */}
 
 
                 {!movieAppWatchProviders && (
 
                     <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <Text>Streaming not available</Text>
+                      <View><Text>Rent:</Text></View>
+                      <Text>(Not available)</Text>
                     </View>
 
                 )}
@@ -524,6 +573,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                 {movieAppWatchProviders && (
 
                     <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
+                      <View><Text>Rent:</Text></View>
                       {
                         movieAppWatchProviders.map(name => {
                           return (
@@ -542,6 +592,13 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                         })
                       }
                     </View>)}
+
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         PRODUCTION COMPANIES                                                             */}
+{/* ======================================================================================================================================================== */}
+
+
 
                 {movieAppProductionCompanies && (
                       <Text style={styles.textLabel}>Produced by ...</Text>
