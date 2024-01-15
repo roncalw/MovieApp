@@ -17,7 +17,7 @@ export default function Navbar({navigation, page}: navBarProps) {
 if (page === 'home') {
     view = (
         <View style={styles.mainNav}>
-            <View style={{ width: '90%', paddingLeft: 5}}>
+            <View style={{ width: '85%', paddingLeft: 5}}>
                 <CustomHeaderLeft  />
             </View>
             {/* <View style={{ width: '90%', paddingLeft: 5}}>
@@ -26,11 +26,12 @@ if (page === 'home') {
                 style={styles.logo} 
             />
             </View> */}
-            <View style={{ width: '10%', height: 50, paddingTop: 10, marginTop: 70}}>
+            <View style={{ width: '15%', height: 50, paddingTop: 0, marginTop: 83, borderWidth: 0, borderColor: 'red'}}>
                 <TouchableOpacity
                     onPress={() => {
                         navigation.navigate('Search');
-                    }}>
+                    }}
+                    style={{alignItems: 'center', borderWidth: 0, height: 50, paddingTop: 5, }}>
                     <Icon name={'search-outline'} size={30} color={Colors.white} />
                 </TouchableOpacity>
             </View>
