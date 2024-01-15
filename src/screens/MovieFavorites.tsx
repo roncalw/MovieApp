@@ -45,11 +45,13 @@ const MovieFavorites = () => {
 
 
   useEffect(() => {
+    setMovieData(([]));
     retrieveFromStorage();
   }, []);
 
   useEffect(() => {
     if (isFocused) {
+      setMovieData(([]));
       retrieveFromStorage();
     }
   }, [isFocused]);

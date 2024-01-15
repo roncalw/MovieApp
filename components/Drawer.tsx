@@ -31,7 +31,7 @@ const Drawer = () => {
       const contentToShare = {
         title: 'Check out this cool app!',
         message: 'Hey, I found this awesome app. You should check it out!',
-        url: 'https://www.yourappurl.com', // Replace with your app URL
+        url: 'https://www.apple.com/app-store/', // Replace with your app URL
       };
   
       const result = await Share.share(contentToShare);
@@ -158,7 +158,7 @@ const Drawer = () => {
           name='AppSettings'
           component={AppSettings}
           options={{
-            title: 'Movie Settings',
+            title: 'Settings',
             drawerIcon: ({focused, size}) => (
               <Icon
                 name='gear'

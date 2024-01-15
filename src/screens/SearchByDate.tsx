@@ -440,9 +440,11 @@ const SearchByDate = () => {
 
                 {/* BUTTON TO CLOSE BEGIN DATE */}
 
-                            <TouchableOpacity onPress={closeDatePickerBegin}>
-                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
-                            </TouchableOpacity>
+                              {/* BUTTON TO CLOSE GENRE PICKER */}
+                              <TouchableOpacity onPress={closeDatePickerBegin} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                                <Text style={{alignSelf: 'center', }}>Close</Text>
+                              </TouchableOpacity>
+
 
                         </Modal>
 
@@ -493,9 +495,12 @@ const SearchByDate = () => {
 
                 {/* BUTTON TO CLOSE END DATE */}
 
-                            <TouchableOpacity onPress={closeDatePickerEnd}>
-                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
-                            </TouchableOpacity>
+                              {/* BUTTON TO CLOSE GENRE PICKER */}
+                              <TouchableOpacity onPress={closeDatePickerEnd} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                                <Text style={{alignSelf: 'center', }}>Close</Text>
+                              </TouchableOpacity>
+
+
 
                         </Modal>
 

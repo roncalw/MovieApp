@@ -10,8 +10,6 @@ import  { OneSignal }  from 'react-native-onesignal';
 
 
 const AppSettings = () => {
-  const [inputText, setInputText] = useState('');
-  const [savedText, setSavedText] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
@@ -45,29 +43,11 @@ const AppSettings = () => {
     }
   };
 
-  const saveToStorage = async () => {
-    try {
-      await AsyncStorage.setItem('savedText', inputText);
-      Alert.alert('Saved!', 'Text saved to local storage.');
-    } catch (error) {
-      console.error('Error saving to local storage:', error);
-    }
-  };
-
-  const retrieveFromStorage = async () => {
-    try {
-      const retrievedText = await AsyncStorage.getItem('savedText');
-      setSavedText(retrievedText || '');
-    } catch (error) {
-      console.error('Error retrieving from local storage:', error);
-    }
-  };
 
   const clearStorage = async () => {
     try {
-      await AsyncStorage.removeItem('savedText');
-      setSavedText('');
-      Alert.alert('Cleared!', 'Content cleared from local storage.');
+      await AsyncStorage.removeItem('movieData');
+      Alert.alert('Your Movie Favorites are Cleared!', 'To start saving your favorite movies again, simply click on the heart from the Movie Detail screen!');
     } catch (error) {
       console.error('Error clearing local storage:', error);
     }
@@ -103,8 +83,6 @@ const AppSettings = () => {
         <View style={{height: '95%', borderWidth: 0, borderColor: 'blue', marginBottom: 0, marginTop: 40}}>
    
           <Button title="Clear Movie Favorites" onPress={clearStorage} />
-
-
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 20 }}>
             <Text style={{textAlign: 'right', alignSelf: 'center', color: '#087BFF', fontSize: 18, borderWidth: 0, marginRight: 5}}>Push Notifications:</Text> 
