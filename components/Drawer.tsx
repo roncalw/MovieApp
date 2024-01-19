@@ -143,7 +143,7 @@ const Drawer = () => {
           component={SearchByDate}
           initialParams={{ directNavigation: true }}
           options={{
-            title: 'Search By Date',
+            title: 'Advanced Search',
             drawerIcon: ({ focused, size }) => (
               <Icon
                 name='gear'

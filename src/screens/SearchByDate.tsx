@@ -621,9 +621,10 @@ const SearchByDate = () => {
 
                             
                             {/* BUTTON TO CLOSE RATING PICKER */}
-                            <TouchableOpacity onPress={closeShowRatingsPicker}>
+                            <TouchableOpacity onPress={closeShowRatingsPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
                               <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
                             </TouchableOpacity>
+
 
                             </Modal>
 

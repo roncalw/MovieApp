@@ -50,7 +50,7 @@ if (page === 'home') {
             />
             </View> */}
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
-                <Text style={{marginLeft: 40, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Dates</Text>
+                <Text style={{marginLeft: 40, color: '#771F14', fontSize: 24, marginTop: -10}}>Advanced Search</Text>
             </View>
             <View style={{width: '15%', }}></View>
         </View>
@@ -81,7 +81,7 @@ if (page === 'home') {
                 <CustomHeaderLeft  />
             </View>
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
-                <Text style={{marginLeft: 0, color: '#771F14', fontSize: 24, marginTop: -10}}>Movie Settings</Text>
+                <Text style={{marginLeft: 0, color: '#771F14', fontSize: 24, marginTop: -10}}>Settings</Text>
             </View>
             <View style={{ width: '15%', height: 50, paddingTop: 10, marginTop: 70}}>
                 <TouchableOpacity

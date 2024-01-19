@@ -35,7 +35,7 @@ type movieTrailerType = {
   name: string;
 }
 
-const placeholderImage = require('../../assets/images/PicNotFoundV2.png');
+const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
 
