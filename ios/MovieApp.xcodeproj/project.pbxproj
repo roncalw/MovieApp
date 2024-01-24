@@ -618,11 +618,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MovieApp/MovieApp.entitlements;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = KL6M72PXJ6;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MovieApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MovieApp;
+				INFOPLIST_KEY_CFBundleDisplayName = MovieGuider;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -650,10 +650,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MovieApp/MovieApp.entitlements;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = KL6M72PXJ6;
 				INFOPLIST_FILE = MovieApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MovieApp;
+				INFOPLIST_KEY_CFBundleDisplayName = MovieGuider;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
