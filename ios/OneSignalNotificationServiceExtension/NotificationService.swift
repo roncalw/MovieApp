@@ -2,7 +2,7 @@
 //  NotificationService.swift
 //  OneSignalNotificationServiceExtension
 //
-//  Created by Carlo Roncallo on 1/13/24.
+//  Created by Carlo Roncallo on 2/1/24.
 //
 
 import UserNotifications
@@ -38,5 +38,5 @@ class NotificationService: UNNotificationServiceExtension {
             OneSignalExtension.serviceExtensionTimeWillExpireRequest(self.receivedRequest, with: self.bestAttemptContent)
             contentHandler(bestAttemptContent)
         }
-    }  
+    }
 }

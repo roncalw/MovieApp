@@ -26,14 +26,10 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-		</dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
@@ -42,7 +38,7 @@
 		<string>fonts/FontAwesome.ttf</string>
 		<string>fonts/Ionicons.ttf</string>
 		<string>fonts/Foundation.ttf</string>
-		<string>fonts/MaterialCommunityIcons.ttf</string>
+		<string>fonts/MaterialCommnunityIcons.ttf</string>
 		<string>fonts/MaterialIcons.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
@@ -57,9 +53,9 @@
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
+		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>

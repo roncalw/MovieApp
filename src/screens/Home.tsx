@@ -23,7 +23,7 @@ import Navbar from '../../components/Navbar';
 export type movieType = {
   id: number;
   adult: boolean;
-  backdrop_path: string;
+  backdrop_path?: string;
   genres: movieGenres[];
   original_language: string;
   original_title: string;
