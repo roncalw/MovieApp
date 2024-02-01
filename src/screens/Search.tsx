@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, ListRenderItem, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { searchMovieTV } from "../services/MovieServices";
 import { movieType } from "./Home";
@@ -19,11 +19,12 @@ function Search({ navigation }: searchProps) {
     const [isChecked, setIsChecked] = useState(false);
 
 
-    const _renderItem: React.FC<{ item: movieType; }> = ({ item }) => {
+
+    const _renderItem: ListRenderItem<movieType> = ({item}) => {
         return (
-            <Card navigation={navigation} item={item} />
+            <Card navigation={navigation} item={item}/>
         );
-    };
+    };  
 
     const [text, onChangeText] = useState('');
     const [searchResults, setSearchResults] = useState<movieType[]>([]);

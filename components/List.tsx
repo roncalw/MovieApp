@@ -1,8 +1,9 @@
-import {View, Text, FlatList, StyleSheet} from 'react-native';
+import {View, Text, FlatList, StyleSheet, ListRenderItem} from 'react-native';
 import { movieType } from '../src/screens/Home';
 import Card from './Card';
 import { RootStackParamList } from '../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React from 'react';
 
 export type listProps = {
     title: string;
@@ -12,7 +13,7 @@ export type listProps = {
 
 export default function List( {navigation, title, content }: listProps) {
 
-    const _renderItem: React.FC<{item: movieType}> = ({item}) => {
+  const _renderItem: ListRenderItem<movieType> = ({item}) => {
         return (
             <Card navigation={navigation} item={item}/>
         );
