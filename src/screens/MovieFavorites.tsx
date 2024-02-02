@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, Alert, Text, SafeAreaView, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Alert, Text, SafeAreaView, TouchableOpacity, FlatList, StyleSheet, ListRenderItem } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from '../../components/Navbar';
 import { RouteProp, useIsFocused, useNavigation } from '@react-navigation/native';
@@ -19,7 +19,7 @@ const MovieFavorites = () => {
   const [directNavigation, setDirectNavigation] = useState(false);
 
 
-  const _renderItem: React.FC<{ item: movieType; }> = ({ item }) => {
+  const _renderItem: ListRenderItem<movieType> = ({ item }) => {
     return (
         <Card navigation={navigation} item={item} />
     );

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
 import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
@@ -170,7 +170,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     //if (movieReleaseDateCountry) { console.log(movieReleaseDateCountry); }
 
-    const _renderCastItem: React.FC<{item: movieCastProfile}> = ({item}) => {
+    const _renderCastItem: ListRenderItem<movieCastProfile> = ({item}) => {
       return (
         <View style={{alignItems: 'center', padding: 0, paddingRight: 10 }}>
 
@@ -194,7 +194,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       );
     }; 
 
-    const _renderCrewItem: React.FC<{item: movieCrewProfile}> = ({item}) => {
+    const _renderCrewItem: ListRenderItem<movieCrewProfile> = ({item}) => {
       return (
         <View style={{alignItems: 'center', padding: 0, paddingRight: 10 }}>
 
@@ -734,12 +734,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingLeft: 5,
     paddingRight: 5
-  },
-  labelRow: {
-    alignContents: "left",
-    flexDirection: 'row',
-    marginTop: 20,
-    marginBottom: 20
   },
   profile: {
     height: 200,

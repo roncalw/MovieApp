@@ -1,7 +1,7 @@
-import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions  } from 'react-native'
+import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem  } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/Navbar'
-import { useFocusEffect, useIsFocused, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
@@ -9,8 +9,7 @@ import { movieType } from './Home';
 import { getMoviesByDate, searchMovieTV } from '../services/MovieServices';
 import Card from '../../components/Card';
 import Icon from "react-native-vector-icons/Ionicons";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import RNPickerSelect from 'react-native-picker-select';
+import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
 
 
 type SearchByDateParamList = {
@@ -32,7 +31,7 @@ const SearchByDate = () => {
     //================================================================    SEARCH RESULTS FOR EACH ITEM IN FLAT LIST    =========================================================================
 
 
-    const _renderItem: React.FC<{ item: movieType; }> = ({ item }) => {
+    const _renderItem: ListRenderItem<movieType> = ({ item }) => {
         return (
             <Card navigation={navigation} item={item} />
         );
@@ -120,10 +119,9 @@ const SearchByDate = () => {
 
     //For the query to the database
     const myArray = selectedItems;
-    let genreString: string = myArray.join(" | ");
+    let genreString: string = myArray.join("|");
 
     //For the display
-
     const separatedStrings = selectedLabels.map((str, index) => (
       <Text key={index}>{str}</Text>
     ));
@@ -168,7 +166,11 @@ const SearchByDate = () => {
       setShowRatingsPicker(false);
     };
 
-    const ratingsAsString: string = selectedRatings.map(item => item.label).join(' | ');
+    //For the query to the database
+    const ratingsAsString: string = selectedRatings.map(item => item.label).join('|');
+
+    //For the display
+    const ratingsAsStringDisplay: string = selectedRatings.map(item => item.label).join(' | ');
 
     //=========================================================================    SUBMIT    ================================================================================
 
@@ -295,7 +297,7 @@ const SearchByDate = () => {
     }
 
   
-    const handleDateChangeBegin = (_: Event, date?: Date) => {
+    const handleDateChangeBegin = (event: DateTimePickerEvent, date?: Date) => {
       //console.log('Begin Date change made');
       setSearchResults([]);
       setPage(1);
@@ -333,7 +335,7 @@ const SearchByDate = () => {
       }).format(selectedDateEnd);
     }
   
-    const handleDateChangeEnd = (_: Event, date?: Date) => {
+    const handleDateChangeEnd = (event: DateTimePickerEvent, date?: Date) => {
       //console.log('End Date change made');
       setSearchResults([]);
       setPage(1);
@@ -629,7 +631,7 @@ const SearchByDate = () => {
                             </Modal>
 
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150, height: 50, borderWidth: 0, padding: 1, marginTop: -7 }}>
-                                <Text style={{ marginLeft: 8, marginTop: -25 }}>{ratingsAsString}</Text>
+                                <Text style={{ marginLeft: 8, marginTop: -25 }}>{ratingsAsStringDisplay}</Text>
                             </View>
 
                     </View>
