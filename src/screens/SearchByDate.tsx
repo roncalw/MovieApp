@@ -1,5 +1,5 @@
 import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem  } from 'react-native'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import Navbar from '../../components/Navbar'
 import { useIsFocused, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import { getMoviesByDate, searchMovieTV } from '../services/MovieServices';
 import Card from '../../components/Card';
 import Icon from "react-native-vector-icons/Ionicons";
 import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
+import RadioGroup, {RadioButtonProps} from 'react-native-radio-buttons-group';
 
 
 type SearchByDateParamList = {
@@ -46,7 +47,7 @@ const SearchByDate = () => {
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
 
-    const pickerRef = useRef<any>(null);
+    //const pickerRef = useRef<any>(null);
 
   
     const openPicker = () => {
@@ -172,22 +173,179 @@ const SearchByDate = () => {
     //For the display
     const ratingsAsStringDisplay: string = selectedRatings.map(item => item.label).join(' | ');
 
+
+
+
+    //=========================================================================   STREAMER PICKER - BEGIN    =========================================================================
+
+    const [showStreamersPicker, setShowStreamersPicker] = useState(false);
+    const [selectedStreamerItems, setSelectedStreamerItems] = useState<string[]>([]);
+    const [selectedStreamerLabels, setSelectedStreamerLabels] = useState<string[]>([]);
+
+
+    const openStreamersPicker = () => {
+      setShowStreamersPicker(true);
+    };
+  
+    const closeStreamersPicker = () => {
+      setShowStreamersPicker(false);
+    };
+
+    
+    const streamerItems = [
+      { label: 'Netflix', value: '8' },
+      { label: 'Hulu', value: '15' },
+      { label: 'Prime', value: '9' },
+      { label: 'Max', value: '1899' },
+      { label: 'YouTube', value: '192' },
+      { label: 'Disney Plus', value: '337' },
+      { label: 'Apple TV Plus', value: '350' },
+      { label: 'Peacock', value: '386' },
+      { label: 'AMC+', value: '526' },
+      { label: 'Paramount+', value: '531' },
+    ];
+
+
+    useEffect(() => {
+      if (!showStreamersPicker) {
+        //setSelectedItems([]); // Reset selected items when the modal is closed
+      }
+    }, [showStreamersPicker]);
+
+
+
+    const handleItemSelectedStreamer = (itemValue: string, itemLabel: string) => {
+      //console.log('Genre change made');
+      setSearchResults([]);
+      setPage(1);
+
+      const isSelectedStreamer = selectedStreamerItems.includes(itemValue);
+
+      if (isSelectedStreamer) {
+        setSelectedStreamerItems(prevSelectedStreamerItems =>
+          prevSelectedStreamerItems.filter(streamerItem => streamerItem !== itemValue)
+        );
+        setSelectedStreamerLabels(prevSelectedStreamerLabels =>
+          prevSelectedStreamerLabels.filter(label => label !== itemLabel)
+        );
+      } else {
+        setSelectedStreamerItems(prevSelectedStreamerItems => [...prevSelectedStreamerItems, itemValue]);
+        setSelectedStreamerLabels(prevSelectedStreamerLabels => [...prevSelectedStreamerLabels, itemLabel]);
+      }
+    };
+  
+    const isItemSelectedStreamer = (itemValue: string) => {
+      return selectedStreamerItems.includes(itemValue);
+    };
+
+
+    useEffect(() => {
+      //console.log(`from selected labels: ${selectedLabels}`); // Log the updated selectedItems immediately after state update
+    }, [selectedStreamerLabels]);
+
+    //For the query to the database
+    const myStreamerArray = selectedStreamerItems;
+    let streamerString: string = myStreamerArray.join("|");
+
+    //For the display
+    const separatedStreamerStrings = selectedStreamerLabels.join(" | ").split(" | ").sort().join(" | ")
+
+
+    //=========================================================================   SORT BY PICKER - BEGIN    =========================================================================
+
+    const [showSortByPicker, setShowSortByPicker] = useState(false);
+
+
+
+    const openSortByPicker = () => {
+      setShowSortByPicker(true); // Open DatePicker
+    };
+  
+    const closeSortByPicker = () => {
+      setShowSortByPicker(false);
+    };
+
+    const [radioButtons, setRadioButtons] = useState<RadioButtonProps[]>(() => [
+      {
+          id: '1',
+          label: 'Popularity',
+          value: '0'
+      },
+      {
+          id: '2',
+          label: 'User Rating (500+ Reviews)',
+          value: '500'
+      },
+      {
+          id: '3',
+          label: 'User Rating (100+ Reviews)',
+          value: '100'
+      },
+      {
+          id: '4',
+          label: 'User Rating (1+ Reviews)',
+          value: '1'
+      }
+  ]);
+
+  const [selectedValue, setSelectedValue] = useState<string | undefined>();
+
+  const handlePress = (selectedId: string) => {
+      const updatedButtons = radioButtons.map(button =>
+          button.id === selectedId ? { ...button, isChecked: true } : { ...button, isChecked: false }
+      );
+      setSelectedValue(selectedId);
+      setRadioButtons(updatedButtons);
+  };
+
+  //For the query to the database
+  const sortByAsString: string | undefined = radioButtons.find(button => button.id === selectedValue)?.value;
+
+  //For the display
+  //const sortByAsStringDisplay: string = selectedSortBy.map(sortBy => sortBy.label).join(' | ');
+
+  const sortByAsStringDisplay: string | undefined = radioButtons.find(button => button.id === selectedValue)?.label
+
+
+
+
     //=========================================================================    SUBMIT    ================================================================================
 
 
     function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number) {
-      //console.log(beginDate);
-      //console.log(endDate);
-      //console.log(pageNum);
-      //console.log(caller);
+        //console.log(beginDate);
+        //console.log(endDate);
+        //console.log(pageNum);
+        //console.log(caller);
+        console.log(`Streamers: ${streamerString}`);
+        console.log(`Sort By: ${sortByAsString}`);
+
+        let sortByforQuery: string = "";
+        let voteCount: string = "0";
+
+        if (sortByAsString === undefined) {
+          sortByforQuery = "popularity.desc";
+        }
+        else if (sortByAsString === "0")
+        {
+          voteCount = "0";
+          sortByforQuery = "popularity.desc";
+        }
+        else
+        {
+          voteCount = sortByAsString;
+          sortByforQuery = "vote_average.desc";
+        }
+
+        console.log(`Sort By For Query: ${sortByforQuery}`);
 
         if (caller === 'submit') {
-            setSearchResults([]);
-            setPage(1);
-          };
+          setSearchResults([]);
+          setPage(1);
+        };
 
         Promise.all(
-        [getMoviesByDate(ratingsAsString, beginDate, endDate, movieGenres, pageNum) ]
+        [getMoviesByDate(ratingsAsString, beginDate, endDate, movieGenres, streamerString, voteCount, sortByforQuery, pageNum) ]
         
         )
         .then(([movies]) => {
@@ -235,6 +393,13 @@ const SearchByDate = () => {
         { id: 'PG', label: 'PG', isChecked: false },
         { id: 'PG-13', label: 'PG-13', isChecked: false },
         { id: 'R', label: 'R', isChecked: false },]);
+
+
+      setSelectedStreamerItems([]);
+      setSelectedStreamerLabels([]);
+
+      setSelectedValue("");
+
       closePicker();
     };
 
@@ -540,14 +705,15 @@ const SearchByDate = () => {
                             >
 
                                 <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
-                        
+                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: -4}}>Search by Genre(s)</Text>
 
-                                    <View style={{ borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'white', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
+
+                                    <View style={{ borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'tan', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
 
 
                                           {items.map((item, index) => (
 
-                                              <View style={{ backgroundColor: 'white', margin: .5}} key={index}>
+                                              <View style={{ backgroundColor: 'tan', margin: .5}} key={index}>
                                                   <TouchableOpacity
                                                     key={index}
                                                     onPress={() => handleItemSelected(item.value, item.label)}
@@ -601,6 +767,8 @@ const SearchByDate = () => {
                             >
 
                                   <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                                  <Text style={{fontSize: 20, color: '#771F14', marginBottom: 10}}>Search by Rating(s)</Text>
+
                                         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
 
                                             <View style={{ flexDirection: 'row', marginTop: 16 }}>
@@ -638,9 +806,128 @@ const SearchByDate = () => {
                 </View>
             </View>
 
-{/* =====================================================================  ROW 4 --- 75% Height   !!!  SEARCH RESULTS !!!   ======================================================    */}
 
-            <View style={{height: '75%', borderWidth: 0, borderColor: 'purple', marginTop: -15}}>
+{/* ========================================================================  STREAMERS AND SORT BY !!!  ===============================================================    */}
+
+{/* ========================================================================  ROW 3 --- 8% Height   !!!  STREAMERS AND SUBMIT !!!  ======================================================    */}
+
+{/* ========================================================================  STREAMERS AND SORT BY !!!  ===============================================================    */}
+
+
+
+              {/* ============================================================     STREAMERS    !!!   STREAMERS      STREAMERS      !!!  ======================================================    */}
+
+
+              <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 15}}>
+                <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
+                    <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
+
+                            <TouchableOpacity onPress={openStreamersPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Streamer(s)</Text>
+                            </TouchableOpacity>
+
+                            <Modal
+                              transparent={true}
+                              visible={showStreamersPicker}
+                              animationType="fade"
+                              style={{}}
+                            >
+
+                                <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                        
+                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: 10}}>Search by Streamer(s)</Text>
+
+                                    <View style={{ width: 350, borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'tan', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
+
+                                          {streamerItems.map((item, index) => (
+
+                                              <View style={{ backgroundColor: 'tan', margin: .5}} key={index}>
+                                                  <TouchableOpacity
+                                                    key={index}
+                                                    onPress={() => handleItemSelectedStreamer(item.value, item.label)}
+                                                    style={[
+                                                      styles.item,
+                                                      isItemSelectedStreamer(item.value) && styles.selectedItem,
+                                                    ]}
+                                                  >
+                                                    <Text style={isItemSelectedStreamer(item.value) && styles.selectedText}>
+                                                      {item.label}
+                                                    </Text>
+                                                  </TouchableOpacity>
+                                              </View>
+
+                                          ))}
+                                          
+                                    </View>
+
+                                </View>
+
+                            {/* BUTTON TO CLOSE GENRE PICKER */}
+                            <TouchableOpacity onPress={closeStreamersPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                              <Text style={{alignSelf: 'center', }}>Close</Text>
+                            </TouchableOpacity>
+                                
+                            </Modal>
+                            
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150, height: 50, borderWidth: 0, paddingLeft: 1, marginTop: -7 }}>
+                              <Text style={{marginTop: -25}} numberOfLines={2} ellipsizeMode="tail">
+                                {separatedStreamerStrings}
+                              </Text>
+                            </View>
+
+                    </View>
+                </View>
+
+              {/* ============================================================     SORT BY    !!!    SORT BY      SORT BY      !!!  ======================================================    */}
+
+                <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
+                    <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
+
+                            <TouchableOpacity onPress={openSortByPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Sort By</Text>
+                            </TouchableOpacity>
+
+                            <Modal
+                              transparent={true}
+                              visible={showSortByPicker}
+                              animationType="fade"
+                              style={{}}
+                            >
+                                  <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+ 
+                                            <View style={{ marginTop: 16, alignItems: 'center'}}>
+                                              <Text style={{fontSize: 20, color: '#771F14', marginBottom: 10}}>Sort By Popularity or User Rating</Text>
+                                              <RadioGroup
+                                                radioButtons={radioButtons}
+                                                onPress={handlePress}
+                                                selectedId={selectedValue}
+                                                containerStyle={{alignItems: 'flex-start'}}
+                                              />
+                                            </View>
+                                  </View>
+
+                            {/* BUTTON TO CLOSE RATING PICKER */}
+                            <TouchableOpacity onPress={closeSortByPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
+                            </TouchableOpacity>
+
+
+                            </Modal> 
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'center', width: 150, height: 50, borderWidth: 0, padding: 1, marginTop: -7 }}>
+                                <Text style={{ marginLeft: 8, marginTop: -25 }}>{sortByAsStringDisplay}</Text>
+                            </View>
+
+                    </View>
+                </View>
+            </View>
+
+
+
+
+{/* =====================================================================  ROW 4 --- 67% Height   !!!  SEARCH RESULTS !!!   ======================================================    */}
+
+            <View style={{height: '67%', borderWidth: 0, borderColor: 'purple', marginTop: -15}}>
                 <View style={styles.searchItems}>
                     <FlatList
                         numColumns={3}
@@ -690,10 +977,11 @@ const styles = StyleSheet.create({
       borderBottomColor: '#ccc',
     },
     selectedItem: {
-      backgroundColor: '#f0f0f0',
+      // backgroundColor: '#f0f0f0',
+      backgroundColor: 'rgba(251, 235, 202, 0.999)'
     },
     selectedText: {
-      color: '#ccc',
+      color: '#777',
     },
   });
 

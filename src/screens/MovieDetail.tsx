@@ -19,30 +19,63 @@ import { formatCurrency } from "../utilities/formatCurrency"
 import Colors from '../../theme/Color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+/* =============================================================================================================================================================== */
+/*                                                                                                         NAVIGATION SETUP                                        */
+/* =============================================================================================================================================================== */
 
+//"route" is used for passing parameters from one screen to another using the navigation object also above
 type PropsType = {
   navigation: NativeStackNavigationProp<RootStackParamList>,
   route: RouteProp<RootStackParamList, 'MovieDetail'>
 } 
 
+
+/* =============================================================================================================================================================== */
+/*                                                                                                         MOVIE TRAILER SETUP                                     */
+/* =============================================================================================================================================================== */
+
 type movieTrailerJson = {
   id: string;
   results: movieTrailerType[];
 }
+
 type movieTrailerType = {
   id: string;
   key: string | undefined;
   name: string;
 }
 
+
+/* =============================================================================================================================================================== */
+/*                                                                                                         IMAGE SETUP                                             */
+/* =============================================================================================================================================================== */
+
 const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
 
+
+
+/* =============================================================================================================================================================== */
+/*                                                                                                         DIMENSIONS SETUP                                        */
+/* =============================================================================================================================================================== */
+
 const height = Dimensions.get('screen').height;
 
+
+
 export default function MovieDetail({ navigation, route }: PropsType) {
+
+/* =============================================================================================================================================================== */
+/*                                                                                         USE THE PASSED IN ROUTE OBJ TO PASS IN MOVIE ID                         */
+/* =============================================================================================================================================================== */
+
     const movieId = route.params.id;
+
+
+/* =============================================================================================================================================================== */
+/*                                                                                                         USE STATE VARIABLES SETUP                               */
+/* =============================================================================================================================================================== */
 
     const [movieDetail, setMovieDetail] = useState<movieType>();
     const [movieTrailers, setMovieTrailers] = useState<movieTrailerJson>();
@@ -50,6 +83,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<AxiosError | boolean>(false);
 
+
+/* =============================================================================================================================================================== */
+/*                                                                        CREATE THE DATA FUNCTION ON MOVIE DETAILS - MOVIE / MOVIE TRAILERS / STREAMERS           */
+/* =============================================================================================================================================================== */
 
     const getData = () => {
       return Promise.all([
@@ -59,6 +96,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       ]);
     }
 
+
+/* =============================================================================================================================================================== */
+/*   LOAD THE DATA ON MOVIE DETAILS, USING THE FUNCTION ABOVE AND ADDING THE DATA TO THE USESTATE VARIABLES CREATED ABOVE - MOVIE / MOVIE TRAILERS / STREAMERS           */
+/* =============================================================================================================================================================== */
 
     useEffect( () => {
       getData().then(
