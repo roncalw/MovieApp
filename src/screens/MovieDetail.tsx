@@ -43,6 +43,8 @@ type movieTrailerType = {
   id: string;
   key: string | undefined;
   name: string;
+  type: string;
+  official: boolean;
 }
 
 
@@ -200,7 +202,21 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       //setModalVisible(modalVisible => {return !modalVisible} )
     }
 
-    const movieTrailerKey = movieTrailers?.results[0] ? movieTrailers?.results[0].key : '0000';
+    const filteredTrailers  = movieTrailers?.results.filter(
+      trailer => trailer.type === "Trailer" && trailer.official === true
+    ) ?? [];
+
+    // if (filteredTrailers.length > 0) {
+    //   console.log("Filtered trailers :", filteredTrailers);
+    // } else {
+    //   console.log("No matching trailers found");
+    // }
+
+
+    const movieTrailerKey = filteredTrailers[0] ? filteredTrailers[0].key : '0000';
+
+
+    //console.log(movieTrailers?.results);
 
     //console.log(movieTitle);
 

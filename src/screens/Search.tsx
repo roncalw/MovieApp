@@ -1,5 +1,7 @@
+import { AxiosError } from 'axios';
+import Error from '../../components/Error';
 import React, { useEffect, useState } from "react";
-import { FlatList, ListRenderItem, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, ListRenderItem, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { searchMovieTV } from "../services/MovieServices";
 import { movieType } from "./Home";
@@ -16,7 +18,15 @@ type searchProps = {
 }
 
 function Search({ navigation }: searchProps) {
+
     const [isChecked, setIsChecked] = useState(false);
+
+
+  //=========================================================================    LOADING PAGE SETUP    =========================================================================
+
+  const [error, setError] = useState<AxiosError | boolean>(false);
+  const [loaded, setLoaded] = useState<boolean>(true);
+
 
 
 
@@ -30,6 +40,9 @@ function Search({ navigation }: searchProps) {
     const [searchResults, setSearchResults] = useState<movieType[]>([]);
 
     function onSubmit(query: string) {
+
+        setLoaded(false);  
+
         Promise.all(
         [searchMovieTV(query, 'movie'), searchMovieTV(query, 'tv') ]
         
@@ -37,6 +50,10 @@ function Search({ navigation }: searchProps) {
         .then(([movies, tv]) => {
             const data:movieType[] = [...movies, ...tv];
             setSearchResults(data);
+        }).catch(() => {
+            setError(true);
+        }).finally(() => {
+            setLoaded(true);
         });
     }
 
@@ -77,6 +94,8 @@ function Search({ navigation }: searchProps) {
                 </View>
             </View>
 
+            {loaded && !error &&  
+
             <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow', marginTop: -10}}>
                 <View style={styles.searchItems}>
                     <FlatList
@@ -87,6 +106,19 @@ function Search({ navigation }: searchProps) {
                         ItemSeparatorComponent={Separator} />
                 </View>
             </View>
+            }
+
+
+            { !loaded && (
+            <View style={{height: '85%', borderWidth: 0, borderColor: 'yellow', marginTop: -10}}>
+                <ActivityIndicator size="large" />
+            </View>
+            
+            ) } 
+
+            {error && (<Error />)}
+
+
 
 
         </SafeAreaView>

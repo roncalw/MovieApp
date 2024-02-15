@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "comments": "npm start -- --reset-cache",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "ios15Max": "xcrun simctl boot D1EB5D51-FC01-4128-B8B0-23F3DF2D189A && npx react-native run-ios --simulator='iPhone 15 Pro Max'",
@@ -38,6 +39,7 @@
     "react-native-gradle-plugin": "^0.71.19",
     "react-native-image-slider-box": "^2.0.7",
     "react-native-onesignal": "^5.0.4",
+    "react-native-orientation-locker": "^1.6.0",
     "react-native-picker-select": "^9.0.0",
     "react-native-radio-buttons-group": "^3.0.7",
     "react-native-reanimated": "^3.6.1",

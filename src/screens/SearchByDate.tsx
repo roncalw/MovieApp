@@ -1,4 +1,6 @@
-import { FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem  } from 'react-native'
+import { AxiosError } from 'axios';
+import Error from '../../components/Error';
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem, Image  } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import Navbar from '../../components/Navbar'
 import { useIsFocused, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -21,6 +23,26 @@ type SearchByDateRouteProp = RouteProp<SearchByDateParamList, 'SearchByDate'>;
 
 
 const SearchByDate = () => {
+
+    //=========================================================================    IMAGES SETUP    =========================================================================
+
+  const imagePathNetflix = require('../../assets/images/netflix.png');
+  const imagePathHulu = require('../../assets/images/hulu.png');
+  const imagePathPrime = require('../../assets/images/amazon_prime.png');
+  const imagePathMax = require('../../assets/images/max.png');
+  const imagePathYouTube = require('../../assets/images/youtube_premium.png');
+  const imagePathDisneyPlus = require('../../assets/images/disney_plus.png');
+  const imagePathAppleTVPlus = require('../../assets/images/apple_tv_plus.png');
+  const imagePathPeacock = require('../../assets/images/peacock.png');
+  const imagePathAMCPlus = require('../../assets/images/amc.png');
+  const imagePathParamountPlus = require('../../assets/images/paramount_plus.png');
+
+
+
+  //=========================================================================    LOADING PAGE SETUP    =========================================================================
+
+  const [error, setError] = useState<AxiosError | boolean>(false);
+  const [loaded, setLoaded] = useState<boolean>(true);
 
   //=========================================================================    NAVIGATION SETUP    =========================================================================
 
@@ -193,16 +215,16 @@ const SearchByDate = () => {
 
     
     const streamerItems = [
-      { label: 'Netflix', value: '8' },
-      { label: 'Hulu', value: '15' },
-      { label: 'Prime', value: '9' },
-      { label: 'Max', value: '1899' },
-      { label: 'YouTube', value: '192' },
-      { label: 'Disney Plus', value: '337' },
-      { label: 'Apple TV Plus', value: '350' },
-      { label: 'Peacock', value: '386' },
-      { label: 'AMC+', value: '526' },
-      { label: 'Paramount+', value: '531' },
+      { label: 'Netflix', image: imagePathNetflix, value: '8' },
+      { label: 'Hulu', image: imagePathHulu, value: '15' },
+      { label: 'Prime', image: imagePathPrime, value: '9' },
+      { label: 'Max', image: imagePathMax, value: '1899' },
+      { label: 'YouTube', image: imagePathYouTube, value: '192' },
+      { label: 'Disney Plus', image: imagePathDisneyPlus, value: '337' },
+      { label: 'Apple TV Plus', image: imagePathAppleTVPlus, value: '350' },
+      { label: 'Peacock', image: imagePathPeacock, value: '386' },
+      { label: 'AMC+', image: imagePathAMCPlus, value: '526' },
+      { label: 'Paramount+', image: imagePathParamountPlus, value: '531' },
     ];
 
 
@@ -268,21 +290,25 @@ const SearchByDate = () => {
     const [radioButtons, setRadioButtons] = useState<RadioButtonProps[]>(() => [
       {
           id: '1',
+          color: '#68A1ED',
           label: 'Popularity',
           value: '0'
       },
       {
           id: '2',
+          color: '#68A1ED',
           label: 'User Rating (500+ Reviews)',
           value: '500'
       },
       {
           id: '3',
+          color: '#68A1ED',
           label: 'User Rating (100+ Reviews)',
           value: '100'
       },
       {
           id: '4',
+          color: '#68A1ED',
           label: 'User Rating (1+ Reviews)',
           value: '1'
       }
@@ -291,6 +317,10 @@ const SearchByDate = () => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>();
 
   const handlePress = (selectedId: string) => {
+
+      setSearchResults([]);
+      setPage(1);
+
       const updatedButtons = radioButtons.map(button =>
           button.id === selectedId ? { ...button, isChecked: true } : { ...button, isChecked: false }
       );
@@ -313,12 +343,13 @@ const SearchByDate = () => {
 
 
     function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number) {
+        setLoaded(false);  
         //console.log(beginDate);
         //console.log(endDate);
         //console.log(pageNum);
         //console.log(caller);
-        console.log(`Streamers: ${streamerString}`);
-        console.log(`Sort By: ${sortByAsString}`);
+        //console.log(`Streamers: ${streamerString}`);
+        //console.log(`Sort By: ${sortByAsString}`);
 
         let sortByforQuery: string = "";
         let voteCount: string = "0";
@@ -337,7 +368,7 @@ const SearchByDate = () => {
           sortByforQuery = "vote_average.desc";
         }
 
-        console.log(`Sort By For Query: ${sortByforQuery}`);
+        //console.log(`Sort By For Query: ${sortByforQuery}`);
 
         if (caller === 'submit') {
           setSearchResults([]);
@@ -354,6 +385,10 @@ const SearchByDate = () => {
               
               prevResults => [...prevResults, ...data]
               );
+        }).catch(() => {
+          setError(true);
+        }).finally(() => {
+            setLoaded(true);
         });
 
     };
@@ -524,8 +559,20 @@ const SearchByDate = () => {
     const Separator = () => {
         return <View style={{height: 5, backgroundColor: 'transparent'}} />;
       };
+
+
+    //=========================================================================  COLLAPSER - COLLAPSER CODE    =========================================================================
+
+    const [collapsed, setCollapsed] = useState(false);
+
+    const toggleCollapsed = () => {
+      setCollapsed(!collapsed);
+      //console.log(collapsed);
+    };
+
   
     return (
+
         <SafeAreaView style={{flexDirection: 'column'}}>
 
 {/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
@@ -537,11 +584,11 @@ const SearchByDate = () => {
 {/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
 
 
-            <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
-                <View style={{width:'90%', borderWidth: 0, borderColor: 'red', }}>
+            <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 0, marginTop: -14}}>
+                <View style={{width:'90%', height: 50, borderWidth: 0, borderColor: 'red', }}>
                   <Navbar navigation={navigation} page={'sbd'}/>
                 </View>
-                <View style={{width:'10%', height: 100,}}>
+                <View style={{width:'10%', height: 100, borderBottomWidth: 0}}>
                   <TouchableOpacity
                     onPress={() => {
                         onSubmit('submit', ratingsAsString, queryDateBegin, queryDateEnd, genreString, page);
@@ -552,6 +599,23 @@ const SearchByDate = () => {
                 </View>
             </View>
 
+
+{/* ======================================================================================  THE CLOSE BUTTON !!!  ======================================================    */}
+
+{/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE DATE BUTTONS !!!  ======================================================    */}
+
+{/* ======================================================================================  THE CLOSE BUTTON !!!  ======================================================    */}
+
+            <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 85, marginBottom: 0}}>
+              <TouchableOpacity onPress={toggleCollapsed} style={{ borderWidth: 0, width: 150, height: 30, justifyContent: 'center', alignItems: 'center',}}>
+                
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
+                    <Text style={{color: '#771F14', fontSize: 16, }}> {collapsed ? " Show Filter" : "Hide Filter"}</Text>
+                    <Icon style={{color: '#771F14',}} name={collapsed ? "chevron-forward" : "chevron-up"} size={20} />
+              </View>
+              </TouchableOpacity>
+            </View>
+
 {/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
 
 {/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE DATE BUTTONS !!!  ======================================================    */}
@@ -559,16 +623,17 @@ const SearchByDate = () => {
 {/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
 
 
+{!collapsed && (
 
-            <View style={{height: '8%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: 25}}>
+            <View style={{height: '10%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: -15}}> 
 
                 <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 0}}>
-
+             
     {/* COLUMN 1 --- 50% Width */}
 
     {/* ======================================================================================  !!! FROM DATE !!!  ===============================================================    */}
 
-
+  
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '50%', borderWidth: 0, paddingLeft: 0, paddingRight: 0, marginTop: -5 }}>
 
                 {/* BUTTON TO POPUP BEGIN DATE */}
@@ -678,6 +743,8 @@ const SearchByDate = () => {
 
             </View>
 
+)}
+
 {/* ========================================================================  GENRES AND MOVIE RATINGS !!!  ===============================================================    */}
 
 {/* ========================================================================  ROW 3 --- 8% Height   !!!  GENRES AND MOVIE RATINGS !!!  ======================================================    */}
@@ -687,14 +754,14 @@ const SearchByDate = () => {
 
 
               {/* ============================================================     GENRES    !!!   GENRES      GENRES      !!!  ======================================================    */}
+{!collapsed && (    
 
-
-            <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 15}}>
+            <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 5}}>
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
                             <TouchableOpacity onPress={openPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
-                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Genre(s)</Text>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20, }}>Choose Genre(s)</Text>
                             </TouchableOpacity>
 
                             <Modal
@@ -705,15 +772,15 @@ const SearchByDate = () => {
                             >
 
                                 <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
-                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: -4}}>Search by Genre(s)</Text>
+                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: -5}}>Search by Genre(s)</Text>
 
 
-                                    <View style={{ borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'tan', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
+                                    <View style={{ borderRadius: 25, margin: 5, marginBottom: -5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
 
 
                                           {items.map((item, index) => (
 
-                                              <View style={{ backgroundColor: 'tan', margin: .5}} key={index}>
+                                              <View style={{ backgroundColor: 'tan', margin: 1, borderRadius: 10}} key={index}>
                                                   <TouchableOpacity
                                                     key={index}
                                                     onPress={() => handleItemSelected(item.value, item.label)}
@@ -778,8 +845,9 @@ const SearchByDate = () => {
                                                     isChecked={rating.isChecked}
                                                     onPress={() => handleRatingChange(rating.id)}
                                                     text={rating.label}
-                                                    textStyle={{ fontSize: 16, marginRight: 20, textDecorationLine: 'none'  }}
-                                                    iconStyle={{ borderRadius: 5, marginRight: -10 }}
+                                                    textStyle={{ marginRight: 20, fontWeight: '600' }}
+                                                    iconStyle={{ borderRadius: 2, marginRight: -10 }}
+                                                    innerIconStyle={{ borderRadius: 2, marginRight: 0 }}
                                                     fillColor="#007AFF"
                                                     unfillColor="rgba(251, 235, 202, 0.999)"            
                                                 />
@@ -805,7 +873,7 @@ const SearchByDate = () => {
                     </View>
                 </View>
             </View>
-
+)}
 
 {/* ========================================================================  STREAMERS AND SORT BY !!!  ===============================================================    */}
 
@@ -813,12 +881,10 @@ const SearchByDate = () => {
 
 {/* ========================================================================  STREAMERS AND SORT BY !!!  ===============================================================    */}
 
-
-
               {/* ============================================================     STREAMERS    !!!   STREAMERS      STREAMERS      !!!  ======================================================    */}
 
-
-              <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 15}}>
+{!collapsed && ( 
+              <View style={{flexDirection: 'row', height: '8%', borderWidth: 0, borderColor: 'red', marginTop: 3}}>
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
@@ -837,22 +903,23 @@ const SearchByDate = () => {
                         
                                 <Text style={{fontSize: 20, color: '#771F14', marginBottom: 10}}>Search by Streamer(s)</Text>
 
-                                    <View style={{ width: 350, borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'tan', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
+                                    <View style={{ width: 350, borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
 
                                           {streamerItems.map((item, index) => (
 
-                                              <View style={{ backgroundColor: 'tan', margin: .5}} key={index}>
+                                              <View style={{ backgroundColor: '', margin: .5}} key={index}>
                                                   <TouchableOpacity
                                                     key={index}
                                                     onPress={() => handleItemSelectedStreamer(item.value, item.label)}
                                                     style={[
-                                                      styles.item,
-                                                      isItemSelectedStreamer(item.value) && styles.selectedItem,
+                                                      styles.streamer,
+                                                      isItemSelectedStreamer(item.value) && styles.selectedStreamer,
                                                     ]}
                                                   >
-                                                    <Text style={isItemSelectedStreamer(item.value) && styles.selectedText}>
+                                                    {/* <Text style={isItemSelectedStreamer(item.value) && styles.selectedText}>
                                                       {item.label}
-                                                    </Text>
+                                                    </Text> */}
+                                                    <Image style={{height: 35, width: 70}} source={item.image} />
                                                   </TouchableOpacity>
                                               </View>
 
@@ -901,7 +968,7 @@ const SearchByDate = () => {
                                                 radioButtons={radioButtons}
                                                 onPress={handlePress}
                                                 selectedId={selectedValue}
-                                                containerStyle={{alignItems: 'flex-start'}}
+                                                containerStyle={{ alignItems: 'flex-start' }}
                                               />
                                             </View>
                                   </View>
@@ -923,11 +990,13 @@ const SearchByDate = () => {
             </View>
 
 
-
+)}
 
 {/* =====================================================================  ROW 4 --- 67% Height   !!!  SEARCH RESULTS !!!   ======================================================    */}
 
-            <View style={{height: '67%', borderWidth: 0, borderColor: 'purple', marginTop: -15}}>
+{loaded && !error &&  
+
+            <View style={{height: collapsed ? '95%': '67%', borderWidth: 0, borderColor: 'purple', marginTop: -15, marginLeft: 8}}>
                 <View style={styles.searchItems}>
                     <FlatList
                         numColumns={3}
@@ -941,6 +1010,16 @@ const SearchByDate = () => {
                 </View>
             </View>
 
+}
+
+{ !loaded && (
+  <View style={{height: collapsed ? '95%': '67%', borderWidth: 0, borderColor: 'purple', marginTop: -15, marginLeft: 8}}>
+    <ActivityIndicator size="large" />
+  </View>
+  
+  ) } 
+
+{error && (<Error />)}
 
         </SafeAreaView>
 
@@ -973,12 +1052,21 @@ const styles = StyleSheet.create({
     },
     item: {
       padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ccc',
+      //borderBottomWidth: 1,
+      //borderBottomColor: '#ccc',
     },
     selectedItem: {
       // backgroundColor: '#f0f0f0',
       backgroundColor: 'rgba(251, 235, 202, 0.999)'
+    },
+    streamer: {
+      padding: 3,
+      //borderBottomWidth: 1,
+      //borderBottomColor: '#ccc',
+    },
+    selectedStreamer: {
+      backgroundColor: 'tan',
+      // backgroundColor: 'rgba(251, 235, 202, 0.999)'
     },
     selectedText: {
       color: '#777',
