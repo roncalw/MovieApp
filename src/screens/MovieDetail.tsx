@@ -457,7 +457,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                     <ZoomableImage
                       imageWidth={screenWidth / 2.14}
                       imageHeight={screenHeight / 3.09}
-                      style={{ marginTop: 15, marginBottom: 5, height: screenHeight / 3.09, width: screenWidth / 2.14, alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
+                      style={{ marginTop: 15, marginBottom: 5, /*height: screenHeight / 3.09, width: screenWidth / 2.14,*/ alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
                       source = {
                             movieImageURL
                             ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}

@@ -122,7 +122,7 @@ class ZoomableImage extends Component<ZoomableImageProps, ZoomableImageState> {
       >
         <Image
           style={{
-            position: "absolute",
+            position: "relative",
             top: this.state.offsetTop + this.state.top,
             left: this.state.offsetLeft + this.state.left,
             width: this.props.imageWidth * this.state.zoom,
