@@ -18,6 +18,7 @@ import Navbar from '../../components/Navbar';
 import { formatCurrency } from "../utilities/formatCurrency"
 import Colors from '../../theme/Color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ZoomableImage from '../../components/ZoomableImage';
 
 /* =============================================================================================================================================================== */
 /*                                                                                                         NAVIGATION SETUP                                        */
@@ -63,9 +64,10 @@ const posterBackgroundImage = require('../../assets/images/hamburgerMenu.png');
 /*                                                                                                         DIMENSIONS SETUP                                        */
 /* =============================================================================================================================================================== */
 
-const height = Dimensions.get('screen').height;
+const screenHeight = Dimensions.get('screen').height;
+const screenWidth = Dimensions.get('screen').width;
 
-
+//console.log(screenHeight + ' ' + screenWidth);
 
 export default function MovieDetail({ navigation, route }: PropsType) {
 
@@ -452,14 +454,17 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                   resizeMode="repeat"
                 >
                 <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.75)'}}>
-                    <Image
-                      style={{ marginTop: 15, marginBottom: 5, height: 300, width: 200, alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
+                    <ZoomableImage
+                      imageWidth={screenWidth / 2.14}
+                      imageHeight={screenHeight / 3.09}
+                      style={{ marginTop: 15, marginBottom: 5, height: screenHeight / 3.09, width: screenWidth / 2.14, alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
                       source = {
                             movieImageURL
                             ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
                             : placeholderImage
                           }
-                          resizeMode='contain'
+
+                          /*resizeMode='contain'*/
                     />
                 </View>
 
@@ -776,7 +781,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   image: {
-    height: height / 2.5,
+    height: screenHeight / 2.5,
   },
   movieTitle: {
     fontSize: 24 ,
