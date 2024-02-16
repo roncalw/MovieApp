@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
+import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
 import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
@@ -55,6 +55,7 @@ type movieTrailerType = {
 const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
+const posterBackgroundImage = require('../../assets/images/hamburgerMenu.png');
 
 
 
@@ -443,18 +444,30 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         <View>
           {loaded && !error && (
             <ScrollView style={{ marginTop: 50 }}>
-                <Navbar navigation={navigation} page={'movieDetail'}/>        
-                  <Image
-                    style={styles.image}
-                    source = {
-                          movieImageURL
-                          ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
-                          : placeholderImage
-                        }
-                  />
+                <Navbar navigation={navigation} page={'movieDetail'}/>
+                <View style={{ backgroundColor: 'tan', }}>
+                <ImageBackground
+                  source={posterBackgroundImage}
+                  style={{flex: 1, width: '100%', height: '100%', }}
+                  resizeMode="repeat"
+                >
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.75)'}}>
+                    <Image
+                      style={{ marginTop: 15, marginBottom: 5, height: 300, width: 200, alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
+                      source = {
+                            movieImageURL
+                            ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
+                            : placeholderImage
+                          }
+                          resizeMode='contain'
+                    />
+                </View>
+
+                </ImageBackground>
+                  </View>        
                 <View style={styles.scrollViewContainer}>
 
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', position: 'absolute', top: -25, paddingRight: 25, paddingLeft: 15 }}>
+                    <View style={{flexDirection: 'row', borderWidth: 0, justifyContent: 'space-between', position: 'absolute', top: -25, paddingRight: 25, paddingLeft: 20 }}>
                       <View style={{flex: 1,  alignItems: 'flex-start', borderWidth: 0, marginTop: 5 }}>
                           <Pressable
                                     onPress={toggleHeartIcon}>
@@ -804,4 +817,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
 }
+
 })

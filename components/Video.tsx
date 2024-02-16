@@ -29,9 +29,9 @@ export default function Video({ keyId, onClose }: localProps) {
 
   useEffect(() => {
     const onChange = (orientation: string) => {
-      if (orientation === 'LANDSCAPE-RIGHT') {
+      if (orientation === 'LANDSCAPE-RIGHT' || orientation === 'LANDSCAPE-LEFT') {
         setPlaying(true); // Start playing
-        console.log('LANDSCAPE-RIGHT');
+        //console.log(orientation);
         setLandscape(true);
       }
       else {
@@ -44,10 +44,10 @@ export default function Video({ keyId, onClose }: localProps) {
 
 
   return (
-    <View style={{width: landscape ? 500 : windowDimensions.width,  height: 1000, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
+    <View style={{width: landscape ? windowDimensions.width / 1.75 : windowDimensions.width,  height: landscape ? 0 : windowDimensions.height, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
       {keyId != '0000' && (
         <YoutubePlayer
-          height={300}
+          height={windowDimensions.height / 1.45}
           play={playing}
           videoId={keyId}
           onChangeState={onStateChange}
