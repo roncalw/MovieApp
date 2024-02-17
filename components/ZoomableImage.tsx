@@ -70,7 +70,7 @@ class ZoomableImage extends Component<ZoomableImageProps, ZoomableImageState> {
       });
     } else {
       const zoomFactor = distance / this.state.initialDistance;
-      const newZoom = Math.max(1, this.state.zoom * zoomFactor);
+      const newZoom = Math.min(2, Math.max(1, this.state.zoom * zoomFactor));
       this.setState({
         zoom: newZoom,
       });
