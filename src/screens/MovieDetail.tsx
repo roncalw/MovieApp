@@ -18,7 +18,8 @@ import Navbar from '../../components/Navbar';
 import { formatCurrency } from "../utilities/formatCurrency"
 import Colors from '../../theme/Color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ZoomableImage from '../../components/ZoomableImage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import PinchableImage from '../../components/PinchableImage';
 
 /* =============================================================================================================================================================== */
 /*                                                                                                         NAVIGATION SETUP                                        */
@@ -145,10 +146,6 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         vote_count: number | undefined;
     }
 
-    // useEffect(() => {
-    // console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
-    //   }, [movieDetail]);
-
 
     const movieImageURL = movieDetail?.poster_path;
     const movieTitle = movieDetail?.title;
@@ -170,6 +167,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       }
     })
 
+  
     let movieRating: string = '';
 
     const jsonString = JSON.stringify(movieReleaseDateCountry);
@@ -190,7 +188,16 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     const movieAppFlatrateWatchProviders = movieWatchProviders?.results?.US?.flatrate;
 
-    //console.log(movieAppFlatrateWatchProviders);
+    console.log(JSON.stringify(movieWatchProviders));
+    //useEffect(() => {
+      // console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
+      //
+      //);
+
+    //}, [movieDetail]);
+  
+
+
 
     let movieStarRating = 1;
     if (movieVoteAverage){
@@ -447,29 +454,24 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           {loaded && !error && (
             <ScrollView style={{ marginTop: 50 }}>
                 <Navbar navigation={navigation} page={'movieDetail'}/>
-                <View style={{ backgroundColor: 'tan', }}>
-                <ImageBackground
-                  source={posterBackgroundImage}
-                  style={{flex: 1, width: '100%', height: '100%', }}
-                  resizeMode="repeat"
-                >
-                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.75)'}}>
-                    <ZoomableImage
-                      imageWidth={screenWidth / 2.14}
-                      imageHeight={screenHeight / 3.09}
-                      style={{ marginTop: 15, marginBottom: 5, /*height: screenHeight / 3.09, width: screenWidth / 2.14,*/ alignSelf: 'center', borderWidth: 10, borderRadius: 20}}
+ 
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black'}}>
+
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                <PinchableImage
+                      width={screenWidth / 2.14}
+                      height={screenHeight / 3.09}
+                      /*style={{ marginTop: 15, marginBottom: 5, height: screenHeight / 3.09, width: screenWidth / 2.14,alignSelf: 'center', borderWidth: 10, borderRadius: 20}}*/ 
                       source = {
                             movieImageURL
                             ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
                             : placeholderImage
                           }
-
-                          /*resizeMode='contain'*/
                     />
+                    </GestureHandlerRootView>
+
                 </View>
 
-                </ImageBackground>
-                  </View>        
                 <View style={styles.scrollViewContainer}>
 
                     <View style={{flexDirection: 'row', borderWidth: 0, justifyContent: 'space-between', position: 'absolute', top: -25, paddingRight: 25, paddingLeft: 20 }}>

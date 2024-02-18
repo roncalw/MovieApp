@@ -222,7 +222,7 @@ const SearchByDate = () => {
       { label: 'YouTube', image: imagePathYouTube, value: '192' },
       { label: 'Disney Plus', image: imagePathDisneyPlus, value: '337' },
       { label: 'Apple TV Plus', image: imagePathAppleTVPlus, value: '350' },
-      { label: 'Peacock', image: imagePathPeacock, value: '386' },
+      { label: 'Peacock', image: imagePathPeacock, value: '387' },
       { label: 'AMC+', image: imagePathAMCPlus, value: '526' },
       { label: 'Paramount+', image: imagePathParamountPlus, value: '531' },
     ];
@@ -342,8 +342,8 @@ const SearchByDate = () => {
     //=========================================================================    SUBMIT    ================================================================================
 
 
-    function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number) {
-        setLoaded(false);  
+    function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number, reSubmitted?: boolean) {
+      if (!reSubmitted) {setLoaded(false);}
         //console.log(beginDate);
         //console.log(endDate);
         //console.log(pageNum);
@@ -404,7 +404,7 @@ const SearchByDate = () => {
       const nextPage = page + 1; // Increment the page for the next fetch
       setPage(nextPage);
 
-      onSubmit('loadMore', ratingsAsString, queryDateBegin, queryDateEnd, genreString, nextPage)
+      onSubmit('loadMore', ratingsAsString, queryDateBegin, queryDateEnd, genreString, nextPage, true)
     };
 
         

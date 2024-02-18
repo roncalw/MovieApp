@@ -102,7 +102,7 @@ export const getMoviesByRating = async (movieRatings: string) => {
 export const getMoviesByDate = async (movieRatings: string, beginDate: string, endDate: string, movieGenres: string, movieStreamers: string, movieVoteCount: string, movieSortBy:string, pageNum: number) => {
 
 
-    //console.log(`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&sort_by=${movieSortBy}&page=${pageNum}`);
-    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&sort_by=${movieSortBy}&page=${pageNum}`)
+    console.log(`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&with_watch_monetization_types=flatrate&sort_by=${movieSortBy}&page=${pageNum}`);
+    const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&with_watch_monetization_types=flatrate&sort_by=${movieSortBy}&page=${pageNum}`)
     return resp.data.results;
 }
