@@ -91,7 +91,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
 
 /* =============================================================================================================================================================== */
-/*                                                                        CREATE THE DATA FUNCTION ON MOVIE DETAILS - MOVIE / MOVIE TRAILERS / STREAMERS           */
+/*                                                    DOES NOT GET YET - CREATES THE DATA FUNCTION ON MOVIE DETAILS - MOVIE / MOVIE TRAILERS / STREAMERS           */
 /* =============================================================================================================================================================== */
 
     const getData = () => {
@@ -158,21 +158,41 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const movieBudget = movieDetail?.budget;
     const movieRevenue = movieDetail?.revenue;
     const movieRuntime = movieDetail?.runtime;
+
+
+/* =============================================================================================================================================================== */
+/*                                                                                              MOVIE RATING                                                       */
+/* =============================================================================================================================================================== */
+    
+
+/* TO GET THE MOVIE RATING FOR THE US, YOU HAVE TO GET THE COUNTRIES */
     const movieReleaseDateCountries = movieDetail?.release_dates.results;
+
+/* YOU THEN HAVE TO PULL OUT THE US TO THEN LOOK INSIDE IT TO SEE THE LIST OF MOVIE RATINGS */
+
+/* THIS WILL BE THE VARIABLE TO REPRESENT THE COUNTRY WE ARE LOOKING FOR, THE US */
     let movieReleaseDateCountry: release_date_country | null = null;
 
+/* LOOL THROUGH THE COUNTRIES AND WHEN US IS FOUND, ASSIGN IT TO THE VARIABLE ABOVE */
     movieReleaseDateCountries?.map(release_dates => {      
       if (release_dates.iso_3166_1 === 'US') {
         movieReleaseDateCountry = release_dates;
       }
     })
 
+/* WE WILL NOW GET THE MOVIE RATING INSIDE THE US OBJECT */
   
     let movieRating: string = '';
 
+    /* TO READ THE OBJECTS INSIDE THE OBJECT USE THE STRINGIFY */
     const jsonString = JSON.stringify(movieReleaseDateCountry);
+
+    /* THEN PARSE THE STRINGIFIED OBJECT TO GET THE OBJECT */
     const jsonObject: release_date_country = JSON.parse(jsonString);
 
+    console.log(jsonObject);
+
+    /* LOOK INSIDE THE OBJECT TO THEN GET THE CERTIFICATION AND ASSIGN IT TO THE movieRating VARIABLE */
     if (jsonObject) {
       if (jsonObject.iso_3166_1) {
 
@@ -184,11 +204,20 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       }
     }
 
+
+/* =============================================================================================================================================================== */
+/*                                                                                              MOVIE WATCH PROVIDERS - STREAMERS                                  */
+/* =============================================================================================================================================================== */
+    
+/* USING THE STATE VARIABLE THAT WAS ASSIGNED DATA FROM A QUERY THAT RETURNS ALL WATCH PROVIDERS USING A MOVIE ID, 
+CREATE VARIABLES FOR THE DIFFERENT TYPES STREAMERS IN THAT DATA AND THEN ASSIGN THE DATA TO THESE TYPES ... IT'S ORGANIZING THE WATCH PROVIDERS BY THEIR TYPES 
+WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRATE) AND WHAT CAN BE RENTED (RENT)*/
+    
+    const movieAppAdsWatchProviders = movieWatchProviders?.results?.US?.ads;
+    const movieAppFlatrateWatchProviders = movieWatchProviders?.results?.US?.flatrate;
     const movieAppWatchProviders = movieWatchProviders?.results?.US?.rent;
 
-    const movieAppFlatrateWatchProviders = movieWatchProviders?.results?.US?.flatrate;
-
-    console.log(JSON.stringify(movieWatchProviders));
+    //console.log(JSON.stringify(movieWatchProviders));
     //useEffect(() => {
       // console.log(`Movie Detail JSON: ${JSON.stringify(localMovieStore)}`); // Log the updated selectedItems immediately after state update
       //
@@ -198,6 +227,9 @@ export default function MovieDetail({ navigation, route }: PropsType) {
   
 
 
+/* =============================================================================================================================================================== */
+/*                                                                        MOVIE WATCH DETAIL STUFF - VOTES, DESCRIPTION, RELEASE DATE, TRAILERS                    */
+/* =============================================================================================================================================================== */
 
     let movieStarRating = 1;
     if (movieVoteAverage){
@@ -237,6 +269,12 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     //if (movieReleaseDateCountry) { console.log(movieReleaseDateCountry); }
 
+
+/* =============================================================================================================================================================== */
+/*                                                                        CAST INFORMATION   - TO RENDER FROM A FLATLIST                                           */
+/* =============================================================================================================================================================== */
+
+
     const _renderCastItem: ListRenderItem<movieCastProfile> = ({item}) => {
       return (
         <View style={{alignItems: 'center', padding: 0, paddingRight: 10 }}>
@@ -260,6 +298,12 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         </View>
       );
     }; 
+
+
+/* =============================================================================================================================================================== */
+/*                                                                        CREW INFORMATION   - TO RENDER FROM A FLATLIST                                           */
+/* =============================================================================================================================================================== */
+
 
     const _renderCrewItem: ListRenderItem<movieCrewProfile> = ({item}) => {
       return (
@@ -286,12 +330,18 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     }; 
 
 
+/* =============================================================================================================================================================== */
+/*                                                                        STORING THE MOVIE LOCALLY                                                                */
+/* =============================================================================================================================================================== */
+
+    /* THE HEART */
     const [isFilled, setIsFilled] = useState(false);
 
+    /* LOCAL STORAGE */
     const [localMovieStore, setLocalMovieStore] = useState<localMovieStoreType>();
 
 
-
+    /* LOAD THE MOVIE DETAIL UP INTO A VARIABLE updatedLocalMovieStore, AND PUT THAT IN A FUNCTION TO UPDATE THE LOCAL MOVIE STORE VARIABLE CREATED IN THE PREVIOUS LIKE ABOVE  */
     const updateLocalMovieStore = useCallback(() => {
       if (movieDetail) {
         const updatedLocalMovieStore: localMovieStoreType = {
@@ -314,7 +364,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       }
     }, [movieDetail]);
 
-
+    /* LOAD THE MOVIE INTO THE localMovieStore OBJECT EVERY TIME THE PAGE LOADS, AND JUST ONCE (USING THE CONST IN THE PREVIOUS LINES ABOVE) */
     useEffect(() => {
       updateLocalMovieStore();
     }, [movieDetail, updateLocalMovieStore]);
@@ -336,6 +386,9 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     //   vote_average: movieDetail?.vote_average,
     //   vote_count: movieDetail?.vote_count
     // };
+
+
+    /* CREATE THE FUNCTION THAT WILL CHECK IF THE MOVIE IS ALREADY SAVED LOCALLY OR NOT, AND IF NOT LEAVE THE HEART ICON UNFILLED, OTHERWISE FILL IT */
 
     const checkHeartIcon = () => {
 
@@ -359,12 +412,14 @@ export default function MovieDetail({ navigation, route }: PropsType) {
           console.error('Error:', error);
         }
       };
+
+      /* THE localMovieStore OBJECT IS LOADED ON PAGE LOAD (SEE USE EFFECT ABOVE) SO THE IF SHOULD BE TRUE, SO THIS SHOULD ALWAYS RUN THE SIBLING CODE HERE, checkMovieData TO KNOW IF HEART SHOULD BE FILLED */
       if (localMovieStore)
       {checkMovieData(localMovieStore.id);}
 
     }
 
-
+    /* THIS CALLED WHEN CLICKING ON THE HEART ICON */
     const toggleHeartIcon = () => {
       //console.log(isFilled);
       //console.log('The heart was clicked on!');
@@ -374,6 +429,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       //   let movieArray1 = data ? JSON.parse(data) : [];
       //   console.log(movieArray1);
       // });
+
+/*SAVE THE MOVIE IF THE HEAR IS NOT FILLED IN */
 
       if (!isFilled) {
 
@@ -408,6 +465,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
         } else {
 
+          /* DELETE THE MOVIE FROM LOCAL STORAGE */
           const removeMovieById = async (movieId: number | undefined): Promise<void> => {
             try {
               const data = await AsyncStorage.getItem('movieData');
@@ -440,7 +498,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
 
     //checkHeartIcon();
-
+/* CHECKS THE STATE OF THE HEART ICON TO EITHER FILL IN OR NOT THE HEART ICON WHEN EVER THERE IS A CHANGE TO THE MOVIE STORE (NOT JUST ON PAGE LOAD) */
     useEffect(() => {
       checkHeartIcon();
       //console.log('Ran check heart icon');
@@ -453,8 +511,20 @@ export default function MovieDetail({ navigation, route }: PropsType) {
         <View>
           {loaded && !error && (
             <ScrollView style={{ marginTop: 50 }}>
+
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         NAB BAR                                                                          */}
+{/* ======================================================================================================================================================== */}
+
                 <Navbar navigation={navigation} page={'movieDetail'}/>
  
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         TOP IMAGE                                                                        */}
+{/* ======================================================================================================================================================== */}
+
+
                 <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black'}}>
 
                 <GestureHandlerRootView style={{ flex: 1 }}>
@@ -471,6 +541,11 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                     </GestureHandlerRootView>
 
                 </View>
+
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         HEART ICON                                                                       */}
+{/* ======================================================================================================================================================== */}
 
                 <View style={styles.scrollViewContainer}>
 
@@ -507,12 +582,23 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                                           </View>
                             </Pressable>
                       </View>
+
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         VIDEO PLAYER                                                                     */}
+{/* ======================================================================================================================================================== */}
+
+
                       <View style={{flex: 1,  alignItems: 'flex-end', borderWidth: 0 }}>
                         {movieTrailerKey != '0000' && (
                               <PlayButton handlePress={videoShown}/>
                           )}
                       </View>
                     </View>
+
+{/* ======================================================================================================================================================== */}
+{/*                                                           TITLE, GENRES, STARS, RATING, AND RELEASE DATE                                                 */}
+{/* ======================================================================================================================================================== */}
 
                     {movieTitle && (
                       <Text style={styles.movieTitle}>{movieTitle}</Text>)}
@@ -542,6 +628,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
                 </View>
 
+{/* ======================================================================================================================================================== */}
+{/*                                                                         CAST                                                                          */}
+{/* ======================================================================================================================================================== */}
+
                 <Text style={styles.textLabel}>Cast</Text>
 
                 {movieAppCast && (
@@ -554,6 +644,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                   />
                 </View>
                 )}
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         CREW                                                                          */}
+{/* ======================================================================================================================================================== */}
 
                 <Text style={styles.textLabel}>Crew</Text>
 
@@ -568,6 +662,10 @@ export default function MovieDetail({ navigation, route }: PropsType) {
                   />
                 </View>
                 )}
+
+{/* ======================================================================================================================================================== */}
+{/*                                                                         MOVIE BUDGET AND RUNTIME                                                         */}
+{/* ======================================================================================================================================================== */}
 
                 <Text style={styles.textLabel}>Details</Text>
                 <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
@@ -597,6 +695,42 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
                 <Text style={styles.textLabel}>Streaming on ...</Text>
 
+
+
+                                                            {/*                    FREE (ADS)                      */}
+
+
+                {!movieAppAdsWatchProviders && (
+
+                    <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
+                      <View><Text>Free - With Ads:</Text></View>
+                      <Text>(Not available)</Text>
+                    </View>
+
+                    )}
+
+                  {movieAppAdsWatchProviders && (
+
+                    <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
+                      <View><Text>Free - With Ads:</Text></View>
+                      {
+                        movieAppAdsWatchProviders.map(name => {
+                          return (
+                                    <View key={name.provider_id} style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+                                      <Image
+                                          style={{height: 30, width: 30,borderRadius: 5,}}
+                                          source={
+                                              name.logo_path
+                                              ? {uri: 'https://image.tmdb.org/t/p/w500'+name.logo_path}
+                                              : placeholderImage
+                                          }
+                                      />
+                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                    </View>
+                                )
+                        })
+                      }
+                    </View>)}
 
 
                                                             {/*                    FLAT RATES                      */}

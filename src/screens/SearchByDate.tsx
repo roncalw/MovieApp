@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
       //borderBottomColor: '#ccc',
     },
     selectedStreamer: {
-      backgroundColor: 'tan',
+      backgroundColor: 'red',
       // backgroundColor: 'rgba(251, 235, 202, 0.999)'
     },
     selectedText: {

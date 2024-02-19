@@ -109,6 +109,7 @@ export type movieCastProfile = {
   }
 
   export type streamTypes = {
+    ads: movieWatchProviderType[];
     flatrate: movieWatchProviderType[];
     rent: movieWatchProviderType[];
   }
