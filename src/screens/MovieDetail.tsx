@@ -525,21 +525,27 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 
 
-                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 25, backgroundColor: ''}}>
-
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                <PinchableImage
-                      width={screenWidth / 2.14}
-                      height={screenHeight / 3.09}
-                      /*style={{ marginTop: 15, marginBottom: 5, height: screenHeight / 3.09, width: screenWidth / 2.14,alignSelf: 'center', borderWidth: 10, borderRadius: 20}}*/ 
-                      source = {
-                            movieImageURL
-                            ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
-                            : placeholderImage
-                          }
-                    />
-                    </GestureHandlerRootView>
-
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 25, backgroundColor: 'tan'}}>
+                  <ImageBackground
+                    source={posterBackgroundImage}
+                    style={{flex: 1, width: '100%', height: '100%', }}
+                    resizeMode="repeat"
+                  >
+                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.75)'}}>
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        <PinchableImage
+                              width={screenWidth / 2.14}
+                              height={screenHeight / 3.09}
+                              /*style={{ marginTop: 15, marginBottom: 5, height: screenHeight / 3.09, width: screenWidth / 2.14,alignSelf: 'center', borderWidth: 10, borderRadius: 20}}*/ 
+                              source = {
+                                    movieImageURL
+                                    ? {uri: 'https://image.tmdb.org/t/p/w500'+movieImageURL}
+                                    : placeholderImage
+                                  }
+                            />
+                      </GestureHandlerRootView>
+                    </View>
+                  </ImageBackground>
                 </View>
 
 
