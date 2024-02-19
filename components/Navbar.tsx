@@ -130,9 +130,9 @@ if (page === 'home') {
     );
 } else {
     view = (
-        <View>
+        <View style={{borderWidth: 0, marginTop: 9}}>
             <TouchableOpacity onPress={() => {navigation.goBack()}}>
-                <Icon name={'chevron-back'} size={42} color={'#800000'} />
+                <Icon name={'chevron-back'} size={42} color={Colors.black} />
             </TouchableOpacity>
         </View>
     );

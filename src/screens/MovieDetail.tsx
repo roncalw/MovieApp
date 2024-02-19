@@ -190,7 +190,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     /* THEN PARSE THE STRINGIFIED OBJECT TO GET THE OBJECT */
     const jsonObject: release_date_country = JSON.parse(jsonString);
 
-    console.log(jsonObject);
+    //console.log(jsonObject);
 
     /* LOOK INSIDE THE OBJECT TO THEN GET THE CERTIFICATION AND ASSIGN IT TO THE movieRating VARIABLE */
     if (jsonObject) {
@@ -514,7 +514,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
 
 {/* ======================================================================================================================================================== */}
-{/*                                                                         NAB BAR                                                                          */}
+{/*                                                                         NAV BAR                                                                          */}
 {/* ======================================================================================================================================================== */}
 
                 <Navbar navigation={navigation} page={'movieDetail'}/>
@@ -525,7 +525,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 
 
-                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black'}}>
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 25, backgroundColor: ''}}>
 
                 <GestureHandlerRootView style={{ flex: 1 }}>
                 <PinchableImage
@@ -703,7 +703,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 {!movieAppAdsWatchProviders && (
 
                     <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Free - With Ads:</Text></View>
+                      <View><Text>Free (With Ads):</Text></View>
                       <Text>(Not available)</Text>
                     </View>
 
@@ -712,7 +712,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                   {movieAppAdsWatchProviders && (
 
                     <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Free - With Ads:</Text></View>
+                      <View><Text>Free (With Ads):</Text></View>
                       {
                         movieAppAdsWatchProviders.map(name => {
                           return (
@@ -808,7 +808,6 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 {/*                                                                         PRODUCTION COMPANIES                                                             */}
 {/* ======================================================================================================================================================== */}
-
 
 
                 {movieAppProductionCompanies && (
