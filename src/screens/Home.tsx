@@ -128,6 +128,31 @@ export type movieCastProfile = {
       provider_name: string;
     }
 
+  export type movieExternalIDs = {
+    id: number;
+    imdb_id: string;
+    wikidata_id: string;
+    facebook_id: string;
+    instagram_id: string;
+    twitter_id: string;
+  }
+
+
+  export type movieIMDBDataType = {
+    Title: string;
+    Awards: string;
+    Poster: string;
+    Ratings: movieIMDBRatingType[];
+    imdbRating: string;
+    imdbVotes: string;
+    imdbID: string;
+  }
+
+  export type movieIMDBRatingType = {
+    Source: string;
+    Value: string;
+  }
+
 
 type movieImage = [string, movieType];
 

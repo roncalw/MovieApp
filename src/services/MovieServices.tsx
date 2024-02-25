@@ -3,6 +3,9 @@ import axios, {AxiosError} from 'axios';
 const apiUrl = 'https://api.themoviedb.org/3';
 const apiKey = 'api_key=422ba447c0f2827f683854b2d4fa154b';
 
+const omdbApiUrl = 'https://www.omdbapi.com';
+const omdbApiKey = 'apikey=77bdf9d5';
+
 // Get Popular Movies
 export const getPopularMovies = async () =>{
     const resp = await axios.get(`${apiUrl}/movie/popular?${apiKey}`)
@@ -90,6 +93,19 @@ export const getMovieWatchProviders = async (id: number) => {
     return resp.data;
 }
 
+// Get External IDs, such as IMDB ID, Instagram, Twitter, Facebook
+export const getMovieExternalIDs = async (id: number) => {
+    const resp = await axios.get (`${apiUrl}/movie/${id}/external_ids?${apiKey}`)
+    return resp.data;
+}
+
+// Get IMDB Rating
+export const getMovieIMDBRating = async (imdbid: string) => {
+    console.log(`${omdbApiUrl}/?i=${imdbid}&${omdbApiKey}`);
+    const resp = await axios.get (`${omdbApiUrl}/?i=${imdbid}&${omdbApiKey}`)
+    return resp.data;
+}
+
 // Get Movies by Rating
 export const getMoviesByRating = async (movieRatings: string) => {
     //Add paramater for LTE date for release date (was pulling dates back from 2026)
@@ -100,8 +116,6 @@ export const getMoviesByRating = async (movieRatings: string) => {
 
 // Get Movies by Date
 export const getMoviesByDate = async (movieRatings: string, beginDate: string, endDate: string, movieGenres: string, movieStreamers: string, movieVoteCount: string, movieSortBy:string, pageNum: number) => {
-
-
     //console.log(`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&with_watch_monetization_types=flatrate&sort_by=${movieSortBy}&page=${pageNum}`);
     const resp = await axios.get (`${apiUrl}/discover/movie?${apiKey}&certification=${movieRatings}&certification_country=US&primary_release_date.gte=${beginDate}&primary_release_date.lte=${endDate}&region=US&with_genres=${movieGenres}&with_watch_providers=${movieStreamers}&vote_count.gte=${movieVoteCount}&watch_region=US&with_watch_monetization_types=flatrate&sort_by=${movieSortBy}&page=${pageNum}`)
     return resp.data.results;

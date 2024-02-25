@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
-import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country } from "../screens/Home"
+import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country, movieExternalIDs, movieIMDBDataType } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation'
-import { getMovie, getMovieTrailers, getMovieWatchProviders } from '../services/MovieServices';
+import { getMovie, getMovieExternalIDs, getMovieIMDBRating, getMovieTrailers, getMovieWatchProviders } from '../services/MovieServices';
 import { AxiosError } from 'axios';
 import Error from '../../components/Error';
 import StarRating  from 'react-native-star-rating';
@@ -86,6 +86,8 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const [movieDetail, setMovieDetail] = useState<movieType>();
     const [movieTrailers, setMovieTrailers] = useState<movieTrailerJson>();
     const [movieWatchProviders, setMovieWatchProviders] = useState<movieWatchProvidersType>();
+    const [movieExternalIDs, setMovieExternalIDs] = useState<movieExternalIDs>();
+    const [movieIMDBData, setMovieIMDBData] = useState<movieIMDBDataType>();
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<AxiosError | boolean>(false);
 
@@ -98,27 +100,57 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       return Promise.all([
         getMovie(movieId),
         getMovieTrailers(movieId),
+        getMovieExternalIDs(movieId),
         getMovieWatchProviders(movieId)
       ]);
     }
 
 
-/* =============================================================================================================================================================== */
-/*   LOAD THE DATA ON MOVIE DETAILS, USING THE FUNCTION ABOVE AND ADDING THE DATA TO THE USESTATE VARIABLES CREATED ABOVE - MOVIE / MOVIE TRAILERS / STREAMERS           */
-/* =============================================================================================================================================================== */
+/* ==================================================================================================================================================================================== */
+/*   LOAD THE DATA ON MOVIE DETAILS, USING THE FUNCTION ABOVE AND ADDING THE DATA TO THE USESTATE VARIABLES CREATED ABOVE - MOVIE / MOVIE TRAILERS / EXTERNAL IDS / STREAMERS           */
+/* ==================================================================================================================================================================================== */
 
     useEffect( () => {
       getData().then(
         ([
           movieDetailData,
           movieTrailersData,
+          movieExternalIDsData,
           movieWatchProvidersData
         ]) => {
           setMovieDetail(movieDetailData);
           setMovieTrailers(movieTrailersData);
-          setMovieWatchProviders(movieWatchProvidersData);      
+          setMovieExternalIDs(movieExternalIDsData);
+          setMovieWatchProviders(movieWatchProvidersData);
+          return [movieExternalIDsData]; // Return the data to the next then block
         }
-      ).catch(() => {
+      )
+      .then(([movieExternalIDsData]) => {
+
+        console.log(movieExternalIDsData);
+
+        const movieIMDBID = movieExternalIDsData?.imdb_id ? movieExternalIDsData.imdb_id : "";
+
+        console.log(movieIMDBID); // Output: "tt0111161"
+
+        const getExternalData = () => {
+          return Promise.all([
+            getMovieIMDBRating(movieIMDBID)
+          ]);
+        }
+
+        getExternalData().then(
+          ([
+            movieIMDBData
+          ]) => {
+            setMovieIMDBData(movieIMDBData);     
+          }
+        )
+
+        
+
+      })
+      .catch(() => {
         setError(true);
       }).finally(() => {
           setLoaded(true);
@@ -126,25 +158,16 @@ export default function MovieDetail({ navigation, route }: PropsType) {
 
     }, [movieId]);
 
-    const isFocused = useIsFocused();
-    
 
-    type localMovieStoreType = {
-        id: number | undefined;
-        adult: boolean | undefined;
-        backdrop_path: string | undefined;
-        genres: number[] | undefined;
-        original_language: string | undefined;
-        original_title: string | undefined;
-        overview: string | undefined;
-        popularity: number | undefined;
-        poster_path: string | undefined;
-        release_date: string | undefined;
-        title: string | undefined;
-        video: boolean | undefined;
-        vote_average: number | undefined;
-        vote_count: number | undefined;
-    }
+    const imdbRating = movieIMDBData?.imdbRating;
+    const imdbVotes = movieIMDBData?.imdbVotes;
+    
+    console.log('IMDB Rating: '+imdbRating); // Output: "7.5/10" 
+    console.log('IMDB Votes: '+imdbVotes); // Output: "1,000,000"
+
+
+    const isFocused = useIsFocused();
+
 
 
     const movieImageURL = movieDetail?.poster_path;
@@ -160,10 +183,70 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const movieRuntime = movieDetail?.runtime;
 
 
+
+
+/* ==================================================================================================================================================================================== */
+/*                                                                GET THE IMDB RATING USING THE EXTERNAL ID RETRIEVED IN THE PREVIOUS SECTION                                           */
+/* ==================================================================================================================================================================================== */
+
+// const movieIMDBID = movieExternalIDs?.imdb_id ? movieExternalIDs.imdb_id : "";
+// console.log(movieIMDBID); // Output: "tt0111161"
+
+// const getExternalData = () => {
+//   return Promise.all([
+//     getMovieIMDBRating(movieIMDBID)
+//   ]);
+// }
+
+
+// useEffect( () => {
+//   getExternalData().then(
+//     ([
+//       movieIMDBData
+//     ]) => {
+//       setMovieIMDBData(movieIMDBData);     
+//     }
+//   ).catch(() => {
+//     setError(true);
+//   }).finally(() => {
+//       setLoaded(true);
+//   });
+
+// }, [movieIMDBID]);
+
+
+  
+  // const imdbRating = movieIMDBData?.imdbRating;
+  // console.log(imdbRating); // Output: "7.5/10"  
+
+
+
+/* ==================================================================================================================================================================================== */
+/*                                                                                  DATA TYPE FOR LOCAL STORAGE                                                                         */
+/* ==================================================================================================================================================================================== */
+
+type localMovieStoreType = {
+  id: number | undefined;
+  adult: boolean | undefined;
+  backdrop_path: string | undefined;
+  genres: number[] | undefined;
+  original_language: string | undefined;
+  original_title: string | undefined;
+  overview: string | undefined;
+  popularity: number | undefined;
+  poster_path: string | undefined;
+  release_date: string | undefined;
+  title: string | undefined;
+  video: boolean | undefined;
+  vote_average: number | undefined;
+  vote_count: number | undefined;
+}
+
 /* =============================================================================================================================================================== */
 /*                                                                                              MOVIE RATING                                                       */
-/* =============================================================================================================================================================== */
-    
+/* =============================================================================================================================================================== */    
+
+
 
 /* TO GET THE MOVIE RATING FOR THE US, YOU HAVE TO GET THE COUNTRIES */
     const movieReleaseDateCountries = movieDetail?.release_dates.results;
@@ -262,7 +345,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
     //console.log(movieTitle);
 
-    // console.log(movieId);
+    //console.log(movieExternalIDs);
 
 
     //console.log(movieAppWatchProviders);
