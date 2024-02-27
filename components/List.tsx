@@ -22,7 +22,7 @@ export default function List( {navigation, title, content }: listProps) {
     return (
         <View  style={styles.list}>
             <View>
-                <Text style={styles.text}>{ title }</Text>
+                <Text adjustsFontSizeToFit= {true} numberOfLines= {1}  style={styles.text}>{ title }</Text>
             </View>
             <View>
             <FlatList 

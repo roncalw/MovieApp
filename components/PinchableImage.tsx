@@ -54,10 +54,11 @@ export default class PinchableImage extends React.Component<PinchableImageProps>
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // flex: 1,
+    // backgroundColor: '#fff',
+    // alignItems: 'center',
+    // justifyContent: 'center',
+    // alignSelf: 'center' 
   },
   image: {
     // You can customize additional styles here if needed

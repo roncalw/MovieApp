@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
-import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country, movieExternalIDs, movieIMDBDataType } from "../screens/Home"
+import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country, movieExternalIDs, movieIMDBDataType, movieIMDBRatingType } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +20,7 @@ import Colors from '../../theme/Color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PinchableImage from '../../components/PinchableImage';
+import getIMDBRating from '../utilities/getIMDBRating';
 
 /* =============================================================================================================================================================== */
 /*                                                                                                         NAVIGATION SETUP                                        */
@@ -58,6 +59,7 @@ const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
 const posterBackgroundImage = require('../../assets/images/hamburgerMenu.png');
+const imageIMDB = require('../../assets/images/imdb.png');
 
 
 
@@ -88,6 +90,7 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     const [movieWatchProviders, setMovieWatchProviders] = useState<movieWatchProvidersType>();
     const [movieExternalIDs, setMovieExternalIDs] = useState<movieExternalIDs>();
     const [movieIMDBData, setMovieIMDBData] = useState<movieIMDBDataType>();
+    const [movieIMDBRating, setMovieIMDBRating] = useState<movieIMDBRatingType>();
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<AxiosError | boolean>(false);
 
@@ -127,27 +130,32 @@ export default function MovieDetail({ navigation, route }: PropsType) {
       )
       .then(([movieExternalIDsData]) => {
 
-        console.log(movieExternalIDsData);
 
         const movieIMDBID = movieExternalIDsData?.imdb_id ? movieExternalIDsData.imdb_id : "";
 
-        console.log(movieIMDBID); // Output: "tt0111161"
+        //console.log(movieIMDBID); // Output: "tt0111161"
 
-        const getExternalData = () => {
+        //There are two methods here to get the IMDB rating one is from the OMDb API and the other is from the IMDB website itself
+        //We will use both to get the rating and votes, however, later below we will only use the rating from the IMDB website, but if for some reason
+        //the rating is not available from the website, we will use the rating from the OMDb API
+
+        const getExternalDataOMDB = () => {
           return Promise.all([
-            getMovieIMDBRating(movieIMDBID)
+            //This gets the IMDB rating and votes (and more) from the OMDB API
+            getMovieIMDBRating(movieIMDBID),
+            //This gets the IMDB rating and votes straight from the IMDB website
+            //getIMDBRating(movieIMDBID)
           ]);
         }
 
-        getExternalData().then(
+        getExternalDataOMDB().then(
           ([
-            movieIMDBData
+            movieIMDBData,
+            //movieIMDBRating
           ]) => {
-            setMovieIMDBData(movieIMDBData);     
-          }
-        )
-
-        
+            setMovieIMDBData(movieIMDBData);  
+            setMovieIMDBRating({ imdbRating: movieIMDBData.imdbRating, imdbVotes: movieIMDBData.imdbVotes } as movieIMDBRatingType);    
+        })
 
       })
       .catch(() => {
@@ -159,11 +167,25 @@ export default function MovieDetail({ navigation, route }: PropsType) {
     }, [movieId]);
 
 
-    const imdbRating = movieIMDBData?.imdbRating;
-    const imdbVotes = movieIMDBData?.imdbVotes;
+    //const imdbRatingOMDB = movieIMDBData?.imdbRating;
+    //const imdbVotesOMDB = movieIMDBData?.imdbVotes;
+   //const imdbPosterPath = movieIMDBData?.Poster;
     
-    console.log('IMDB Rating: '+imdbRating); // Output: "7.5/10" 
-    console.log('IMDB Votes: '+imdbVotes); // Output: "1,000,000"
+    //console.log('IMDB Rating: '+imdbRating); // Output: "7.5/10" 
+    //console.log('IMDB Votes: '+imdbVotes); // Output: "1,000,000"
+    //console.log('Poster Path: '+imdbPosterPath); // Output: "1,000,000"
+
+
+    //let imdbRating = imdbRatingOMDB === 'N/A' ? 'No Data' : imdbRatingOMDB;
+    //let imdbVotes = imdbVotesOMDB === 'N/A' ? '' : imdbVotesOMDB;
+
+    //setMovieIMDBRating ({imdbRating, imdbVotes })
+
+   // setMovieIMDBDRating(movieIMDBRating);
+
+
+    //imdbRating = imdbRatingScraped;
+    //imdbVotes = imdbVotesScraped;
 
 
     const isFocused = useIsFocused();
@@ -374,8 +396,8 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
             </View>
 
             <View style={{display: 'flex', alignItems: 'center', width: 115}}>
-              <Text style={{fontWeight: 'bold', textAlign: 'center'}}>{item.name}</Text>
-              <Text style={{textAlign: 'center'}}>{item.character}</Text>
+              <Text adjustsFontSizeToFit= {true} numberOfLines= {2} style={{fontWeight: 'bold', textAlign: 'center'}}>{item.name}</Text>
+              <Text adjustsFontSizeToFit= {true} numberOfLines= {2} style={{textAlign: 'center'}}>{item.character}</Text>
             </View>
 
         </View>
@@ -404,8 +426,8 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
             </View>
 
             <View style={{display: 'flex', alignItems: 'center', width: 110}}>
-              <Text style={{fontWeight: 'bold', textAlign: 'center'}}>{item.name}</Text>
-              <Text style={{textAlign: 'center'}}>{item.job}</Text>
+              <Text adjustsFontSizeToFit= {true} numberOfLines= {2} style={{fontWeight: 'bold', textAlign: 'center'}}>{item.name}</Text>
+              <Text adjustsFontSizeToFit= {true} numberOfLines= {2} style={{textAlign: 'center'}}>{item.job}</Text>
             </View>
 
         </View>
@@ -589,12 +611,65 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
 
 
+  const scrapeIMDBWebsite = async () => {
+    //console.log(`Scraping IMDB Website...${movieIMDBData?.imdbID}`);
+    setMovieIMDBRating({ imdbRating: 'Loading...', imdbVotes: '' } as movieIMDBRatingType);    
+
+    const getExternalDataScraped = async () => {
+      return Promise.all([
+        //This gets the IMDB rating and votes straight from the IMDB website
+        getIMDBRating(movieIMDBData?.imdbID)
+      ]);
+    }
+
+    try {
+      const [movieIMDBRating] = await getExternalDataScraped();
+
+      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : NaN; // Convert the string to a number, or NaN if it's null or undefined
+
+
+      if (!isNaN(imdbRatingScrapedCheck)) {
+        setMovieIMDBRating(movieIMDBRating);
+        //console.log('IMDB Rating ScrapedCheck Complete: ');
+      } 
+
+
+      //console.log('IMDB Rating Scraped: '+movieIMDBRating.imdbRating); // Output: "7.5/10"
+      //console.log('IMDB Votes Scraped: '+movieIMDBRating.imdbVotes); // Output: "1,000,000"
+
+    } catch (error) {
+
+      console.error('Error scraping IMDB website:', error);
+    }
+}
+
+
+ 
+
+
+/* ==========================================================     BEGINNING OF THE VIEW  ===================================================================== */
+
+/* ==========================================================     BEGINNING OF THE VIEW   =====================================================================*/
+
+/* ==========================================================     BEGINNING OF THE VIEW  ===================================================================== */
+
+/* ==========================================================     BEGINNING OF THE VIEW   =====================================================================*/
+
+/* ==========================================================     BEGINNING OF THE VIEW  ===================================================================== */
+
+/* ==========================================================     BEGINNING OF THE VIEW   =====================================================================*/
+
+/* ==========================================================     BEGINNING OF THE VIEW  ===================================================================== */
+
+/* ==========================================================     BEGINNING OF THE VIEW   =====================================================================*/
+
+
+
     return (
       <React.Fragment>
         <View>
           {loaded && !error && (
             <ScrollView style={{ marginTop: 50 }}>
-
 
 {/* ======================================================================================================================================================== */}
 {/*                                                                         NAV BAR                                                                          */}
@@ -608,14 +683,18 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 
 
-                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 25, backgroundColor: 'tan'}}>
+                <View style={{marginTop: 25,}}>
                   <ImageBackground
                     source={posterBackgroundImage}
                     style={{flex: 1, width: '100%', height: '100%', }}
                     resizeMode="repeat"
                   >
-                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.75)'}}>
-                      <GestureHandlerRootView style={{ flex: 1 }}>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10, backgroundColor: 'rgba(255, 255, 255, 0.75)' }}>
+
+
+                    <View style={{flex: 1, alignItems: 'center', width: '100%', borderWidth: 0, paddingLeft: 80, }}>
+                      <GestureHandlerRootView style={{ flex: 1, }}>
                         <PinchableImage
                               width={screenWidth / 2.14}
                               height={screenHeight / 3.09}
@@ -628,6 +707,21 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                             />
                       </GestureHandlerRootView>
                     </View>
+
+
+                    <View style={{ width: '0%', paddingLeft: 80, }}>
+                      <TouchableOpacity style={{flexDirection: 'column', alignItems: 'center', height: '25%', borderWidth: 0, marginLeft: -80, marginTop: 12, }} onPress={() => scrapeIMDBWebsite()}>
+    
+                          <Image source={imageIMDB} style={{width: 42, height: 20, }}/>
+                          <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{ marginTop: 0, fontWeight: 'bold', color: '#800000', fontSize: 13,  }}>{movieIMDBRating?.imdbRating}</Text>
+                          <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{ marginTop: 0, fontWeight: '400', fontSize: 10, color: '#800000' }}>{movieIMDBRating?.imdbVotes}</Text>
+                  
+                      </TouchableOpacity>
+                    </View>
+                    
+                  </View>
+
+
                   </ImageBackground>
                 </View>
 
@@ -690,7 +784,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 
                     {movieTitle && (
-                      <Text style={styles.movieTitle}>{movieTitle}</Text>)}
+                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={styles.movieTitle}>{movieTitle}</Text>)}
 
                     {movieGenres && (
                       <View style={styles.genresContainer}>
@@ -707,13 +801,13 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                       rating={movieStarRating}
                       fullStarColor={'gold'}
                     />
-                    <Text style={styles.overviewContainer}>{movieOverview}</Text>
+                    <Text adjustsFontSizeToFit= {true} numberOfLines= {10} style={styles.overviewContainer}>{movieOverview}</Text>
 
                     {movieRating && (
                       <Text style={{fontWeight: 'bold'}}>{'Rated: ' + movieRating}</Text>
                     )}
 
-                    <Text style={styles.releaseDateContainer}>{'Release Date: ' + movieReleaseDate}</Text>    
+                    <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={styles.releaseDateContainer}>{'Release Date: ' + movieReleaseDate}</Text>    
 
                 </View>
 
@@ -814,7 +908,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -850,7 +944,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -886,7 +980,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -918,7 +1012,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text style={{marginLeft: 10}}>{name.name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.name}</Text>
                                     </View>
                                 )
                         })
@@ -926,14 +1020,14 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                     </View>)}
 
                 {movieAppProductionCountries && (
-                      <Text style={styles.textLabel}>Production Locations</Text>
+                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={styles.textLabel}>Production Locations</Text>
                 )}
 
                 {movieAppProductionCountries && (
                     <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee'}}>
                       {
                         movieAppProductionCountries.map((name: production_country) => {
-                          return <Text key={name.iso_3166_1} style={{marginLeft: 10}}>-{name.name}-</Text>
+                          return <Text adjustsFontSizeToFit= {true} numberOfLines= {1} key={name.iso_3166_1} style={{marginLeft: 10}}>-{name.name}-</Text>
                         })
                       }
                     </View>)}

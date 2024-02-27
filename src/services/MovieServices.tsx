@@ -101,7 +101,7 @@ export const getMovieExternalIDs = async (id: number) => {
 
 // Get IMDB Rating
 export const getMovieIMDBRating = async (imdbid: string) => {
-    console.log(`${omdbApiUrl}/?i=${imdbid}&${omdbApiKey}`);
+    //console.log(`${omdbApiUrl}/?i=${imdbid}&${omdbApiKey}`);
     const resp = await axios.get (`${omdbApiUrl}/?i=${imdbid}&${omdbApiKey}`)
     return resp.data;
 }

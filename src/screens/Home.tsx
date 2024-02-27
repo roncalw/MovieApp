@@ -142,15 +142,21 @@ export type movieCastProfile = {
     Title: string;
     Awards: string;
     Poster: string;
-    Ratings: movieIMDBRatingType[];
+    Ratings: movieRatingType[];
     imdbRating: string;
     imdbVotes: string;
     imdbID: string;
   }
 
-  export type movieIMDBRatingType = {
+  //Not using until I put in a rating for Rottent Tomatoes (The movieIMDBDataType is what you get from the OMDB API, and it has Rotten Tomatoes in the Ratings collection)
+  export type movieRatingType = {
     Source: string;
     Value: string;
+  }
+
+  export type movieIMDBRatingType = {
+    imdbRating: string | undefined;
+    imdbVotes: string | undefined;
   }
 
 

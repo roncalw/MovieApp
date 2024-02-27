@@ -50,7 +50,7 @@ if (page === 'home') {
             />
             </View> */}
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
-                <Text style={{marginLeft: 40, color: '#771F14', fontSize: 24, marginTop: -10}}>Advanced Search</Text>
+                <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 40, color: '#771F14', fontSize: 24, marginTop: -10}}>Advanced Search</Text>
             </View>
             <View style={{width: '15%', }}></View>
         </View>
@@ -123,15 +123,15 @@ if (page === 'home') {
                 </TouchableOpacity>
             </View>
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
-                <Text style={{marginLeft: 5, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Movie Title</Text>
+                <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 5, color: '#771F14', fontSize: 24, marginTop: -10}}>Search by Movie Title</Text>
             </View>
             <View style={{width: '15%', }}></View>
         </View>
     );
 } else {
     view = (
-        <View style={{borderWidth: 0, marginTop: 14, marginLeft: 10, marginBottom: -15}}>
-            <TouchableOpacity onPress={() => {navigation.goBack()}}>
+        <View style={{width: '25%', borderWidth: 0, marginTop: 14, marginLeft: 10, marginBottom: -15}}>
+            <TouchableOpacity style={{borderWidth: 0, width: '100%'}} onPress={() => {navigation.goBack()}}>
                 <Icon name={'chevron-back'} size={42} color={'#800000'} />
             </TouchableOpacity>
         </View>

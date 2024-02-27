@@ -761,7 +761,7 @@ const SearchByDate = () => {
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
                             <TouchableOpacity onPress={openPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
-                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20, }}>Choose Genre(s)</Text>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20, }}>Genre {'>'}</Text>
                             </TouchableOpacity>
 
                             <Modal
@@ -823,7 +823,7 @@ const SearchByDate = () => {
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
                             <TouchableOpacity onPress={openShowRatingsPicker} style={{ padding: 10, height: 45}}>
-                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Rating(s)</Text>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Rating {'>'}</Text>
                             </TouchableOpacity>
 
                             <Modal
@@ -889,7 +889,7 @@ const SearchByDate = () => {
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
                             <TouchableOpacity onPress={openStreamersPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
-                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Streamer(s)</Text>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Streaming On {'>'}</Text>
                             </TouchableOpacity>
 
                             <Modal
@@ -951,7 +951,7 @@ const SearchByDate = () => {
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
                             <TouchableOpacity onPress={openSortByPicker} style={{ padding: 10, height: 45, marginBottom: 0}}>
-                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Choose Sort By</Text>
+                              <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Sort By {'>'}</Text>
                             </TouchableOpacity>
 
                             <Modal
