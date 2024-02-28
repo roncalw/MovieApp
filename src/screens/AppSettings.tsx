@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, Alert, Text, SafeAreaView, Switch } from 'react-native';
+import { View, TextInput, Button, Alert, Text, SafeAreaView, Switch, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from '../../components/Navbar';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LogLevel} from 'react-native-onesignal';
 import  { OneSignal }  from 'react-native-onesignal';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 
 const AppSettings = () => {
@@ -61,6 +62,24 @@ const AppSettings = () => {
 
 
 
+    const appStoreUrl = 'https://apps.apple.com/us/app/its-movie-time/id6465793035'; // Replace with your app's URL
+
+    const openAppStore = async () => {
+      try {
+        const supported = await Linking.canOpenURL(appStoreUrl);
+        if (supported) {
+          await Linking.openURL(appStoreUrl);
+        } else {
+          console.error('Cannot open URL:', appStoreUrl);
+        }
+      } catch (error) {
+        console.error('Error opening URL:', error);
+      }
+    };
+
+
+
+
   return (
     <SafeAreaView style={{flexDirection: 'column'}}>
 
@@ -81,6 +100,8 @@ const AppSettings = () => {
 
 
         <View style={{height: '95%', borderWidth: 0, borderColor: 'blue', marginBottom: 0, marginTop: 40}}>
+
+        <TouchableOpacity onPress={openAppStore}><Text style={{marginBottom: 25, fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Check for Update</Text></TouchableOpacity>
    
           <Button title="Clear Movie Favorites" onPress={clearStorage} />
 
@@ -94,7 +115,7 @@ const AppSettings = () => {
               trackColor={{ false: 'grey', true: '#007BFF' }} // Colors for the switch track primary: 007BFF  default switch: 4CD964
                 />
           </View>
-          <Text style={{alignSelf: 'center', marginTop: -25, marginLeft: -45}}>({isSubscribed ? 'Subscribed' : 'Not Subscribed'})</Text> 
+          <Text style={{alignSelf: 'center', marginTop: -25}}>({isSubscribed ? 'Subscribed' : 'Not Subscribed'})</Text> 
 
         </View>
 
