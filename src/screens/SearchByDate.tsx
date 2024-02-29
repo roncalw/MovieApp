@@ -771,11 +771,11 @@ const SearchByDate = () => {
                               style={{}}
                             >
 
-                                <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
-                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: -5}}>Search by Genre(s)</Text>
+                                <View style={{width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                                    <Text style={{fontSize: 20, color: '#771F14', marginBottom: -5, marginTop: 5}}>Search by Genre(s)</Text>
 
 
-                                    <View style={{ borderRadius: 25, margin: 5, marginBottom: -5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
+                                    <View style={{ borderRadius: 25, margin: 5, marginBottom: 0, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
 
 
                                           {items.map((item, index) => (
@@ -802,9 +802,11 @@ const SearchByDate = () => {
                                 </View>
 
                             {/* BUTTON TO CLOSE GENRE PICKER */}
-                            <TouchableOpacity onPress={closePicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
-                              <Text style={{alignSelf: 'center', }}>Close</Text>
+                            <TouchableOpacity onPress={closePicker} style={{ alignSelf: 'center', alignItems: 'center', justifyContent: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5 }}>
+                              <Text style={{ alignSelf: 'center' }}>Close</Text>
                             </TouchableOpacity>
+
+
                                 
                             </Modal>
                             
@@ -859,8 +861,8 @@ const SearchByDate = () => {
 
                             
                             {/* BUTTON TO CLOSE RATING PICKER */}
-                            <TouchableOpacity onPress={closeShowRatingsPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
-                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
+                            <TouchableOpacity onPress={closeShowRatingsPicker} style={{alignSelf: 'center', alignItems: 'center', justifyContent: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5 }}>
+                              <Text style={{ alignSelf: 'center', }}>Close</Text>
                             </TouchableOpacity>
 
 
@@ -901,7 +903,7 @@ const SearchByDate = () => {
 
                                 <View style={{height: 200, width: 400, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
                         
-                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: 10}}>Search by Streamer(s)</Text>
+                                <Text style={{fontSize: 20, color: '#771F14', marginBottom: 5, marginTop: 5}}>Search by Streamer(s)</Text>
 
                                     <View style={{ width: 350, borderRadius: 25, margin: 5, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '', padding: 5, justifyContent: 'center', alignItems: 'center', }}>
 
@@ -930,7 +932,7 @@ const SearchByDate = () => {
                                 </View>
 
                             {/* BUTTON TO CLOSE GENRE PICKER */}
-                            <TouchableOpacity onPress={closeStreamersPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                            <TouchableOpacity onPress={closeStreamersPicker} style={{alignSelf: 'center', alignItems: 'center', justifyContent: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5 }}>
                               <Text style={{alignSelf: 'center', }}>Close</Text>
                             </TouchableOpacity>
                                 
@@ -974,8 +976,8 @@ const SearchByDate = () => {
                                   </View>
 
                             {/* BUTTON TO CLOSE RATING PICKER */}
-                            <TouchableOpacity onPress={closeSortByPicker} style={{alignSelf: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 10, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
-                              <Text style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>Close</Text>
+                            <TouchableOpacity onPress={closeSortByPicker} style={{alignSelf: 'center', alignItems: 'center', justifyContent: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5 }}>
+                              <Text style={{ alignSelf: 'center',}}>Close</Text>
                             </TouchableOpacity>
 
 
@@ -1051,7 +1053,10 @@ const styles = StyleSheet.create({
       color: '#333',
     },
     item: {
-      padding: 10,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingRight: 10,
+      paddingLeft: 10
       //borderBottomWidth: 1,
       //borderBottomColor: '#ccc',
     },
