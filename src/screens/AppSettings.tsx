@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LogLevel} from 'react-native-onesignal';
 import  { OneSignal }  from 'react-native-onesignal';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import Config from 'react-native-config';
 
 
 const AppSettings = () => {
@@ -24,7 +25,7 @@ const AppSettings = () => {
 
     setIsSubscribed(OneSignal.User.pushSubscription.getOptedIn());
 
-  
+
   }, []);
 
 
@@ -101,7 +102,9 @@ const AppSettings = () => {
 
         <View style={{height: '95%', borderWidth: 0, borderColor: 'blue', marginBottom: 0, marginTop: 40}}>
 
-        <TouchableOpacity onPress={openAppStore}><Text style={{marginBottom: 25, fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Check for Update</Text></TouchableOpacity>
+        <TouchableOpacity onPress={openAppStore}><Text style={{fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Check for Update</Text></TouchableOpacity>
+   
+        <Text style={{alignSelf: 'center', marginBottom: 25}}>Version: {Config.VERSION}</Text>
    
           <Button title="Clear Movie Favorites" onPress={clearStorage} />
 

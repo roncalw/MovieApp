@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PinchableImage from '../../components/PinchableImage';
 import getIMDBRating from '../utilities/getIMDBRating';
+import { formatNumber } from '../utilities/formatNumber';
 
 /* =============================================================================================================================================================== */
 /*                                                                                                         NAVIGATION SETUP                                        */
@@ -154,7 +155,14 @@ export default function MovieDetail({ navigation, route }: PropsType) {
             //movieIMDBRating
           ]) => {
             setMovieIMDBData(movieIMDBData);  
-            setMovieIMDBRating({ imdbRating: movieIMDBData.imdbRating, imdbVotes: movieIMDBData.imdbVotes } as movieIMDBRatingType);    
+            setMovieIMDBRating({
+
+              imdbRating: movieIMDBData.imdbRating === 'N/A' ? 'No Data' : movieIMDBData.imdbRating ? movieIMDBData.imdbRating : 'No Data',
+              imdbVotes: movieIMDBData.imdbVotes === 'N/A' ? 'Tap to Refresh' : movieIMDBData.imdbVotes ? formatNumber(movieIMDBData.imdbVotes) : 'Tap to Refresh',
+
+                //imdbRating: movieIMDBData.imdbRating, imdbVotes: movieIMDBData.imdbVotes 
+              
+              } as movieIMDBRatingType);    
         })
 
       })
@@ -631,7 +639,10 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
       if (!isNaN(imdbRatingScrapedCheck)) {
         setMovieIMDBRating(movieIMDBRating);
         //console.log('IMDB Rating ScrapedCheck Complete: ');
-      } 
+      } else {
+        //console.log('IMDB Rating ScrapedCheck Failed: ');
+        setMovieIMDBRating({ imdbRating: 'No Data', imdbVotes: '' } as movieIMDBRatingType);
+      }
 
 
       //console.log('IMDB Rating Scraped: '+movieIMDBRating.imdbRating); // Output: "7.5/10"
@@ -784,7 +795,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 {/* ======================================================================================================================================================== */}
 
                     {movieTitle && (
-                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={styles.movieTitle}>{movieTitle}</Text>)}
+                      <Text adjustsFontSizeToFit= {true} numberOfLines= {2} style={[styles.movieTitle, { textAlign: 'center', textAlignVertical: 'center' }]}>{movieTitle}</Text>)}
 
                     {movieGenres && (
                       <View style={styles.genresContainer}>
@@ -801,7 +812,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                       rating={movieStarRating}
                       fullStarColor={'gold'}
                     />
-                    <Text adjustsFontSizeToFit= {true} numberOfLines= {10} style={styles.overviewContainer}>{movieOverview}</Text>
+                    <Text adjustsFontSizeToFit= {true} numberOfLines= {20} style={styles.overviewContainer}>{movieOverview}</Text>
 
                     {movieRating && (
                       <Text style={{fontWeight: 'bold'}}>{'Rated: ' + movieRating}</Text>
@@ -1106,6 +1117,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 23,
     marginBottom: 10,
+    alignSelf: 'center',
   },
   overviewContainer: {
     padding: 15,
