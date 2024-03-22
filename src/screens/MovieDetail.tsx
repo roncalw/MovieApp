@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
+import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem, Platform } from 'react-native';
 import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country, movieExternalIDs, movieIMDBDataType, movieIMDBRatingType } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
@@ -633,8 +633,11 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
     try {
       const [movieIMDBRating] = await getExternalDataScraped();
 
-      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : NaN; // Convert the string to a number, or NaN if it's null or undefined
+      //console.log('IMDB Rating: '+movieIMDBRating.imdbRating); // Output: "7.5/10"
 
+      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : 100; // Convert the string to a number, or NaN if it's null or undefined
+
+      //console.log('IMDB Rating ScrapedCheck: '+imdbRatingScrapedCheck);
 
       if (!isNaN(imdbRatingScrapedCheck)) {
         setMovieIMDBRating(movieIMDBRating);
@@ -680,7 +683,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
       <React.Fragment>
         <View>
           {loaded && !error && (
-            <ScrollView style={{ marginTop: 50 }}>
+            <ScrollView style={{ ...Platform.select({ios: {marginTop: 50}, android: {marginTop: -15}}), borderWidth: 0 }}>
 
 {/* ======================================================================================================================================================== */}
 {/*                                                                         NAV BAR                                                                          */}
@@ -779,7 +782,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
 
 {/* ======================================================================================================================================================== */}
-{/*                                                                         VIDEO PLAYER                                                                     */}
+{/*                                                                         VIDEO PLAYER BUTTON                                                              */}
 {/* ======================================================================================================================================================== */}
 
 
@@ -1079,7 +1082,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}              
-                  style={{ marginTop: 50 }}>
+                  style={{ ...Platform.select({ios: {marginTop: 50}, android: {marginTop: 0}}) }}> 
                   <Icon name={'chevron-back'} size={40} color={'black'} />
                 </TouchableOpacity>
 

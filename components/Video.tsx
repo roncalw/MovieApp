@@ -44,7 +44,7 @@ export default function Video({ keyId, onClose }: localProps) {
 
 
   return (
-    <View style={{width: landscape ? windowDimensions.width / 1.75 : windowDimensions.width,  height: landscape ? 0 : windowDimensions.height, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
+    <View style={{borderColor: 'red', borderWidth: 0, width: landscape ? windowDimensions.width / 1.75 : windowDimensions.width,  height: landscape ? 0 : windowDimensions.height, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
       {keyId != '0000' && (
         <YoutubePlayer
           height={windowDimensions.height / 1.45}
