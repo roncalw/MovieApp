@@ -10,7 +10,7 @@ const CustomHeaderLeft: React.FC = () => {
     navigation.dispatch(DrawerActions.toggleDrawer());
   };
 
-  const placeholderImage = require('../assets/images/placeholder.png');
+  const placeholderImage = require('../assets/images/placeholder.jpg');
 
 
   return (

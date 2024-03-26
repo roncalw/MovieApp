@@ -59,7 +59,7 @@ type movieTrailerType = {
 const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
-const posterBackgroundImage = require('../../assets/images/hamburgerMenu.png');
+const posterBackgroundImage = require('../../assets/images/hamburgermenu.jpg');
 const imageIMDB = require('../../assets/images/imdb.png');
 
 
@@ -635,7 +635,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
       //console.log('IMDB Rating: '+movieIMDBRating.imdbRating); // Output: "7.5/10"
 
-      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : 100; // Convert the string to a number, or NaN if it's null or undefined
+      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : NaN; // Convert the string to a number, or NaN if it's null or undefined
 
       //console.log('IMDB Rating ScrapedCheck: '+imdbRatingScrapedCheck);
 
