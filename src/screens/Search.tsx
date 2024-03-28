@@ -12,6 +12,7 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { RootStackParamList } from "../../components/MainNavigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Navbar from "../../components/Navbar";
+import Colors from '../../theme/Color';
 
 type searchProps = {
     navigation:  NativeStackNavigationProp<RootStackParamList>
@@ -89,7 +90,7 @@ function Search({ navigation }: searchProps) {
                         onPress={() => {
                             onSubmit(text);
                         } }>
-                        <Icon name={'search-outline'} size={30} />
+                        <Icon  style={{color: Colors.black}} name={'search-outline'} size={30} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -131,12 +132,14 @@ const styles = StyleSheet.create({
         flexBasis: 'auto',
         flexGrow: 1,
         paddingRight: 8,
+        color: Colors.black,
     },
     input: {
         borderRadius: 15,
         borderWidth: 0.5,
         height: 50,
-        padding: 8
+        padding: 8,
+        color: Colors.black,
     },
     container: {
         padding: 8,

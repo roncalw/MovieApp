@@ -23,7 +23,7 @@ const Drawer = () => {
 
   const Drawer = createDrawerNavigator()
 
-  const logoImage = require('../assets/images/placeholder.png');
+  const logoImage = require('../assets/images/placeholder.jpg');
   const backgroundImage = require('../assets/images/GreyBackGroundImage.jpg');
 
   const shareWithFriend = async () => {

@@ -9,7 +9,7 @@ export type cardProps = {
     navigation: NativeStackNavigationProp<RootStackParamList>;
 }
 
-const placeholderImage = require('../assets/images/placeholder.png');
+const placeholderImage = require('../assets/images/placeholder.jpg');
 
 const Card = React.memo(({ navigation, item }: cardProps) => {
 

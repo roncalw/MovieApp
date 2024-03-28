@@ -1,4 +1,4 @@
-package com.movieapp
+package com.codefest.movieapp
 
 import android.app.Application
 import com.facebook.react.PackageList

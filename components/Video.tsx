@@ -42,9 +42,11 @@ export default function Video({ keyId, onClose }: localProps) {
     return () => Orientation.removeOrientationListener(onChange);
   }, []);
 
+//...Platform.select({ios: {marginTop: 50}, android: {marginTop: -15}})
 
   return (
-    <View style={{borderColor: 'red', borderWidth: 0, width: landscape ? windowDimensions.width / 1.75 : windowDimensions.width,  height: landscape ? 0 : windowDimensions.height, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
+    <View style={{width: '100%', height: '100%', borderWidth: 0, borderColor: 'red', backgroundColor: landscape ? 'black' : 'transparent', alignItems: 'center'}}>
+    <View style={{borderColor: 'red', borderWidth: 0, width: landscape ? windowDimensions.width / 1.75 : windowDimensions.width,  height: windowDimensions.height, backgroundColor: playing ? 'black' : 'transparent', marginTop: landscape ? 0 : 0, }}>
       {keyId != '0000' && (
         <YoutubePlayer
           height={windowDimensions.height / 1.45}
@@ -58,6 +60,7 @@ export default function Video({ keyId, onClose }: localProps) {
           }}
         />
       )}
+    </View>
     </View>
   );
 };

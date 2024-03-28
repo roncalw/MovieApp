@@ -59,7 +59,7 @@ type movieTrailerType = {
 const placeholderImage = require('../../assets/images/PicNotFoundV6.png');
 const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
-const posterBackgroundImage = require('../../assets/images/hamburgerMenu.png');
+const posterBackgroundImage = require('../../assets/images/hamburgermenu.jpg');
 const imageIMDB = require('../../assets/images/imdb.png');
 
 
@@ -635,7 +635,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
       //console.log('IMDB Rating: '+movieIMDBRating.imdbRating); // Output: "7.5/10"
 
-      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : 100; // Convert the string to a number, or NaN if it's null or undefined
+      const imdbRatingScrapedCheck = movieIMDBRating.imdbRating ? parseFloat(movieIMDBRating.imdbRating) : NaN; // Convert the string to a number, or NaN if it's null or undefined
 
       //console.log('IMDB Rating ScrapedCheck: '+imdbRatingScrapedCheck);
 
@@ -681,7 +681,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 
     return (
       <React.Fragment>
-        <View>
+        <View >
           {loaded && !error && (
             <ScrollView style={{ ...Platform.select({ios: {marginTop: 50}, android: {marginTop: -15}}), borderWidth: 0 }}>
 
@@ -818,7 +818,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                     <Text adjustsFontSizeToFit= {true} numberOfLines= {20} style={styles.overviewContainer}>{movieOverview}</Text>
 
                     {movieRating && (
-                      <Text style={{fontWeight: 'bold'}}>{'Rated: ' + movieRating}</Text>
+                      <Text style={{fontWeight: 'bold', color: Colors.black}}>{'Rated: ' + movieRating}</Text>
                     )}
 
                     <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={styles.releaseDateContainer}>{'Release Date: ' + movieReleaseDate}</Text>    
@@ -867,21 +867,21 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 <Text style={styles.textLabel}>Details</Text>
                 <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
                   
-                  <Text style={{fontWeight: 'bold'}}>Budget: <Text style={{fontWeight: 'normal'}}>
+                  <Text style={{fontWeight: 'bold', color: Colors.black}}>Budget: <Text style={{fontWeight: 'normal', color: Colors.black}}>
                     {
                       movieBudget === 0 ? 'Data not available.' : formatCurrency(movieBudget)
                     }
                     </Text>
                   </Text>
 
-                  <Text style={{fontWeight: 'bold'}}>Revenue: <Text style={{fontWeight: 'normal'}}>
+                  <Text style={{fontWeight: 'bold', color: Colors.black}}>Revenue: <Text style={{fontWeight: 'normal', color: Colors.black}}>
                     {
                       movieRevenue === 0 ? 'Data not available.' : formatCurrency(movieRevenue)
                     }
                     </Text>
                   </Text>
                   
-                  <Text style={{fontWeight: 'bold'}}>Total Runtime: <Text style={{fontWeight: 'normal'}}>{movieRuntime} minutes</Text></Text>
+                  <Text style={{fontWeight: 'bold', color: Colors.black}}>Total Runtime: <Text style={{fontWeight: 'normal', color: Colors.black}}>{movieRuntime} minutes</Text></Text>
 
                 </View>
 
@@ -900,8 +900,8 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 {!movieAppAdsWatchProviders && (
 
                     <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Free (With Ads):</Text></View>
-                      <Text>(Not available)</Text>
+                      <View><Text style={{color: Colors.black}}>Free (With Ads):</Text></View>
+                      <Text style={{color: Colors.black}}>(Not available)</Text>
                     </View>
 
                     )}
@@ -909,7 +909,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                   {movieAppAdsWatchProviders && (
 
                     <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Free (With Ads):</Text></View>
+                      <View><Text style={{color: Colors.black}}>Free (With Ads):</Text></View>
                       {
                         movieAppAdsWatchProviders.map(name => {
                           return (
@@ -922,7 +922,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10, color: Colors.black}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -936,8 +936,8 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 {!movieAppFlatrateWatchProviders && (
 
                     <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Subscription:</Text></View>
-                      <Text>(Not available)</Text>
+                      <View><Text style={{color: Colors.black}}>Subscription:</Text></View>
+                      <Text style={{color: Colors.black}}>(Not available)</Text>
                     </View>
 
                     )}
@@ -945,7 +945,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                   {movieAppFlatrateWatchProviders && (
 
                     <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Subscription:</Text></View>
+                      <View><Text style={{color: Colors.black}}>Subscription:</Text></View>
                       {
                         movieAppFlatrateWatchProviders.map(name => {
                           return (
@@ -958,7 +958,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10, color: Colors.black}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -972,8 +972,8 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 {!movieAppWatchProviders && (
 
                     <View style={{marginLeft: 5, marginBottom: 10, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Rent:</Text></View>
-                      <Text>(Not available)</Text>
+                      <View><Text style={{color: Colors.black}}>Rent:</Text></View>
+                      <Text style={{color: Colors.black}}>(Not available)</Text>
                     </View>
 
                 )}
@@ -981,7 +981,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                 {movieAppWatchProviders && (
 
                     <View style={{marginLeft: 5, borderWidth: 0, borderColor: 'red', borderRadius: 10, padding: 7, marginRight: 5, backgroundColor: '#eee'}}>
-                      <View><Text>Rent:</Text></View>
+                      <View><Text style={{color: Colors.black}}>Rent:</Text></View>
                       {
                         movieAppWatchProviders.map(name => {
                           return (
@@ -994,7 +994,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.provider_name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10, color: Colors.black}}>{name.provider_name}</Text>
                                     </View>
                                 )
                         })
@@ -1026,7 +1026,7 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                                               : placeholderImage
                                           }
                                       />
-                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10}}>{name.name}</Text>
+                                      <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{marginLeft: 10, color: Colors.black}}>{name.name}</Text>
                                     </View>
                                 )
                         })
@@ -1041,15 +1041,15 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                     <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee'}}>
                       {
                         movieAppProductionCountries.map((name: production_country) => {
-                          return <Text adjustsFontSizeToFit= {true} numberOfLines= {1} key={name.iso_3166_1} style={{marginLeft: 10}}>-{name.name}-</Text>
+                          return <Text adjustsFontSizeToFit= {true} numberOfLines= {1} key={name.iso_3166_1} style={{marginLeft: 10, color: Colors.black}}>-{name.name}-</Text>
                         })
                       }
                     </View>)}
 
                 <View style={{alignItems: 'center', marginBottom: 50, marginTop: 40}}>
-                  <Text style={{fontWeight: 'bold'}}>--Licensed By CodeFest--</Text>
+                  <Text style={{fontWeight: 'bold', color: Colors.black}}>--Licensed By CodeFest--</Text>
 
-                  <Text style={{marginTop: 10}}>-Powered By-</Text>
+                  <Text style={{marginTop: 10, color: Colors.black}}>-Powered By-</Text>
 
                   <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee', alignItems: 'center', paddingTop: 10}}>
 
@@ -1100,7 +1100,8 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',         
+    alignItems: 'center',   
+    color: 'black',      
   },
   genresContainer: {
     flexDirection: 'row',
@@ -1110,7 +1111,8 @@ const styles = StyleSheet.create({
   },
   genre: {
     marginRight: 10,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: 'black',
   },
   image: {
     height: screenHeight / 2.5,
@@ -1121,12 +1123,15 @@ const styles = StyleSheet.create({
     marginTop: 23,
     marginBottom: 10,
     alignSelf: 'center',
+    color: 'black',
   },
   overviewContainer: {
     padding: 15,
+    color: 'black',
   },
   releaseDateContainer: {
     fontWeight: 'bold',
+    color: 'black',
   },
   playButton: {
     position: 'absolute',
@@ -1154,6 +1159,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
+    color: 'black',
 }
 
 })

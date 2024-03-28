@@ -1,10 +1,14 @@
 {
   "name": "MovieApp",
-  "version": "0.0.1",
+  "version": "3.2.3",
   "private": true,
   "scripts": {
-    "comments": "npm start -- --reset-cache",
+    "comments1": "npm start -- --reset-cache",
+    "comments2": "To see a list of all of the available Android Devices: emulator -list-avds",
+    "comments3": "To restart the Android Devices: adb shell reboot",
     "android": "react-native run-android",
+    "startAndroidPix8Pro": "emulator -avd Pixel_8_Pro_API_34 & npm run androidPixel8Pro",
+    "androidPixel8Pro": "adb wait-for-device && adb devices && react-native run-android",
     "ios": "react-native run-ios",
     "ios15Max": "xcrun simctl boot D1EB5D51-FC01-4128-B8B0-23F3DF2D189A && npx react-native run-ios --simulator='iPhone 15 Pro Max'",
     "ios14Plus": "xcrun simctl boot 61E24D68-23A1-48FD-991D-6C81255BBC41 && npx react-native run-ios --simulator='iPhone 14 Plus'",

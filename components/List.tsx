@@ -4,6 +4,7 @@ import Card from './Card';
 import { RootStackParamList } from '../components/MainNavigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
+import Colors from '../theme/Color';
 
 export type listProps = {
     title: string;
@@ -45,5 +46,6 @@ const styles = StyleSheet.create({
           fontWeight: 'bold',
           padding: 10,
           paddingBottom: 5,
+          color: Colors.black
     }
   })
