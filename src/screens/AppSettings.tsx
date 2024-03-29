@@ -9,9 +9,30 @@ import { LogLevel} from 'react-native-onesignal';
 import  { OneSignal }  from 'react-native-onesignal';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Config from 'react-native-config';
+import packageJson from '../,,/../../package.json';
+import CustomAlert from '../../components/CustomAlert';
 
 
 const AppSettings = () => {
+  const [appVersion, setAppVersion] = useState('');
+
+  useEffect(() => {
+    // Access the version from package.json
+    const version = packageJson.version;
+    setAppVersion(version);
+  }, []); // Run once when component mounts
+
+  const [isAlertVisible, setAlertVisible] = useState(false);
+
+  const showAlert = () => {
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
+
+
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
@@ -49,7 +70,18 @@ const AppSettings = () => {
   const clearStorage = async () => {
     try {
       await AsyncStorage.removeItem('movieData');
-      Alert.alert('Your Movie Favorites are Cleared!', 'To start saving your favorite movies again, simply click on the heart from the Movie Detail screen!');
+      Alert.alert('Your Movie Favorites are Cleared!', 'To start saving your favorite movies again, simply click on the heart from the Movie Detail screen!',
+      [
+        {
+          text: 'OK',
+          onPress: () => console.log('OK Pressed'),
+          style: 'default', // Style for the button (default, cancel, destructive)
+        },
+      ],
+      {
+        cancelable: true, // Allow dismissal by tapping outside of the alert
+      }
+    );
     } catch (error) {
       console.error('Error clearing local storage:', error);
     }
@@ -63,7 +95,9 @@ const AppSettings = () => {
 
 
 
-    const appStoreUrl = 'https://apps.apple.com/us/app/its-movie-time/id6465793035'; // Replace with your app's URL
+    //const appStoreUrl = 'https://apps.apple.com/us/app/its-movie-time/id6465793035'; // Replace with your app's URL
+    const appStoreUrl = 'https://play.google.com/store/apps'; // Replace with your app's URL
+
 
     const openAppStore = async () => {
       try {
@@ -77,8 +111,6 @@ const AppSettings = () => {
         console.error('Error opening URL:', error);
       }
     };
-
-
 
 
   return (
@@ -104,9 +136,16 @@ const AppSettings = () => {
 
         <TouchableOpacity onPress={openAppStore}><Text style={{fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Check for Update</Text></TouchableOpacity>
    
-        <Text style={{alignSelf: 'center', marginBottom: 25}}>Version: {Config.VERSION}</Text>
+        <Text style={{alignSelf: 'center', marginBottom: 25}}>Version: {appVersion}</Text>
    
-          <Button title="Clear Movie Favorites" onPress={clearStorage} />
+        <TouchableOpacity onPress={showAlert}><Text style={{fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Clear Movie Favorites</Text></TouchableOpacity>
+        <CustomAlert
+          visible={isAlertVisible}
+          title="Your Movie Favorites are Cleared!"
+          message="To start saving your favorite movies again, simply click on the heart from the Movie Detail screen!"
+          onClose={hideAlert}
+        />
+
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 20 }}>
             <Text style={{textAlign: 'right', alignSelf: 'center', color: '#087BFF', fontSize: 18, borderWidth: 0, marginRight: 5}}>Push Notifications:</Text> 
