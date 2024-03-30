@@ -5,6 +5,11 @@
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:textColor">#000000</item>
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="android:forceDarkAllowed">false</item> <!-- Add this line to ignore dark mode -->
+        <item name="android:textColorHint">#000000</item> <!-- Add this line to set placeholder text color -->
+
     </style>
+
 
 </resources>

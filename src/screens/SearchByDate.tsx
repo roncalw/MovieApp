@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 import Error from '../../components/Error';
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem, Image  } from 'react-native'
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Button, Platform, Alert, Modal, TouchableWithoutFeedback, Dimensions, useWindowDimensions, ListRenderItem, Image, Appearance  } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import Navbar from '../../components/Navbar'
 import { useIsFocused, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import Card from '../../components/Card';
 import Icon from "react-native-vector-icons/Ionicons";
 import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
 import RadioGroup, {RadioButtonProps} from 'react-native-radio-buttons-group';
+import DatePicker from 'react-native-date-picker';
 
 
 type SearchByDateParamList = {
@@ -23,6 +24,18 @@ type SearchByDateRouteProp = RouteProp<SearchByDateParamList, 'SearchByDate'>;
 
 
 const SearchByDate = () => {
+
+  const colorScheme = Appearance.getColorScheme();
+
+
+  useEffect(() => {
+    if (colorScheme === 'dark') {
+      console.log('Dark mode detected!');
+    } else {
+      console.log('Light mode detected!');
+    }
+  }, []); // Empty dependency array ensures this effect runs only once
+
 
     //=========================================================================    IMAGES SETUP    =========================================================================
 
@@ -651,11 +664,11 @@ const SearchByDate = () => {
                         >
                             <TouchableWithoutFeedback onPress={closeDatePickerBegin}>
 
-                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: (colorScheme === 'dark') ? 'rgba(251, 235, 202, 0.999)' : '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
 
                 {/* DATEPICKER BEGIN DATE */}
 
-                                  <DateTimePicker
+                                  {/* <DateTimePicker
                                     value={selectedDateBegin || new Date()}
                                     mode="date"
                                     onChange={handleDateChangeBegin}
@@ -664,7 +677,21 @@ const SearchByDate = () => {
                                     style={{borderWidth: 0, borderRadius: 0, height: 200, }}
                                     minimumDate={new Date(1960, 11, 31)} // Set the minimum date (December 31, 1960)
                                     maximumDate={new Date(2024, 11, 31)} // Set the maximum date (December 31, 2024)
-                                  />
+                                  /> */}
+
+                                  <DatePicker
+                                    date={selectedDateBegin || new Date()}
+                                    onDateChange={(dt) => {
+                                      setSearchResults([]);
+                                      setPage(1);
+                                      setSelectedDateBegin(dt);
+                                    }}
+                                    mode="date"
+                                    style={{borderWidth: 0, borderRadius: 0, }}
+                                    minimumDate={new Date(1960, 11, 31)} // Set the minimum date (December 31, 1960)
+                                    maximumDate={new Date(2024, 11, 31)} // Set the maximum date (December 31, 2024)
+                                    
+                                    />
 
                               </View>
 
@@ -706,20 +733,25 @@ const SearchByDate = () => {
                         >
                             <TouchableWithoutFeedback onPress={closeDatePickerEnd}>
 
-                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: (colorScheme === 'dark') ? 'rgba(251, 235, 202, 0.999)' : '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
                 
                 {/* DATEPICKER END DATE */}
 
-                                  <DateTimePicker
-                                    value={selectedDateEnd || new Date()}
+   
+                                  <DatePicker
+                                    date={selectedDateEnd || new Date()}
+                                    onDateChange={(dt) => {
+                                      setSearchResults([]);
+                                      setPage(1);
+                                      setSelectedDateEnd(dt);
+                                    }}
                                     mode="date"
-                                    onChange={handleDateChangeEnd}
-                                    display="spinner"
-                                    textColor="#000000"
-                                    style={{borderWidth: 0, borderRadius: 0, height: 200, }}
-                                    minimumDate={new Date(1960, 11, 31)} // Set the maximum date (December 31, 2024)
+                                    style={{borderWidth: 0, borderRadius: 0, width: 350,}}
+                                    minimumDate={new Date(1960, 11, 31)} // Set the minimum date (December 31, 1960)
                                     maximumDate={new Date(2024, 11, 31)} // Set the maximum date (December 31, 2024)
-                                  />
+                                    dividerColor="#771F14"
+                                    />
+                   
 
                               </View>
 
