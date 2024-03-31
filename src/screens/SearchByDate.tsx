@@ -30,9 +30,9 @@ const SearchByDate = () => {
 
   useEffect(() => {
     if (colorScheme === 'dark') {
-      console.log('Dark mode detected!');
+      //console.log('Dark mode detected!');
     } else {
-      console.log('Light mode detected!');
+      //console.log('Light mode detected!');
     }
   }, []); // Empty dependency array ensures this effect runs only once
 
@@ -664,7 +664,19 @@ const SearchByDate = () => {
                         >
                             <TouchableWithoutFeedback onPress={closeDatePickerBegin}>
 
-                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: (colorScheme === 'dark') ? 'rgba(251, 235, 202, 0.999)' : '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                              <View style={{ 
+                                alignSelf: 'center', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                borderColor: (colorScheme === 'dark') ? '#59170F' : '#771F14', 
+                                marginTop: (colorScheme === 'dark') ? 105 : 150, 
+                                width: (colorScheme === 'dark') ? 350 : null,
+                                borderRadius: 30, 
+                                backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', 
+                                borderStartWidth:  3,
+                                borderEndWidth: 7,
+                                borderTopWidth: 1,
+                                borderBottomWidth: 5}}>
 
                 {/* DATEPICKER BEGIN DATE */}
 
@@ -733,7 +745,19 @@ const SearchByDate = () => {
                         >
                             <TouchableWithoutFeedback onPress={closeDatePickerEnd}>
 
-                              <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderColor: (colorScheme === 'dark') ? 'rgba(251, 235, 202, 0.999)' : '#771F14', marginTop: 150, borderRadius: 30, backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', borderStartWidth: 3, borderEndWidth: 7, borderTopWidth: 1, borderBottomWidth: 5}}>
+                            <View style={{ 
+                                alignSelf: 'center', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                borderColor: (colorScheme === 'dark') ? '#59170F' : '#771F14', 
+                                marginTop: (colorScheme === 'dark') ? 105 : 150, 
+                                width: (colorScheme === 'dark') ? 350 : null,
+                                borderRadius: 30, 
+                                backgroundColor: (colorScheme === 'dark') ? '#771F14' : 'rgba(251, 235, 202, 0.999)', 
+                                borderStartWidth:  3,
+                                borderEndWidth: 7,
+                                borderTopWidth: 1,
+                                borderBottomWidth: 5}}>
                 
                 {/* DATEPICKER END DATE */}
 
