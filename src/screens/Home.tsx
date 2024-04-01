@@ -264,7 +264,7 @@ const Home = () => {
       <React.Fragment>
         {loaded && !error &&  
         (
-          <ScrollView>
+          <ScrollView style={{borderWidth: 0, borderColor: 'white'}}>
             {/* Upcoming Movies */}
             { movieImages && ( 
               <View style={ styles.sliderContainer}>

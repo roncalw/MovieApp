@@ -70,20 +70,9 @@ const AppSettings = () => {
   const clearStorage = async () => {
     try {
       await AsyncStorage.removeItem('movieData');
-      Alert.alert('Your Movie Favorites are Cleared!', 'To start saving your favorite movies again, simply click on the heart from the Movie Detail screen!',
-      [
-        {
-          text: 'OK',
-          onPress: () => console.log('OK Pressed'),
-          style: 'default', // Style for the button (default, cancel, destructive)
-        },
-      ],
-      {
-        cancelable: true, // Allow dismissal by tapping outside of the alert
-      }
-    );
+        showAlert();
     } catch (error) {
-      console.error('Error clearing local storage:', error);
+        console.error('Error clearing local storage:', error);
     }
   };
 
@@ -138,7 +127,7 @@ const AppSettings = () => {
    
         <Text style={{alignSelf: 'center', marginBottom: 25}}>Version: {appVersion}</Text>
    
-        <TouchableOpacity onPress={showAlert}><Text style={{fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Clear Movie Favorites</Text></TouchableOpacity>
+        <TouchableOpacity onPress={clearStorage}><Text style={{fontSize: 18, color: '#007BFF', alignSelf: 'center' }}>Clear Movie Favorites</Text></TouchableOpacity>
         <CustomAlert
           visible={isAlertVisible}
           title="Your Movie Favorites are Cleared!"

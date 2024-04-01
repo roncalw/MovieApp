@@ -613,21 +613,46 @@ const SearchByDate = () => {
             </View>
 
 
-{/* ======================================================================================  THE CLOSE BUTTON !!!  ======================================================    */}
+{/* ======================================================================================  THE SEARCH BY TITLE BUTTON !!!  ======================================================    */}
 
-{/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE DATE BUTTONS !!!  ======================================================    */}
+{/* =================================================================  ROW 2 --- 12% Height  !!!  THE SEARCH BY TITLE BUTTON !!!  ======================================================    */}
 
-{/* ======================================================================================  THE CLOSE BUTTON !!!  ======================================================    */}
+{/* ======================================================================================  THE SEARCH BY TITLE BUTTON !!!  ======================================================    */}
 
-            <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 85, marginBottom: 0}}>
-              <TouchableOpacity onPress={toggleCollapsed} style={{ borderWidth: 0, width: 150, height: 30, justifyContent: 'center', alignItems: 'center',}}>
-                
-              <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
-                    <Text style={{color: '#771F14', fontSize: 16, }}> {collapsed ? " Show Filter" : "Hide Filter"}</Text>
-                    <Icon style={{color: '#771F14',}} name={collapsed ? "chevron-forward" : "chevron-up"} size={20} />
-              </View>
-              </TouchableOpacity>
+
+            <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 80, marginBottom: 0}}>
+
+            <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('Search')}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
+                  <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>Search by Title</Text>
+                  <Icon style={{color: '#771F14',}} name="chevron-forward" size={15} />
+                </View>                
+            </TouchableOpacity>
+
             </View>
+
+
+{/* ======================================================================================  THE SHOW/HIDE BUTTON !!!  ======================================================    */}
+
+{/* ==========================================================================  ROW 2 --- 12% Height  !!!  THE SHOW/HIDE BUTTON !!!  ======================================================    */}
+
+{/* ======================================================================================  THE SHOW/HIDE BUTTON !!!  ======================================================    */}
+
+
+            <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: -15, marginBottom: 0}}>
+
+              <TouchableOpacity onPress={toggleCollapsed} style={{ borderWidth: 0, width: 150, height: 30, justifyContent: 'center', alignItems: 'center',}}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
+                      <Text style={{color: '#771F14', fontSize: 16, }}> {collapsed ? " Show Filter" : "Hide Filter"}</Text>
+                      <Icon style={{color: '#771F14',}} name={collapsed ? "chevron-forward" : "chevron-up"} size={20} />
+                </View>
+              </TouchableOpacity>
+
+            </View>
+
+
+{/* ======================================================================================  THE CLOSE BUTTON !!!  ======================================================    */}   
+
 
 {/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
 
@@ -641,6 +666,7 @@ const SearchByDate = () => {
             <View style={{height: '10%', borderWidth: 0, borderColor: 'green', padding: 0, marginTop: -15}}> 
 
                 <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 0}}>
+
              
     {/* COLUMN 1 --- 50% Width */}
 
@@ -903,7 +929,7 @@ const SearchByDate = () => {
                                                     isChecked={rating.isChecked}
                                                     onPress={() => handleRatingChange(rating.id)}
                                                     text={rating.label}
-                                                    textStyle={{ marginRight: 20, fontWeight: '600' }}
+                                                    textStyle={{ marginRight: 20, fontWeight: '600', textDecorationLine: 'none' }}
                                                     iconStyle={{ borderRadius: 2, marginRight: -10 }}
                                                     innerIconStyle={{ borderRadius: 2, marginRight: 0 }}
                                                     fillColor="#007AFF"
@@ -913,8 +939,6 @@ const SearchByDate = () => {
                                             </View>
                                         </View>
                                   </View>
-
-
                             
                             {/* BUTTON TO CLOSE RATING PICKER */}
                             <TouchableOpacity onPress={closeShowRatingsPicker} style={{alignSelf: 'center', alignItems: 'center', justifyContent: 'center', height: 40, width: 120, backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5 }}>

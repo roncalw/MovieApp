@@ -8,6 +8,8 @@ import { movieType } from "./Home";
 import Card from "../../components/Card";
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 
+import { useNavigation } from '@react-navigation/native';
+
 
 import { RootStackParamList } from "../../components/MainNavigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -74,17 +76,47 @@ function Search({ navigation }: searchProps) {
                 <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
                   <Navbar navigation={navigation} page={'search'}/>
                 </View>
+                
             </View>
+
+
+            {/* <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('SearchByDate')}>
+                <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>Advanced Search</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('Search')}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
+                  <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>(Advanced Search)</Text>
+                </View>                
+            </TouchableOpacity> */}
+
+
+            <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: -15, marginBottom: 0}}>
+
+            <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('SearchByDate')}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
+                  <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>Advanced Search</Text>
+                  <Icon style={{color: '#771F14',}} name="chevron-forward" size={15} />
+                </View>                
+            </TouchableOpacity>
+
+            </View>
+
+
+
 
             <View style={{height: '10%', borderWidth: 0, borderColor: 'red', }}>
                 <View style={styles.container}>
                     <View style={styles.form}>
                         <TextInput
                             style={styles.input}
+                            onSubmitEditing={() => {
+                                onSubmit(text);
+                            }}
                             placeholder={'Search Movie Title'}
                             onChangeText={onChangeText}
                             value={text} 
-                             clearButtonMode="while-editing"/>
+                            clearButtonMode="while-editing"/>
                     </View>
                     <TouchableOpacity
                         onPress={() => {
@@ -94,6 +126,8 @@ function Search({ navigation }: searchProps) {
                     </TouchableOpacity>
                 </View>
             </View>
+
+           
 
             {loaded && !error &&  
 

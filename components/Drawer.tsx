@@ -92,6 +92,7 @@ const Drawer = () => {
         )
       }}
       screenOptions={{
+        drawerPosition: 'left', //determines where the drawer will be opened from (eg. will open from the right side if you say right the drawer icon does not move of course, just the drawer contents, since the icon is based on CSS)
         headerShown: false,
         drawerActiveBackgroundColor: '#eeee',
         //drawerActiveTintColor: '#000',

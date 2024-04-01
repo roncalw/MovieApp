@@ -14,6 +14,7 @@ export type RootStackParamList = {
     Home: undefined, // undefined because you aren't passing any params to the home screen
     MovieDetail: { id: number },
     Search: undefined,
+    SearchByDate: undefined,
     PrivacyPolicy: undefined;
   };
 
