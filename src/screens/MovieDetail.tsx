@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem, Platform } from 'react-native';
+import { ActivityIndicator, Image, ImageBackground, ScrollView, StyleSheet, Dimensions, Text, View, Modal, Pressable, TouchableOpacity, FlatList, ListRenderItem, Platform, Linking } from 'react-native';
 import {movieType, movieCastProfile, movieCrewProfile, movieWatchProviderType, movieWatchProvidersType, release_date_country, release_details, production_company, production_country, movieExternalIDs, movieIMDBDataType, movieIMDBRatingType } from "../screens/Home"
 
 import { RouteProp, useIsFocused } from '@react-navigation/native'
@@ -61,7 +61,6 @@ const TMDB_Logo = require('../../assets/images/TMDB_Logo.png');
 const JustWatch_Logo = require('../../assets/images/JustWatch_Logo.png');
 const posterBackgroundImage = require('../../assets/images/hamburgermenu.jpg');
 const imageIMDB = require('../../assets/images/imdb.png');
-
 
 
 /* =============================================================================================================================================================== */
@@ -658,7 +657,34 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
 }
 
 
- 
+const openIMDBReview = async () => {
+  const imdbMovieReview = `https://www.imdb.com/title/${movieIMDBData?.imdbID}/reviews/`; 
+
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+    // Add any other headers as needed
+  };
+
+  try {
+    // On Android, directly open the URL
+    if (Platform.OS === 'android') {
+      await Linking.openURL(imdbMovieReview);
+    } else {
+      // On iOS, check if the URL can be opened before attempting to open it
+      const supported = await Linking.canOpenURL(imdbMovieReview);
+      if (supported) {
+        await Linking.openURL(imdbMovieReview);
+      } else {
+        console.error('Cannot open URL:', imdbMovieReview);
+      }
+    }
+  } catch (error) {
+    console.error('Error opening URL:', error);
+  }
+};
+
+
+
 
 
 /* ==========================================================     BEGINNING OF THE VIEW  ===================================================================== */
@@ -1063,6 +1089,19 @@ WE WILL SHOW JUST WHAT IS FOR FREE (ADS), WHAT IS PART OF A SUBSCRIPTION (FLATRA
                         source={JustWatch_Logo}
                     />
                   
+                  </View>
+
+                  <Text style={{marginTop: 10, color: Colors.black}}>-Reviews By-</Text>
+
+                  <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee', alignItems: 'center', paddingTop: 10}}>
+
+                  <TouchableOpacity onPress={openIMDBReview}>
+                    <Image
+                        style={{height: 35, width: 70,}}
+                        source={imageIMDB}
+                    />
+                  </TouchableOpacity>
+
                   </View>
 
                 </View>

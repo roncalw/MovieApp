@@ -14,6 +14,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
 import RadioGroup, {RadioButtonProps} from 'react-native-radio-buttons-group';
 import DatePicker from 'react-native-date-picker';
+import CustomAlert from '../../components/CustomAlert';
 
 
 type SearchByDateParamList = {
@@ -354,6 +355,16 @@ const SearchByDate = () => {
 
     //=========================================================================    SUBMIT    ================================================================================
 
+    const [isAlertVisible, setAlertVisible] = useState(false);
+
+
+    const showAlert = () => {
+      setAlertVisible(true);
+    };
+  
+    const hideAlert = () => {
+      setAlertVisible(false);
+    };
 
     function onSubmit(caller: string, ratings: string, beginDate: string, endDate: string, movieGenres: string, pageNum: number, reSubmitted?: boolean) {
       if (!reSubmitted) {setLoaded(false);}
@@ -387,6 +398,12 @@ const SearchByDate = () => {
           setSearchResults([]);
           setPage(1);
         };
+
+        if (beginDate > endDate) {
+         showAlert();
+         setLoaded(true);
+         return;
+        }
 
         Promise.all(
         [getMoviesByDate(ratingsAsString, beginDate, endDate, movieGenres, streamerString, voteCount, sortByforQuery, pageNum) ]
@@ -660,6 +677,12 @@ const SearchByDate = () => {
 
 {/* ======================================================================================  THE DATE BUTTONS !!!  ======================================================    */}
 
+<CustomAlert
+  visible={isAlertVisible}
+  title="The Date Range is Invalid!"
+  message="The From Date cannot be greater than the To Date! Please select a valid date range and try again."
+  onClose={hideAlert}
+/>
 
 {!collapsed && (
 

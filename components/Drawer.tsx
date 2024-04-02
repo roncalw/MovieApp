@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome'
 //import screens here
 import Home from '../src/screens/Home';
 import AppSettings from '../src/screens/AppSettings';
-import { Image, ImageBackground, Pressable, Share, Text, View} from 'react-native';
+import { Image, ImageBackground, Pressable, Share, Text, View, Platform} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -20,6 +20,11 @@ const Drawer = () => {
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const androidStoreURL = 'https://play.google.com/store/apps/';
+  const iosStoreURL = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
+
+  const storeURL = Platform.OS === 'android' ? androidStoreURL : iosStoreURL;
+
 
   const Drawer = createDrawerNavigator()
 
@@ -31,7 +36,7 @@ const Drawer = () => {
       const contentToShare = {
         title: 'Check out this Movie app!',
         message: 'With this movie guide you can find out what movies are playing and where they are streaming or where they are for rent as well!\n\nClick on the link below to download it!',
-        url: 'https://apps.apple.com/us/app/movie-guider/id6465793035', // Replace with your app URL
+        url: storeURL, // Replace with your app URL
       };
   
       const result = await Share.share(contentToShare);

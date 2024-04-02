@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, Alert, Text, SafeAreaView, Switch, Linking } from 'react-native';
+import { View, TextInput, Button, Alert, Text, SafeAreaView, Switch, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from '../../components/Navbar';
 import { useNavigation } from '@react-navigation/native';
@@ -83,18 +83,20 @@ const AppSettings = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
 
-
-    //const appStoreUrl = 'https://apps.apple.com/us/app/its-movie-time/id6465793035'; // Replace with your app's URL
-    const appStoreUrl = 'https://play.google.com/store/apps'; // Replace with your app's URL
+    const androidStoreURL = 'https://play.google.com/store/apps/';
+    const iosStoreURL = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
+  
+    const storeURL = Platform.OS === 'android' ? androidStoreURL : iosStoreURL;
+  
 
 
     const openAppStore = async () => {
       try {
-        const supported = await Linking.canOpenURL(appStoreUrl);
+        const supported = await Linking.canOpenURL(storeURL);
         if (supported) {
-          await Linking.openURL(appStoreUrl);
+          await Linking.openURL(storeURL);
         } else {
-          console.error('Cannot open URL:', appStoreUrl);
+          console.error('Cannot open URL:', storeURL);
         }
       } catch (error) {
         console.error('Error opening URL:', error);
