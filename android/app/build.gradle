@@ -79,8 +79,8 @@ android {
         applicationId "com.codefest.movieapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "3.2.3"
+        versionCode 69
+        versionName "3.2.4"
     }
     signingConfigs {
         release {

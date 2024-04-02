@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/MainNavigation';
 import { movieType } from './Home';
 import Card from '../../components/Card';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const MovieFavorites = () => {
 
@@ -69,7 +70,8 @@ const MovieFavorites = () => {
 
 
   return (
-    <SafeAreaView style={{flexDirection: 'column'}}>
+    <SafeAreaView >
+      <ScrollView style={{flexDirection: 'column', padding: 0, marginBottom: -50}}>  
 
     {/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
     
@@ -79,24 +81,27 @@ const MovieFavorites = () => {
     
     {/* ======================================================================================  !!! NAVBAR !!!  ================================================================    */}
     
-    
-        <View style={{flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15}}>
-            <View style={{width:'100%', borderWidth: 0, borderColor: 'red', }}>
-              <Navbar navigation={navigation} page={'movieFavorites'}/>
-            </View>
+    <View style={{ flex: 1, flexDirection: 'row', height: '5%', borderWidth: 0, borderColor: 'blue', marginBottom: 75, marginTop: -15 }}>
+          <View style={{ width: '100%', borderWidth: 0, borderColor: 'red' }}>
+            <Navbar navigation={navigation} page={'movieFavorites'} />
+          </View>
         </View>
 
-
-        <View style={{height: '95%', borderWidth: 0, borderColor: 'yellow', marginTop: 25}}>
-                <FlatList
-                    numColumns={3}
-                    data={movieData}
-                    keyExtractor = {(item, index) => `${index}`}
-                    renderItem={_renderItem}
-                    //keyExtractor={(item) => item.id.toString()} // Use id as a unique key
-                    ItemSeparatorComponent={Separator} />
+        <View style={{ borderWidth: 0, borderColor: 'yellow', marginTop: 25, height: '90%' }}>
+          <FlatList
+            numColumns={3}
+            data={movieData}
+            keyExtractor={(item, index) => `${index}`}
+            renderItem={_renderItem}
+            ItemSeparatorComponent={Separator}
+          />
         </View>
 
+        <View style={{ marginTop: 0, height: 50, alignItems: 'center', alignContent: 'flex-start', borderWidth: 0 }}>
+          <Text style={{textAlign: 'center',}}></Text>
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
   )
 }
