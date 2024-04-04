@@ -113,7 +113,8 @@ function Search({ navigation }: searchProps) {
                             onSubmitEditing={() => {
                                 onSubmit(text);
                             }}
-                            placeholder={'Search Movie Title'}
+                            placeholder={'Search by Movie Title'}
+                            placeholderTextColor={'#808080'}
                             onChangeText={onChangeText}
                             value={text} 
                             clearButtonMode="while-editing"/>
