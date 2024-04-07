@@ -279,9 +279,8 @@ const Home = () => {
                   autoplay={true}
                   circleLoop={true}
                   onCurrentImagePressed={handleImagePress}
+                  imageProps={{accessibilityLabel: 'Movie Poster'}}
                   />
-
-
 
               </View>)
             }

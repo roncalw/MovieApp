@@ -750,7 +750,7 @@ const openIMDBReview = async () => {
 
 
                     <View style={{ width: '0%', paddingLeft: 80, }}>
-                      <TouchableOpacity style={{flexDirection: 'column', alignItems: 'center', height: '25%', borderWidth: 0, marginLeft: -80, marginTop: 12, }} onPress={() => scrapeIMDBWebsite()}>
+                      <TouchableOpacity style={{flexDirection: 'column', alignItems: 'center', marginLeft: -80, marginTop: 12, borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center'}} onPress={() => scrapeIMDBWebsite()}>
     
                           <Image source={imageIMDB} style={{width: 42, height: 20, }}/>
                           <Text adjustsFontSizeToFit= {true} numberOfLines= {1} style={{ marginTop: 0, fontWeight: 'bold', color: '#800000', fontSize: 13,  }}>{movieIMDBRating?.imdbRating}</Text>
@@ -835,12 +835,14 @@ const openIMDBReview = async () => {
                         }
                       </View>)}
 
-                    <StarRating
-                      disabled={true}
-                      maxStars={5}
-                      rating={movieStarRating}
-                      fullStarColor={'gold'}
-                    />
+                      <View accessibilityLabel="Movie rating out of 5 stars">
+                        <StarRating
+                          disabled={true}
+                          maxStars={5}
+                          rating={movieStarRating}
+                          fullStarColor={'gold'}                      
+                        />
+                      </View>
                     <Text adjustsFontSizeToFit= {true} numberOfLines= {20} style={styles.overviewContainer}>{movieOverview}</Text>
 
                     {movieRating && (
@@ -1095,10 +1097,11 @@ const openIMDBReview = async () => {
 
                   <View style={{ flexDirection: 'row', marginLeft: 5, backgroundColor: '#eee', alignItems: 'center', paddingTop: 10}}>
 
-                  <TouchableOpacity onPress={openIMDBReview}>
+                  <TouchableOpacity onPress={openIMDBReview} style={{borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center'}}>
                     <Image
                         style={{height: 35, width: 70,}}
                         source={imageIMDB}
+                        accessibilityLabel='IMDB Reviews'
                     />
                   </TouchableOpacity>
 
@@ -1121,7 +1124,7 @@ const openIMDBReview = async () => {
 
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}              
-                  style={{ ...Platform.select({ios: {marginTop: 50}, android: {marginTop: 0}}) }}> 
+                  style={{ ...Platform.select({ios: {marginTop: 50}, android: {marginTop: 0}}), borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center' }}> 
                   <Icon name={'chevron-back'} size={40} color={'black'} />
                 </TouchableOpacity>
 

@@ -623,7 +623,7 @@ const SearchByDate = () => {
                     onPress={() => {
                         onSubmit('submit', ratingsAsString, queryDateBegin, queryDateEnd, genreString, page);
                     }}
-                    style={{marginTop: 45, marginLeft: -20}}>
+                    style={{marginTop: 40, marginLeft: -45, borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center', alignItems: 'center'}}>
                     <Icon name={'search-outline'} size={30} />
                   </TouchableOpacity>
                 </View>
@@ -639,7 +639,7 @@ const SearchByDate = () => {
 
             <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: 80, marginBottom: 0}}>
 
-            <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('Search')}>
+            <TouchableOpacity style={{borderWidth: 0, height: 48, marginTop: -20, justifyContent: 'center'}} onPress={() => navigation.navigate('Search')}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
                   <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>Search by Title</Text>
                   <Icon style={{color: '#771F14',}} name="chevron-forward" size={15} />
@@ -658,7 +658,7 @@ const SearchByDate = () => {
 
             <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: -15, marginBottom: 0}}>
 
-              <TouchableOpacity onPress={toggleCollapsed} style={{ borderWidth: 0, width: 150, height: 30, justifyContent: 'center', alignItems: 'center',}}>
+              <TouchableOpacity onPress={toggleCollapsed} style={{ marginTop: 25, borderWidth: 0, width: 150, height: 48, justifyContent: 'flex-start', alignItems: 'center',}}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
                       <Text style={{color: '#771F14', fontSize: 16, }}> {collapsed ? " Show Filter" : "Hide Filter"}</Text>
                       <Icon style={{color: '#771F14',}} name={collapsed ? "chevron-forward" : "chevron-up"} size={20} />
@@ -700,8 +700,10 @@ const SearchByDate = () => {
 
                 {/* BUTTON TO POPUP BEGIN DATE */}
                         <Text style={{marginBottom: -5, marginTop: 10}}>From</Text>
-                        <TouchableOpacity onPress={openDatePickerBegin} style={{height: 40, width:120, justifyContent: 'center', alignItems: 'center', backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
-                          {selectedDateBegin && <Text>{formattedDateBegin}</Text>}
+                        <TouchableOpacity onPress={openDatePickerEnd} style={{borderWidth: 0, borderColor: 'red', height: 50, width: 125, justifyContent: 'center', alignItems: 'center', }}>
+                          <View style={{height: 40, width: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                            {selectedDateBegin && <Text>{formattedDateBegin}</Text>}
+                          </View>
                         </TouchableOpacity>
 
                         <Modal
@@ -781,8 +783,10 @@ const SearchByDate = () => {
                 {/* BUTTON TO POPUP END DATE */}
                         <Text style={{marginBottom: -5, marginTop: 10}}>To</Text>
                      
-                        <TouchableOpacity onPress={openDatePickerEnd} style={{height: 40, width: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
-                          {selectedDateEnd && <Text>{formattedDateEnd}</Text>}
+                        <TouchableOpacity onPress={openDatePickerEnd} style={{borderWidth: 0, borderColor: 'red', height: 50, width: 125, justifyContent: 'center', alignItems: 'center', }}>
+                          <View style={{height: 40, width: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: "#F8EBCE", borderRadius: 10, padding: 0, margin: 10, borderColor: '#771F14', borderStartWidth: 2, borderEndWidth: 3, borderTopWidth: 1, borderBottomWidth: 2.5}}>
+                            {selectedDateEnd && <Text>{formattedDateEnd}</Text>}
+                          </View>
                         </TouchableOpacity>
 
                         <Modal
@@ -865,7 +869,7 @@ const SearchByDate = () => {
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
-                            <TouchableOpacity onPress={openPicker} style={{ marginTop: 20, padding: 0, height: 45, marginBottom: -5}}>
+                            <TouchableOpacity onPress={openPicker} style={{ marginTop: 0, padding: 0, height: 48, marginBottom: -5, justifyContent: 'center', borderWidth: 0, borderColor: 'red'}}>
                               <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20, }}>Genre {'>'}</Text>
                             </TouchableOpacity>
 
@@ -929,7 +933,7 @@ const SearchByDate = () => {
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
-                            <TouchableOpacity onPress={openShowRatingsPicker} style={{marginTop: 20, padding: 0, height: 45, marginBottom: -5}}>
+                            <TouchableOpacity onPress={openShowRatingsPicker} style={{ marginTop: 0, padding: 0, height: 48, marginBottom: -5, justifyContent: 'center', borderWidth: 0, borderColor: 'red'}}>
                               <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Rating {'>'}</Text>
                             </TouchableOpacity>
 
@@ -993,7 +997,7 @@ const SearchByDate = () => {
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
-                            <TouchableOpacity onPress={openStreamersPicker} style={{marginTop: 20, padding: 0, height: 45, marginBottom: -5}}>
+                            <TouchableOpacity onPress={openStreamersPicker} style={{ marginTop: 0, padding: 0, height: 48, marginBottom: -5, justifyContent: 'center', borderWidth: 0, borderColor: 'red'}}>
                               <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Streaming On {'>'}</Text>
                             </TouchableOpacity>
 
@@ -1055,7 +1059,7 @@ const SearchByDate = () => {
                 <View style={{width: '50%', flexDirection: 'row', borderWidth: 0, borderColor: 'blue', }}>
                     <View style={{justifyContent: 'center', alignItems: 'center', borderWidth: 0, width: '100%',}}>
 
-                            <TouchableOpacity onPress={openSortByPicker} style={{marginTop: 20, padding: 0, height: 45, marginBottom: -5}}>
+                            <TouchableOpacity onPress={openSortByPicker} style={{ marginTop: 0, padding: 0, height: 48, marginBottom: -5, justifyContent: 'center', borderWidth: 0, borderColor: 'red'}}>
                               <Text style={{ color: '#771F14', textAlign: 'center', fontSize: 20 }}>Sort By {'>'}</Text>
                             </TouchableOpacity>
 

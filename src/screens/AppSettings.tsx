@@ -83,7 +83,7 @@ const AppSettings = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
 
-    const androidStoreURL = 'https://play.google.com/store/apps/';
+    const androidStoreURL = 'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
     const iosStoreURL = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
   
     const storeURL = Platform.OS === 'android' ? androidStoreURL : iosStoreURL;

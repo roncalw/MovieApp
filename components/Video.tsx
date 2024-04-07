@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import { Alert, Platform, Text, TouchableOpacity, View, useWindowDimensions, Dimensions } from 'react-native';
+import {View, useWindowDimensions, Dimensions } from 'react-native';
 import Orientation from 'react-native-orientation-locker';
 
 type localProps = {

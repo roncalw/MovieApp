@@ -20,7 +20,7 @@ const Drawer = () => {
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const androidStoreURL = 'https://play.google.com/store/apps/';
+  const androidStoreURL = 'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
   const iosStoreURL = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
 
   const storeURL = Platform.OS === 'android' ? androidStoreURL : iosStoreURL;
@@ -33,13 +33,20 @@ const Drawer = () => {
 
   const shareWithFriend = async () => {
     try {
-      const contentToShare = {
+
+      const contentToShare = Platform.OS === 'android' ? 
+      {message: 'Check out this Movie app!\n\nWith this movie guide you can find out what movies are playing and where they are streaming or where they are for rent as well!\n\nClick on the link below to download it!\n\nhttps://play.google.com/store/apps/details?id=com.codefest.movieapp'}
+      :
+      {
         title: 'Check out this Movie app!',
         message: 'With this movie guide you can find out what movies are playing and where they are streaming or where they are for rent as well!\n\nClick on the link below to download it!',
         url: storeURL, // Replace with your app URL
       };
   
       const result = await Share.share(contentToShare);
+
+      //console.log('result: ', contentToShare)
+
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
           // Shared via an activity
@@ -50,7 +57,7 @@ const Drawer = () => {
         }
       } else if (result.action === Share.dismissedAction) {
         // Dismissed
-        //console.log('Share dismissed');
+        console.log('Share dismissed');
       }
     } catch (error) {
       const err = error as Error; 
@@ -105,7 +112,8 @@ const Drawer = () => {
         drawerLabelStyle: {
           marginLeft: -25,
           fontFamily: 'Roboto-Medium',
-          fontSize: 15
+          fontSize: 15,
+          height: 25,
         },
         headerTintColor: '#aaa',
         headerLeft: () => (

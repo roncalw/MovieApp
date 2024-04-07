@@ -18,6 +18,7 @@ const CustomHeaderLeft: React.FC = () => {
         <Image
             style={{height: 40, width: 40, marginLeft: 10, marginTop: 17}}
             source={placeholderImage}
+            accessibilityLabel='Open Drawer'
         />
     </TouchableOpacity>
   );

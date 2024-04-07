@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, Alert, Text, SafeAreaView, TouchableOpacity, FlatList, StyleSheet, ListRenderItem } from 'react-native';
+import { View, TextInput, Button, Alert, Text, SafeAreaView, FlatList, StyleSheet, ListRenderItem } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from '../../components/Navbar';
 import { RouteProp, useIsFocused, useNavigation } from '@react-navigation/native';

@@ -26,7 +26,7 @@ if (page === 'home') {
                 style={styles.logo} 
             />
             </View> */}
-            <View style={{ width: '15%', height: 50, paddingTop: 0, marginTop: 83, borderWidth: 0, borderColor: 'red'}}>
+            <View style={{ width: '15%', height: 50, paddingTop: 0, marginTop: 83, borderWidth: 0, borderColor: 'red',}}>
                 <TouchableOpacity
                     onPress={() => {
                         navigation.navigate('Search');
@@ -97,15 +97,16 @@ if (page === 'home') {
     view = (
         <View style={styles.mainNav}>
             <View style={{ width: '15%', marginTop: 65, height: 40}} >
-                <TouchableOpacity onPress={() => {navigation.goBack()}}>
+                <TouchableOpacity onPress={() => {navigation.goBack()}} style={{borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center'}}>
                     <Icon name={'chevron-back'} size={40} color={Colors.black} />
                 </TouchableOpacity>
             </View>
             <View style={{ width: '70%', height: 50, paddingTop: 10, marginTop: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 0}}>
                 <Text style={{marginLeft: 0, color: '#771F14', fontSize: 24, marginTop: -10}}>Privacy Policy</Text>
             </View>
-            <View style={{ width: '15%', height: 50, paddingTop: 10, marginTop: 70}}>
+            <View style={{ width: '15%', height: 50, marginTop: 70}}>
                 <TouchableOpacity
+                    style={{borderWidth: 0, borderColor: 'red', height: 48, justifyContent: 'center'}}
                     onPress={() => {
                         navigation.navigate('Search');
                     }}>
@@ -117,7 +118,7 @@ if (page === 'home') {
 } else if (page === 'search') {
     view = (
         <View style={styles.mainNav}>
-            <View style={{ width: '15%', marginTop: 65, height: 40}} >
+            <View style={{ width: '15%', marginTop: 65, height: 48, borderWidth: 0, borderColor: 'red', justifyContent: 'center'}} >
                 <TouchableOpacity onPress={() => {navigation.goBack()}}>
                     <Icon name={'chevron-back'} size={40} color={Colors.black} />
                 </TouchableOpacity>
@@ -130,7 +131,7 @@ if (page === 'home') {
     );
 } else {
     view = (
-        <View style={{width: '25%', borderWidth: 0, marginTop: 14, marginLeft: 10, marginBottom: -15}}>
+        <View style={{width: '25%', marginTop: 15, marginLeft: 10, marginBottom: -15, height: 48, borderWidth: 0, borderColor: 'red'}} >
             <TouchableOpacity style={{borderWidth: 0, width: '100%'}} onPress={() => {navigation.goBack()}}>
                 <Icon name={'chevron-back'} size={42} color={'#800000'} />
             </TouchableOpacity>

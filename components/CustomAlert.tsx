@@ -25,13 +25,7 @@ const CustomAlert: React.FC<Props> = ({ visible, title, message, onClose }) => {
 
 const styles = StyleSheet.create({
     btnStyle: {
-        height: 30,
-        width: 60,
-        marginLeft: 155,
-        backgroundColor: '#007BFF',
-        color: 'white',
-        borderRadius: 5,
-        textAlign: 'center',
+        alignSelf: 'center',
     },
     modalContainer: {
         flex: 1,

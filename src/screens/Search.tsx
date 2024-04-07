@@ -93,7 +93,7 @@ function Search({ navigation }: searchProps) {
 
             <View style={{height: '5%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginTop: -15, marginBottom: 0}}>
 
-            <TouchableOpacity style={{borderWidth: 0, height: 20, marginTop: -20, }} onPress={() => navigation.navigate('SearchByDate')}>
+            <TouchableOpacity style={{borderWidth: 0, borderColor: 'red', height: 48, marginTop: -20, justifyContent: 'center'}} onPress={() => navigation.navigate('SearchByDate')}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 0, }}>
                   <Text style={{color: '#771F14', fontSize: 14, marginTop: 0, alignSelf: 'center'}}>Advanced Search</Text>
                   <Icon style={{color: '#771F14',}} name="chevron-forward" size={15} />
@@ -120,6 +120,7 @@ function Search({ navigation }: searchProps) {
                             clearButtonMode="while-editing"/>
                     </View>
                     <TouchableOpacity
+                        style={{borderWidth: 0, borderColor: 'red', height: 50, width: 48, justifyContent: 'center', alignItems: 'center'}}
                         onPress={() => {
                             onSubmit(text);
                         } }>

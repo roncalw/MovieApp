@@ -24,6 +24,7 @@ const Card = React.memo(({ navigation, item }: cardProps) => {
                     ? {uri: 'https://image.tmdb.org/t/p/w500'+item.poster_path}
                     : placeholderImage
                 }
+                accessibilityLabel="Movie Poster"
             />
             {
                 !item.poster_path && (
