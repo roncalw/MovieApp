@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "list-androids": "adb devices",
+    "my-android": "react-native run-android  --device R3CMC035PHN",
     "android": "react-native run-android",
+    "list-iphones": "xcrun xctrace list devices",
+    "my-iphone": "react-native run-ios --device 'Carlo’s iPhone'",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",

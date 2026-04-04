@@ -1,0 +1,452 @@
+src/
+├── api/
+│   └── tmdb/
+│       ├── config.ts           // base URL, API key, config
+│       ├── client.ts           // axios instance ("the truck")
+│       ├── endpoints.ts        // where to go (/movie/popular)
+│       ├── responseTypes.ts    // TMDB response shapes
+│       │
+│       ├── mappers/
+│       │   └── movieMapper.ts  // TMDB → app Movie
+│       │
+│       └── services/
+│           └── movieService.ts // decides what to fetch (popular, etc.)
+│
+├── hooks/
+│   └── queries/
+│       └── usePopularMoviesQuery.ts // TanStack Query hook
+│
+├── providers/
+│   ├── AppProvider.tsx         // root composition (SafeArea + Query)
+│   ├── QueryProvider.tsx       // React Query setup (warehouse)
+│   └── SafeAreaProvider.tsx    // screen safe layout
+│
+├── screens/
+│   └── PopularMoviesScreen.tsx // UI screen
+│
+├── types/
+│   └── movie.ts                // app Movie type
+│
+└── App.tsx                     // entry point
+
+
+## Full Flow (Providers ↓ + Data Work →)
+
+┌───────────────────────────────┐
+│           App.tsx             │
+│        src/App.tsx            │
+│                               │
+│  <AppProvider>                │
+│    PopularMoviesScreen        │
+│  </AppProvider>               │
+└───────────────┬───────────────┘
+                │ renders AppProvider
+                │ with children =
+                │ (PopularMoviesScreen)
+                ▼
+
+┌───────────────────────────────┐
+│        AppProvider            │
+│  src/providers/AppProvider.tsx│
+│                               │
+│ composition root for          │
+│ app-wide sub-providers        │
+│                               │
+│ this is where sub-providers   │
+│ belong                        │
+│                               │
+│ SafeAreaProvider is the       │
+│ outer app shell               │
+│                               │
+│ QueryProvider lives inside    │
+│ that safe layout shell        │
+│                               │
+│ actual structure:             │
+│                               │
+│ <SafeAreaProvider>            │
+│   <QueryProvider>             │
+│     {children}                │
+│   </QueryProvider>            │
+│ </SafeAreaProvider>           │
+│                               │
+│ children =                    │
+│  PopularMoviesScreen          │
+└───────────────┬───────────────┘
+                │ renders SafeAreaProvider
+                │ with children =
+                │ (QueryProvider → PopularMoviesScreen)
+                ▼
+┌───────────────────────────────┐
+│      SafeAreaProvider         │
+│ src/providers/SafeAreaProvider.tsx│
+│                               │
+│ wraps children with:          │
+│  SafeAreaProvider (library)   │
+│  SafeAreaView                 │
+│                               │
+│ children =                    │
+│  QueryProvider                │
+│    → PopularMoviesScreen      │
+└───────────────┬───────────────┘
+                │ renders QueryProvider
+                │ with children =
+                │ (PopularMoviesScreen)
+                ▼
+┌───────────────────────────────┐
+│        QueryProvider          │
+│ src/providers/QueryProvider.tsx│
+│                               │──────────────►  🏭 TanStack Query System
+│ wraps children with:          │                 (Warehouse + Dispatcher)
+│  QueryClientProvider          │                 • caching
+│                               │                 • decides WHEN to fetch
+│ children =                    │                 • dedupes requests
+│  PopularMoviesScreen          │
+└───────────────┬───────────────┘
+                │ renders PopularMoviesScreen
+                ▼
+┌───────────────────────────────┐
+│   PopularMoviesScreen         │
+│ src/screens/PopularMoviesScreen.tsx│
+│                               │──────────────►  📦 Hook Trigger
+│                               │                 usePopularMoviesQuery()
+│ calls:                        │
+│  usePopularMoviesQuery()      │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│ usePopularMoviesQuery         │
+│ src/hooks/queries/usePopularMoviesQuery.ts│
+│                               │──────────────►  🧠 TanStack Decision
+│                               │                 useQuery(...)
+│ calls:                        │
+│  useQuery({                   │                 • check cache
+│    queryFn: fetchMovies       │                 • fetch if needed
+│  })                           │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│ fetchMovies (Driver)          │
+│ src/api/tmdb/services/moviesService.ts│
+│                               │──────────────►  🚗 Delivery Logic
+│                               │                 • decides WHICH endpoint
+│ builds request path:          │                 • builds query string
+│  endpoint + apiKey            │
+│                               │
+│ example:                      │
+│  "/movie/popular?api_key=..." │
+│                               │
+│ calls:                        │
+│  client.get(path)             │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│ axios client (Truck)          │
+│ src/api/tmdb/client.ts        │
+│                               │──────────────►  🚚 HTTP Engine
+│                               │                 • applies baseURL
+│ receives path from service    │                 • executes request
+│                               │
+│ combines:                     │
+│  baseURL + path               │
+│                               │
+│ final URL becomes:            │
+│  https://api.themoviedb.org/3 │
+│  + /movie/popular?...         │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│        TMDB API               │
+│        (external)             │
+│                               │──────────────►  🌐 Supplier
+│                               │                 returns movie data
+└───────────────┬───────────────┘
+                │
+                ▼
+
+          🔁 DATA RETURNS BACK UP THE SAME PATH
+
+TMDB → axios → fetchMovies → useQuery → hook → screen → UI renders list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+src/
+├── api/                                      // talking to outside suppliers (APIs)
+│   ├── tmdb/                                 // TMDB supplier world
+│   │   ├── config.ts                         // supplier rules → base URL, timeout, auth setup
+│   │   ├── client.ts                         // truck → axios instance that makes the trip
+│   │   ├── endpoints.ts                      // map → where to go (/movie/popular, etc.)
+│   │   ├── responseTypes.ts                  // supplier package shapes → raw TMDB payload
+│   │   ├── mappers/                          // repackaging station → convert to app format
+│   │   │   ├── movieMapper.ts                // TMDB movie → app Movie
+│   │   │   ├── genreMapper.ts                // TMDB genre → app Genre
+│   │   │   └── searchMapper.ts               // TMDB search → app SearchResult
+│   │   └── services/                         // drivers → decide what to fetch
+│   │       ├── moviesService.ts              // driver: popular, details, etc.
+│   │       ├── searchService.ts              // driver: search movies
+│   │       └── genresService.ts              // driver: fetch genres
+│   │
+│   ├── omdb/                                 // OMDb supplier world
+│   │   ├── config.ts                         // supplier rules
+│   │   ├── client.ts                         // truck
+│   │   ├── endpoints.ts                      // map
+│   │   ├── responseTypes.ts                  // supplier package shapes
+│   │   ├── mappers/                          // repackaging station
+│   │   │   ├── movieMapper.ts                // OMDb movie → app Movie
+│   │   │   └── searchMapper.ts               // OMDb search → app SearchResult
+│   │   └── services/                         // drivers
+│   │       ├── movieService.ts               // driver: movie lookup
+│   │       └── searchService.ts              // driver: search
+│   │
+│   ├── imdb/                                 // IMDb supplier world
+│   │   ├── config.ts                         // supplier rules
+│   │   ├── client.ts                         // truck
+│   │   ├── endpoints.ts                      // map
+│   │   ├── responseTypes.ts                  // supplier package shapes
+│   │   ├── mappers/                          // repackaging station
+│   │   │   ├── titleMapper.ts                // IMDb title → app Movie
+│   │   │   └── searchMapper.ts               // IMDb search → app SearchResult
+│   │   └── services/                         // drivers
+│   │       ├── titleService.ts               // driver: title/details
+│   │       └── searchService.ts              // driver: search
+│   │
+│   └── shared/                               // shared tools across suppliers
+│       ├── http/
+│       │   └── createApiClient.ts            // helper to build trucks consistently
+│       └── errors/
+│           └── apiError.ts                   // normalized error shape/handling
+│
+├── types/                                    // store’s internal catalog (API-agnostic)
+│   ├── movie.ts                              // app Movie type (what UI expects)
+│   ├── genre.ts                              // app Genre type
+│   ├── search.ts                             // app SearchResult/SearchParams
+│   └── person.ts                             // optional cast/crew type
+│
+├── hooks/                                    // reusable React hooks
+│   └── queries/                              // warehouse request desk (TanStack Query)
+│       ├── usePopularMoviesQuery.ts          // ask for popular movies
+│       ├── useMovieDetailsQuery.ts           // ask for one movie
+│       ├── useMovieSearchQuery.ts            // ask for search results
+│       └── useGenresQuery.ts                 // ask for genres
+│
+├── providers/                                // building infrastructure around the app
+│   └── AppProvider.tsx                       // QueryClientProvider, SafeAreaProvider, etc.
+│   └── QueryProvider.tsx                     // QueryClientProvider
+│   └── SafeAreaProvider.tsx                  // SafeAreaProviderProvider
+│
+├── navigation/                               // moving between storefronts
+│   ├── AppNavigator.tsx                      // root navigator
+│   └── types.ts                              // navigation param types
+│
+├── screens/                                  // storefronts (full screens)
+│   ├── HomeScreen.tsx                        // main screen
+│   ├── MovieDetailsScreen.tsx                // details screen
+│   ├── FavoritesScreen.tsx                   // favorites
+│   ├── SearchScreen.tsx                      // search UI
+│   ├── SearchByDateScreen.tsx                // search by date
+│   ├── PrivacyPolicyScreen.tsx               // privacy policy
+│   └── SettingsScreen.tsx                    // settings
+│
+├── components/                               // reusable UI pieces
+│   ├── movie/
+│   │   ├── MovieCard.tsx                     // one movie tile/row
+│   │   ├── MovieList.tsx                     // list of movies
+│   │   └── MoviePoster.tsx                   // poster image
+│   └── common/
+│       ├── LoadingView.tsx                   // loading state
+│       ├── ErrorView.tsx                     // error state
+│       └── EmptyState.tsx                    // empty results
+│
+├── utilities/                                // plain helper functions
+│   ├── formatCurrency.ts                     // currency formatting
+│   ├── formatNumber.ts                       // number formatting
+│   ├── formatDate.ts                         // date formatting
+│   └── getIMDbRating.ts                      // rating helper
+│
+├── constants/                                // app-wide constants
+│   ├── colors.ts                             // color palette
+│   ├── spacing.ts                            // spacing scale
+│   └── images.ts                             // static image refs
+│
+└── theme/                                    // optional theming layer
+    ├── index.ts                              // theme exports
+    └── tokens.ts                             // design tokens
+
+App.tsx                                        // entry → renders providers + root navigator/screen
+
+================================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Full Flow (Providers ↓ + Data Work →)
+
+┌───────────────────────────────┐
+│           App.tsx             │
+│        src/App.tsx            │
+│                               │
+│  <AppProvider>                │
+│    PopularMoviesScreen        │
+│  </AppProvider>               │
+└───────────────┬───────────────┘
+                │ renders AppProvider
+                │ with children =
+                │ (PopularMoviesScreen)
+                ▼
+
+┌───────────────────────────────┐
+│        AppProvider            │
+│  src/providers/AppProvider.tsx│
+│                               │
+│ composition root for          │
+│ app-wide sub-providers        │
+│                               │
+│ actual structure:             │
+│                               │
+│ <QueryProvider>               │
+│   <SafeAreaProvider>          │
+│     {children}                │
+│   </SafeAreaProvider>         │
+│ </QueryProvider>              │
+│                               │
+│ children =                    │
+│  PopularMoviesScreen          │
+└───────────────┬───────────────┘
+                │ renders QueryProvider
+                │ with children =
+                │ (SafeAreaProvider → PopularMoviesScreen)
+                ▼
+
+┌───────────────────────────────┐
+│        QueryProvider          │
+│ src/providers/QueryProvider.tsx│
+│                               │──────────────►  🏭 TanStack Query System
+│ wraps children with:          │                 (Warehouse + Dispatcher)
+│  QueryClientProvider          │                 • caching
+│                               │                 • decides WHEN to fetch
+│ children =                    │                 • dedupes requests
+│  SafeAreaProvider             │
+│    → PopularMoviesScreen      │
+└───────────────┬───────────────┘
+                │ renders SafeAreaProvider
+                │ with children =
+                │ (PopularMoviesScreen)
+                ▼
+
+┌───────────────────────────────┐
+│      SafeAreaProvider         │
+│ src/providers/SafeAreaProvider.tsx│
+│                               │
+│ wraps children with:          │
+│  SafeAreaProvider (library)   │
+│  SafeAreaView                 │
+│                               │
+│ children =                    │
+│  PopularMoviesScreen          │
+└───────────────┬───────────────┘
+                │ renders PopularMoviesScreen
+                ▼
+
+┌───────────────────────────────┐
+│   PopularMoviesScreen         │
+│ src/screens/PopularMoviesScreen.tsx│
+│                               │──────────────►  📦 Hook Trigger
+│                               │                 usePopularMoviesQuery()
+│ calls:                        │
+│  usePopularMoviesQuery()      │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│ usePopularMoviesQuery         │
+│ src/hooks/queries/usePopularMoviesQuery.ts│
+│                               │──────────────►  🧠 TanStack Decision
+│                               │                 useQuery(...)
+│ calls:                        │
+│  useQuery({                   │                 • check cache
+│    queryFn: fetchMovies       │                 • fetch if needed
+│  })                           │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│ fetchMovies (Driver)          │
+│ src/api/tmdb/services/moviesService.ts│
+│                               │──────────────►  🚗 Delivery Logic
+│                               │                 • decides WHICH endpoint
+│ builds request path:          │                 • builds query string
+│  endpoint + apiKey            │
+│                               │
+│ example:                      │
+│  "/movie/popular?api_key=..." │
+│                               │
+│ calls:                        │
+│  client.get(path)             │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│ axios client (Truck)          │
+│ src/api/tmdb/client.ts        │
+│                               │──────────────►  🚚 HTTP Engine
+│                               │                 • applies baseURL
+│ receives path from service    │                 • executes request
+│                               │
+│ combines:                     │
+│  baseURL + path               │
+│                               │
+│ final URL becomes:            │
+│  https://api.themoviedb.org/3 │
+│  + /movie/popular?...         │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│        TMDB API               │
+│        (external)             │
+│                               │──────────────►  🌐 Supplier
+│                               │                 returns movie data
+└───────────────┬───────────────┘
+                │
+                ▼
+
+          🔁 DATA RETURNS BACK UP THE SAME PATH
+
+TMDB → axios → fetchMovies → useQuery → hook → screen → UI renders list
