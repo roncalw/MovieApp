@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
-import { usePopularMoviesQuery } from '../hooks/queries/usePopularMoviesQuery';
+import { usePopularMoviesQuery } from '../hooks/queries/useMovieSearchQuery';
 import type { movieType } from '../types/movie';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';

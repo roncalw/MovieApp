@@ -21,3 +21,10 @@ export type PopularMoviesResponse = {
   total_pages: number;
   total_results: number;
 };
+
+export type MovieSearchResponse = {
+  page: number;
+  results: movieType[];
+  total_pages: number;
+  total_results: number;
+};

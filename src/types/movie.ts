@@ -31,6 +31,7 @@ export type movieType = {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  genreIds: number[];
   budget: number;
   revenue: number;
   runtime: number;

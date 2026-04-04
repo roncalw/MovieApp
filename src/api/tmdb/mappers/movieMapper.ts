@@ -35,6 +35,7 @@ export function mapMovieToMovie(movie: movieType): movieType {
     video: movie.video,
     vote_average: movie.vote_average,
     vote_count: movie.vote_count,
+    genreIds: movie.genreIds,
     budget: movie.budget,
     revenue: movie.revenue,
     runtime: movie.runtime,

@@ -1,11 +1,12 @@
 import React from 'react';
 import { AppProvider } from './src/providers/AppProvider';
 import { PopularMoviesScreen } from './src/screens/PopularMoviesScreen';
+import { MovieSearchScreen } from './src/screens/MovieSearchScreen';
 
 export default function App() {
   return (
     <AppProvider>
-      <PopularMoviesScreen />
+      <MovieSearchScreen />
     </AppProvider>
   );
 }

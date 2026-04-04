@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchPopularMovies } from '../../api/tmdb/services/movieService';
+import { fetchPopularMovies, fetchMovieSearchResults, type MovieSearchParams, } from '../../api/tmdb/services/movieService';
 
 /*
   usePopularMoviesQuery = warehouse request desk
@@ -33,6 +33,26 @@ import { fetchPopularMovies } from '../../api/tmdb/services/movieService';
   - popular movies are treated as fresh for 5 minutes
   - if you leave and come back quickly, the app can reuse cached results
 */
+
+/*
+  WHAT THIS DOES:
+  - Creates the TanStack Query hook for the movie search page
+
+  WHY THIS CHANGES:
+  - The old hook was for a fixed popular-movies request
+  - The new screen depends on selector-driven filter values
+  - So the query key needs to include those params
+*/
+
+export function useMovieSearchQuery(params: MovieSearchParams) {
+  return useQuery({
+    queryKey: ['movieSearch', params],
+    queryFn: () => fetchMovieSearchResults(params),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+
 export function usePopularMoviesQuery() {
   return useQuery({
     queryKey: ['popularMovies'],

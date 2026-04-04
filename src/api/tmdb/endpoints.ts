@@ -11,4 +11,5 @@
 */
 export const ENDPOINTS = {
   POPULAR_MOVIES: '/movie/popular',
+  MOVIE_SEARCH: '/discover/movie',
 };
