@@ -1,4 +1,15 @@
-import type { movieType } from '../../../types/movie';
+/*
+Step: 12
+   * /MovieApp/src/api/tmdb/mappers/movieMapper.ts
+Called by:
+   * /MovieApp/src/api/tmdb/services/movieService.ts
+Next step path:
+   * /MovieApp/src/types/MovieTypes.ts
+Purpose:
+   * Normalizes TMDB movie payloads into the app's movieType shape and fills in safe defaults for fields that are missing 
+     from list responses.
+*/
+import type { movieType } from '../../../types/MovieTypes';
 
 /*
   mapMovieToMovie = repackaging station
@@ -25,6 +36,7 @@ export function mapMovieToMovie(movie: movieType): movieType {
     id: movie.id,
     adult: movie.adult,
     backdrop_path: movie.backdrop_path,
+    genres: movie.genres ?? [],
     original_language: movie.original_language,
     original_title: movie.original_title,
     overview: movie.overview,
@@ -35,9 +47,13 @@ export function mapMovieToMovie(movie: movieType): movieType {
     video: movie.video,
     vote_average: movie.vote_average,
     vote_count: movie.vote_count,
-    genreIds: movie.genreIds,
-    budget: movie.budget,
-    revenue: movie.revenue,
-    runtime: movie.runtime,
+    genreIds: movie.genreIds ?? [],
+    budget: movie.budget ?? 0,
+    revenue: movie.revenue ?? 0,
+    runtime: movie.runtime ?? 0,
+    credits: movie.credits ?? { cast: [], crew: [] },
+    release_dates: movie.release_dates ?? { results: [] },
+    production_companies: movie.production_companies ?? [],
+    production_countries: movie.production_countries ?? [],
   };
 }

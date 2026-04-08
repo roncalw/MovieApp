@@ -1,3 +1,14 @@
+/*
+Step: 8
+   * /MovieApp/src/api/tmdb/client.ts
+Called by:
+   * /MovieApp/src/api/tmdb/services/movieService.ts
+Next step path:
+   * /MovieApp/src/api/tmdb/config.ts
+Purpose:
+   * Creates the shared Axios client used for TMDB requests so services can reuse one base URL, timeout, and header 
+     setup.
+*/
 import axios from 'axios';
 import { CONFIG } from './config';
 

@@ -1,124 +1,28 @@
+/*
+Step: 5
+   * /MovieApp/src/screens/MovieSearchScreen.tsx
+Called by:
+   * /MovieApp/App.tsx
+Next step path:
+   * /MovieApp/src/components/MovieSearchHeader.tsx
+   * /MovieApp/src/components/MovieResultsList.tsx
+Purpose:
+   * Renders the movie search filters and delegates the shared results-list/detail flow to the reusable movie results component.
+*/
 import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  StyleSheet,
-  Image,
-  Pressable,
-  ScrollView,
-  TextInput,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
-import type { movieType } from '../types/movie';
+import { MovieSearchHeader } from '../components/MovieSearchHeader';
+import { MovieResultsList } from '../components/MovieResultsList';
 
-/*
-  WHAT THIS CONSTANT DOES:
-  - Provides the base image URL for TMDB poster images
-
-  WHY THIS EXISTS HERE:
-  - The screen renders the poster images
-  - TMDB gives poster_path, not the full image URL
-*/
-const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-
-/*
-  WHAT THESE CONSTANTS DO:
-  - Provide the selector data for the UI controls at the top
-
-  WHY THEY LIVE HERE FOR NOW:
-  - You asked to hardcode the selector values for now
-  - This keeps the page self-contained while the screen is still evolving
-*/
-const GENRE_ITEMS = [
-  { label: 'Action', value: '28' },
-  { label: 'Adventure', value: '12' },
-  { label: 'Animation', value: '16' },
-  { label: 'Comedy', value: '35' },
-  { label: 'Crime', value: '80' },
-  { label: 'Documentary', value: '99' },
-  { label: 'Drama', value: '18' },
-  { label: 'Family', value: '10751' },
-  { label: 'Fantasy', value: '14' },
-  { label: 'History', value: '36' },
-  { label: 'Horror', value: '27' },
-  { label: 'Music', value: '10402' },
-  { label: 'Mystery', value: '9648' },
-  { label: 'Romance', value: '10749' },
-  { label: 'SciFi', value: '878' },
-  { label: 'Thriller', value: '53' },
-  { label: 'War', value: '10752' },
-  { label: 'Western', value: '37' },
-];
-
-const RATING_ITEMS = [
-  { id: 'G', label: 'G' },
-  { id: 'PG', label: 'PG' },
-  { id: 'PG-13', label: 'PG-13' },
-  { id: 'R', label: 'R' },
-];
-
-const STREAMER_ITEMS = [
-  { label: 'Netflix', value: '8' },
-  { label: 'Hulu', value: '15' },
-  { label: 'Prime', value: '9' },
-  { label: 'Max', value: '1899' },
-  { label: 'YouTube', value: '192' },
-  { label: 'Disney Plus', value: '337' },
-  { label: 'Apple TV Plus', value: '350' },
-  { label: 'Peacock', value: '387' },
-  { label: 'AMC+', value: '526' },
-  { label: 'Paramount+', value: '531' },
-];
-
-const SORT_ITEMS = [
-  { id: '1', label: 'Popularity', value: '0' },
-  { id: '2', label: 'User Rating (500+ Reviews)', value: '500' },
-  { id: '3', label: 'User Rating (100+ Reviews)', value: '100' },
-  { id: '4', label: 'User Rating (1+ Reviews)', value: '1' },
-];
-
-const PAGE_ITEMS = Array.from({ length: 100 }, (_, index) => index + 1);
-
-/*
-  WHAT THIS COMPONENT DOES:
-  - Renders a section heading for each control group
-
-  WHY THIS EXISTS:
-  - Keeps the main screen JSX cleaner
-*/
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.sectionLabel}>{children}</Text>;
+function getTodayDateString() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-/*
-  WHAT THIS COMPONENT DOES:
-  - Renders a simple selectable chip
+function getDefaultBeginDate() {
+  const currentYear = new Date().getFullYear();
 
-  WHY THIS EXISTS:
-  - You asked for selector-type controls at the top
-  - This avoids adding extra UI packages right now
-*/
-function SelectChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.chip, selected && styles.chipSelected]}
-    >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
+  return `${currentYear - 5}-01-01`;
 }
 
 /*
@@ -139,14 +43,12 @@ export function MovieSearchScreen() {
     WHY THEY EXIST:
     - The page is now query-driven by user selections
   */
-  const [selectedRating, setSelectedRating] = useState<string>('PG-13');
-  const [selectedGenre, setSelectedGenre] = useState<string>('28');
-  const [selectedStreamer, setSelectedStreamer] = useState<string>('8');
-  const [selectedSortValue, setSelectedSortValue] = useState<string>('0');
-  const [selectedPage, setSelectedPage] = useState<number>(1);
-
-  const [beginDate, setBeginDate] = useState<string>('2024-01-01');
-  const [endDate, setEndDate] = useState<string>('2024-12-31');
+  const [selectedRating, setSelectedRating] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const [selectedStreamer, setSelectedStreamer] = useState<string>('');
+  const [selectedSortValue, setSelectedSortValue] = useState<string>('');
+  const [beginDate, setBeginDate] = useState<string>(getDefaultBeginDate);
+  const [endDate, setEndDate] = useState<string>(getTodayDateString);
 
   /*
     WHAT THIS useMemo DOES:
@@ -160,9 +62,12 @@ export function MovieSearchScreen() {
   */
   const { movieVoteCount, movieSortBy } = useMemo(() => {
     let sortByForQuery = '';
-    let voteCount = '0';
+    let voteCount = '';
 
-    if (selectedSortValue === '0') {
+    if (selectedSortValue === '') {
+      sortByForQuery = '';
+      voteCount = '';
+    } else if (selectedSortValue === '0') {
       voteCount = '0';
       sortByForQuery = 'popularity.desc';
     } else {
@@ -193,7 +98,6 @@ export function MovieSearchScreen() {
       movieStreamers: selectedStreamer,
       movieVoteCount,
       movieSortBy,
-      pageNum: selectedPage,
     }),
     [
       selectedRating,
@@ -203,7 +107,6 @@ export function MovieSearchScreen() {
       selectedStreamer,
       movieVoteCount,
       movieSortBy,
-      selectedPage,
     ]
   );
 
@@ -215,128 +118,22 @@ export function MovieSearchScreen() {
     - The screen should not call the API directly
     - The hook owns cache/loading/error behavior
   */
-  const { data, isLoading, isError, error } = useMovieSearchQuery(queryParams);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMovieSearchQuery(queryParams);
 
-  /*
-    WHAT THIS HEADER DOES:
-    - Builds the controls area that appears above the movie results
-
-    WHY THIS IS USED AS ListHeaderComponent:
-    - It keeps the entire page as one scrollable layout
-  */
-  const header = (
-    <View>
-      <Text style={styles.title}>Movie Search</Text>
-
-      <SectionLabel>Begin Date (YYYY-MM-DD)</SectionLabel>
-      <TextInput
-        style={styles.input}
-        value={beginDate}
-        onChangeText={setBeginDate}
-        placeholder="2024-01-01"
-        autoCapitalize="none"
-      />
-
-      <SectionLabel>End Date (YYYY-MM-DD)</SectionLabel>
-      <TextInput
-        style={styles.input}
-        value={endDate}
-        onChangeText={setEndDate}
-        placeholder="2024-12-31"
-        autoCapitalize="none"
-      />
-
-      <SectionLabel>Rating</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rowWrap}
-      >
-        {RATING_ITEMS.map((item) => (
-          <SelectChip
-            key={item.id}
-            label={item.label}
-            selected={selectedRating === item.id}
-            onPress={() => setSelectedRating(item.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionLabel>Genre</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rowWrap}
-      >
-        {GENRE_ITEMS.map((item) => (
-          <SelectChip
-            key={item.value}
-            label={item.label}
-            selected={selectedGenre === item.value}
-            onPress={() => setSelectedGenre(item.value)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionLabel>Streamer</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rowWrap}
-      >
-        {STREAMER_ITEMS.map((item) => (
-          <SelectChip
-            key={item.value}
-            label={item.label}
-            selected={selectedStreamer === item.value}
-            onPress={() => setSelectedStreamer(item.value)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionLabel>Sort</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rowWrap}
-      >
-        {SORT_ITEMS.map((item) => (
-          <SelectChip
-            key={item.id}
-            label={item.label}
-            selected={selectedSortValue === item.value}
-            onPress={() => setSelectedSortValue(item.value)}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionLabel>Page</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rowWrap}
-      >
-        {PAGE_ITEMS.map((page) => (
-          <SelectChip
-            key={page}
-            label={String(page)}
-            selected={selectedPage === page}
-            onPress={() => setSelectedPage(page)}
-          />
-        ))}
-      </ScrollView>
-
-      <View style={styles.summaryBox}>
-        <Text style={styles.summaryText}>Query Summary</Text>
-        <Text style={styles.summarySubText}>Rating: {selectedRating}</Text>
-        <Text style={styles.summarySubText}>Genre: {selectedGenre}</Text>
-        <Text style={styles.summarySubText}>Streamer: {selectedStreamer}</Text>
-        <Text style={styles.summarySubText}>Sort By: {movieSortBy}</Text>
-        <Text style={styles.summarySubText}>Vote Count: {movieVoteCount}</Text>
-        <Text style={styles.summarySubText}>Page: {selectedPage}</Text>
-      </View>
-    </View>
+  const movies = useMemo(
+    () => data?.pages.flatMap((page) => page.movies) ?? [],
+    [data]
   );
+  const loadedPages = data?.pages.length ?? 1;
+  const totalPages = data?.pages[0]?.totalPages ?? null;
 
   /*
     WHAT THIS DOES:
@@ -373,143 +170,37 @@ export function MovieSearchScreen() {
     );
   }
 
-  /*
-    WHAT THIS DOES:
-    - Renders the full page:
-        controls at top
-        movie results underneath
-
-    WHY:
-    - This preserves the one-page layout you requested
-  */
   return (
-    <FlatList
-      data={data}
-      keyExtractor={(item: movieType) => item.id.toString()}
-      contentContainerStyle={styles.listContent}
-      ListHeaderComponent={header}
-      renderItem={({ item }: { item: movieType }) => (
-        <View style={styles.card}>
-          {item.poster_path ? (
-            <Image
-              source={{ uri: `${POSTER_BASE_URL}${item.poster_path}` }}
-              style={styles.poster}
-              resizeMode="cover"
-            />
-          ) : null}
-
-          <Text style={styles.movieTitle}>{item.title}</Text>
-          <Text style={styles.subText}>
-            Release Date: {item.release_date}
-          </Text>
-          <Text style={styles.subText}>
-            Rating: {item.vote_average} ({item.vote_count} votes)
-          </Text>
-          <Text style={styles.overview}>{item.overview}</Text>
-        </View>
-      )}
+    <MovieResultsList
+      movies={movies}
+      onEndReached={fetchNextPage}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      ListHeaderComponent={
+        <MovieSearchHeader
+          beginDate={beginDate}
+          endDate={endDate}
+          selectedRating={selectedRating}
+          selectedGenre={selectedGenre}
+          selectedStreamer={selectedStreamer}
+          selectedSortValue={selectedSortValue}
+          loadedPages={loadedPages}
+          totalPages={totalPages}
+          movieSortBy={movieSortBy}
+          movieVoteCount={movieVoteCount}
+          onBeginDateChange={setBeginDate}
+          onEndDateChange={setEndDate}
+          onRatingChange={setSelectedRating}
+          onGenreChange={setSelectedGenre}
+          onStreamerChange={setSelectedStreamer}
+          onSortChange={setSelectedSortValue}
+        />
+      }
     />
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  listContent: {
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  sectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-  },
-  rowWrap: {
-    paddingBottom: 4,
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#68A1ED',
-    backgroundColor: '#fff',
-    marginRight: 8,
-  },
-  chipSelected: {
-    backgroundColor: '#68A1ED',
-  },
-  chipText: {
-    color: '#68A1ED',
-    fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: '#fff',
-  },
-  summaryBox: {
-    marginTop: 16,
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#f4f6f8',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  summaryText: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  summarySubText: {
-    fontSize: 14,
-    color: '#444',
-    marginBottom: 2,
-  },
-  card: {
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  poster: {
-    width: '100%',
-    height: 300,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  movieTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  subText: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 4,
-  },
-  overview: {
-    fontSize: 15,
-    color: '#333',
-    marginTop: 8,
-    lineHeight: 21,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',

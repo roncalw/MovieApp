@@ -1,3 +1,14 @@
+/*
+Step: 3
+   * /MovieApp/src/providers/QueryProvider.tsx
+Called by:
+   * /MovieApp/src/providers/SafeAreaProvider.tsx
+Next step path:
+   * /MovieApp/src/screens/MovieSearchScreen.tsx
+Purpose:
+   * Creates the shared TanStack Query client and exposes it to the rest of the app so hooks can fetch, cache, and reuse movie 
+     data.
+*/
 import React, { PropsWithChildren } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -28,11 +39,11 @@ const queryClient = new QueryClient();
 
   WHAT children IS IN THIS PROJECT:
   - QueryProvider is a wrapper component
-  - In AppProvider.tsx, QueryProvider wraps SafeAreaProvider
-  - SafeAreaProvider then wraps the screen
+  - In AppProvider.tsx, SafeAreaProvider wraps QueryProvider
+  - QueryProvider then wraps the screen
 
   So in THIS project, QueryProvider's child is:
-    <SafeAreaProvider>{children}</SafeAreaProvider>
+    <MovieSearchScreen />
 
   WHY WE IMPORT PropsWithChildren:
   - Because QueryProvider exists specifically to wrap other components
@@ -56,11 +67,11 @@ export function QueryProvider({ children }: PropsWithChildren) {
       THE REAL CHAIN HERE IS:
       App.tsx
         → AppProvider
-          → QueryProvider
-            → QueryClientProvider
-              → SafeAreaProvider
-                → PopularMoviesScreen
-                  → usePopularMoviesQuery()
+          → SafeAreaProvider
+            → QueryProvider
+              → QueryClientProvider
+                → MovieSearchScreen
+                  → useMovieSearchQuery()
                     → useQuery()
 
       WHY THIS IS REQUIRED:

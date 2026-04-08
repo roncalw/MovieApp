@@ -1,4 +1,16 @@
 /*
+Step: 9
+   * /MovieApp/src/api/tmdb/config.ts
+Called by:
+   * /MovieApp/src/api/tmdb/client.ts
+   * /MovieApp/src/api/tmdb/services/movieService.ts
+Next step path:
+   * /MovieApp/src/api/tmdb/endpoints.ts
+Purpose:
+   * Stores the shared TMDB configuration values like the base API URL, API key query string, and request timeout 
+     settings.
+*/
+/*
   CONFIG = supplier rules
 
   IN THIS PROJECT:

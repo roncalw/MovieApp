@@ -1,0 +1,293 @@
+src/
+├── api/
+│   └── tmdb/
+│       ├── config.ts                  // base URL, API key, config
+│       ├── client.ts                  // axios instance ("the truck")
+│       ├── endpoints.ts               // where to go (/discover/movie, /movie/:id)
+│       ├── responseTypes.ts           // TMDB response shapes
+│       │
+│       ├── mappers/
+│       │   └── movieMapper.ts         // TMDB → app Movie
+│       │
+│       └── services/
+│           └── movieService.ts        // decides what to fetch (search, popular, details)
+│
+├── hooks/
+│   └── queries/
+│       └── useMovieSearchQuery.ts     // TanStack Query hooks for search, details, popular
+│
+├── components/
+│   ├── MovieSearchHeader.tsx          // search controls and query summary above results
+│   ├── MovieCard.tsx                  // reusable tappable movie summary card
+│   └── MovieResultsList.tsx           // shared movie list + detail/open/back flow
+│
+├── providers/
+│   ├── AppProvider.tsx                // root composition (SafeArea + Query)
+│   ├── QueryProvider.tsx              // React Query setup (warehouse)
+│   └── SafeAreaProvider.tsx           // screen safe layout
+│
+├── screens/
+│   ├── MovieSearchScreen.tsx          // main search screen that composes header + shared results list
+│   ├── MovieDetail.tsx                // shared selected-movie detail screen
+│   └── PopularMoviesScreen.tsx        // older movie list screen using the shared results component
+│
+├── types/
+│   ├── MovieTypes.ts                  // app Movie-related types
+│   └── movieSearchParams.ts           // search filter params type
+│
+└── App.tsx                            // entry point
+
+
+## Full Flow (Providers ↓ + Data Work → + Shared List Flow)
+
+┌───────────────────────────────┐
+│           App.tsx             │
+│            App.tsx            │
+│                               │
+│  <AppProvider>                │
+│    MovieSearchScreen          │
+│  </AppProvider>               │
+└───────────────┬───────────────┘
+                │ renders AppProvider
+                │ with children =
+                │ (MovieSearchScreen)
+                ▼
+
+┌───────────────────────────────┐
+│        AppProvider            │
+│  src/providers/AppProvider.tsx│
+│                               │
+│ composition root for          │
+│ app-wide sub-providers        │
+│                               │
+│ wraps children with:          │
+│  SafeAreaProvider             │
+│  QueryProvider                │
+│                               │
+│ children =                    │
+│  MovieSearchScreen            │
+└───────────────┬───────────────┘
+                │ renders SafeArea + Query setup
+                ▼
+
+┌───────────────────────────────┐
+│      SafeAreaProvider         │
+│ src/providers/SafeAreaProvider.tsx│
+│                               │
+│ keeps UI inside safe screen   │
+│ bounds on device              │
+│ and wraps QueryProvider       │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│        QueryProvider          │
+│ src/providers/QueryProvider.tsx│
+│                               │──────────────►  🏭 TanStack Query System
+│ wraps children with:          │                 • caching
+│  QueryClientProvider          │                 • decides WHEN to fetch
+│                               │                 • dedupes requests
+│ children =                    │
+│  MovieSearchScreen            │
+└───────────────┬───────────────┘
+                │ renders MovieSearchScreen
+                ▼
+
+┌───────────────────────────────┐
+│     MovieSearchScreen         │
+│ src/screens/MovieSearchScreen.tsx│
+│                               │──────────────►  📦 Hook Trigger
+│ builds filter state for:      │                 useMovieSearchQuery(params)
+│  rating, genre, streamer,     │
+│  date range, sort, page       │
+│                               │
+│ renders:                      │
+│  MovieSearchHeader            │
+│  MovieResultsList             │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│    useMovieSearchQuery        │
+│ src/hooks/queries/useMovieSearchQuery.ts│
+│                               │──────────────►  🧠 TanStack Decision
+│ calls:                        │                 useQuery(...)
+│  fetchMovieSearchResults      │                 • check cache
+│                               │                 • fetch if needed
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│ fetchMovieSearchResults       │
+│ src/api/tmdb/services/movieService.ts│
+│                               │──────────────►  🚗 Delivery Logic
+│ builds request path using:    │                 • decides search endpoint
+│  discover/movie + filters     │                 • builds query string
+│                               │
+│ calls:                        │
+│  tmdbClient.get(path)         │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│ axios client (Truck)          │
+│ src/api/tmdb/client.ts        │
+│                               │──────────────►  🚚 HTTP Engine
+│ combines:                     │                 • applies baseURL
+│  baseURL + path               │                 • executes request
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│        TMDB API               │
+│        (external)             │
+│                               │──────────────►  🌐 Supplier
+│                               │                 returns movie list data
+└───────────────┬───────────────┘
+                │
+                ▼
+
+          🔁 DATA RETURNS BACK UP THE SAME PATH
+
+TMDB → axios → fetchMovieSearchResults → useQuery → useMovieSearchQuery → MovieSearchScreen → MovieResultsList
+
+
+## Shared Results Composition
+
+┌───────────────────────────────┐
+│    MovieSearchHeader          │
+│ src/components/MovieSearchHeader.tsx│
+│                               │
+│ renders the filter controls   │
+│ and query summary above       │
+│ the shared results list       │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│     MovieResultsList          │
+│ src/components/MovieResultsList.tsx│
+│                               │
+│ renders FlatList of movies    │
+│ tracks:                       │
+│  selectedMovieId              │
+│  shouldRestoreScroll          │
+│  last scroll offset           │
+│                               │
+│ renders MovieCard for each    │
+│ result                        │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│        MovieCard              │
+│ src/components/MovieCard.tsx  │
+│                               │
+│ shows poster, title, rating,  │
+│ release date, and overview    │
+│                               │
+│ onPress goes back up to       │
+│ MovieResultsList              │
+└───────────────────────────────┘
+
+
+## Tap Flow (Movie Card → Details)
+
+┌───────────────────────────────┐
+│   MovieSearchScreen or        │
+│   PopularMoviesScreen         │
+│ src/screens/...               │
+│                               │
+│ passes movie data and an      │
+│ optional header into          │
+│ MovieResultsList              │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│     MovieResultsList          │
+│ src/components/MovieResultsList.tsx│
+│                               │
+│ receives the tap from         │
+│ MovieCard and stores:         │
+│  selectedMovieId              │
+└───────────────┬───────────────┘
+                │ user taps anywhere on card
+                ▼
+
+┌───────────────────────────────┐
+│      MovieDetail              │
+│ src/screens/MovieDetail.tsx   │
+│                               │──────────────►  🧾 Detail Screen
+│ called by MovieResultsList    │                 • shows back button
+│ receives movieId + onBack     │                   poster, title, genres,
+│                               │                   rating, overview
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│   useMovieDetailsQuery        │
+│ src/hooks/queries/useMovieSearchQuery.ts│
+│                               │──────────────►  🧠 TanStack Decision
+│ fetches the selected movie    │                 • query runs for the
+│ details by id                 │                   chosen movie
+│                               │
+│ calls:                        │
+│  getMovie(movieId)            │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│          getMovie             │
+│ src/api/tmdb/services/movieService.ts│
+│                               │──────────────►  🚗 Delivery Logic
+│ builds request path:          │                 • /movie/:id
+│  /movie/{id}?api_key=...      │                 • append credits
+│  &append_to_response=         │                 • append release_dates
+│  credits,release_dates        │
+│                               │
+│ calls:                        │
+│  tmdbClient.get(path)         │
+└───────────────┬───────────────┘
+                │
+                ▼
+
+┌───────────────────────────────┐
+│        TMDB API               │
+│        (external)             │
+│                               │──────────────►  🌐 Supplier
+│                               │                 returns movie detail data
+└───────────────┬───────────────┘
+                │
+                ▼
+
+          🔁 DETAIL DATA RETURNS BACK UP THE SAME PATH
+
+TMDB → axios → getMovie → useQuery → useMovieDetailsQuery → MovieDetail
+
+
+## What The User Sees After The Tap
+
+MovieResultsList switches from the result list to the shared detail layout.
+
+Display order:
+1. movie image
+2. movie title
+3. genres
+4. rating
+5. movie description
+
+Back button:
+- "Back to results" clears selectedMovieId inside MovieResultsList
+- MovieResultsList returns to the FlatList of cards
+- the saved scroll position is restored when the list comes back

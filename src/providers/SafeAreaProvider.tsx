@@ -1,3 +1,14 @@
+/*
+Step: 4
+   * /MovieApp/src/providers/SafeAreaProvider.tsx
+Called by:
+   * /MovieApp/src/providers/AppProvider.tsx
+Next step path:
+   * /MovieApp/src/providers/QueryProvider.tsx
+Purpose:
+   * Wraps the app content in safe-area components so screens stay out of the notch, status bar, and other unsafe device 
+     edges.
+*/
 import React, { PropsWithChildren } from 'react';
 import {
   SafeAreaProvider as RNSafeAreaProvider,
@@ -31,14 +42,14 @@ export function SafeAreaProvider({ children }: PropsWithChildren) {
 
       WHAT IT WRAPS HERE:
       - It wraps SafeAreaView
-      - SafeAreaView then wraps the screen content
+      - SafeAreaView then wraps QueryProvider and the screen content
     */
     <RNSafeAreaProvider>
       {/*
         SafeAreaView is the visible safe-area-aware container.
 
         IN THIS PROJECT:
-        - It wraps PopularMoviesScreen right now
+        - It wraps QueryProvider right now
         - Later it may wrap your whole navigator
 
         style={{ flex: 1 }}
