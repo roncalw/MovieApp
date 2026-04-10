@@ -1,7 +1,7 @@
 /*
 Step: 5
    * /MovieApp/src/components/PageTopHeader.tsx
-Called by:
+Imported by:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
 Next step path:
    * /MovieApp/src/components/MovieSearchHeader.tsx
@@ -13,6 +13,8 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 import { buttons } from '../theme/buttons';
+import { typography } from '../theme/typography';
+import { scaleSize } from '../theme/scale';
 
 type PageTopHeaderProps = {
   title: string;
@@ -28,18 +30,26 @@ export function PageTopHeader({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
+    /*
+      Combine the real safe-area inset with a scaled extra top gap so the header
+      clears the status area on all devices without using one fixed number.
+    */
+    <View style={[styles.container, { paddingTop: insets.top + scaleSize(10) }]}>
       <View style={styles.row}>
         <View style={styles.sideSlot}>
           <View style={styles.leftPlaceholder} />
         </View>
 
-        <Text style={styles.title}>{title}</Text>
+        <Text allowFontScaling={false} style={styles.title}>
+          {title}
+        </Text>
 
         {rightActionLabel ? (
           <View style={styles.sideSlot}>
             <Pressable onPress={onRightActionPress} style={styles.rightAction}>
-              <Text style={styles.rightActionText}>{rightActionLabel}</Text>
+              <Text allowFontScaling={false} style={styles.rightActionText}>
+                {rightActionLabel}
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -52,50 +62,54 @@ export function PageTopHeader({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 14,
+    /*
+      scaleSize(...) is used throughout this header's spacing so the title row,
+      placeholder, and action pill stay visually balanced on both compact and
+      larger phones.
+    */
+    paddingHorizontal: scaleSize(16),
+    paddingBottom: scaleSize(14),
     backgroundColor: colors.background,
   },
   row: {
-    minHeight: 44,
+    minHeight: scaleSize(44),
     flexDirection: 'row',
     alignItems: 'center',
   },
   sideSlot: {
-    width: 96,
-    minHeight: 32,
+    width: scaleSize(96),
+    minHeight: scaleSize(32),
     justifyContent: 'center',
   },
   leftPlaceholder: {
-    width: 42,
-    height: 32,
-    borderRadius: 12,
+    width: scaleSize(42),
+    height: scaleSize(32),
+    borderRadius: scaleSize(12),
     backgroundColor: colors.placeholderAccent,
   },
   title: {
     flex: 1,
-    marginHorizontal: 12,
-    fontSize: 24,
-    fontWeight: '700',
+    marginHorizontal: scaleSize(12),
+    ...typography.pageTitle,
     color: colors.brandText,
     textAlign: 'center',
   },
   rightAction: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    minHeight: scaleSize(36),
+    paddingHorizontal: scaleSize(14),
+    paddingVertical: scaleSize(8),
     borderRadius: 999,
     backgroundColor: buttons.primaryPill.backgroundColor,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rightActionText: {
+    ...typography.buttonLabel,
     color: buttons.primaryPill.textColor,
-    fontSize: 14,
-    fontWeight: '700',
     textAlign: 'center',
   },
   rightSpacer: {
-    width: 42,
-    height: 32,
+    width: scaleSize(42),
+    height: scaleSize(32),
   },
 });

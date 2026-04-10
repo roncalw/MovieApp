@@ -1,7 +1,7 @@
 /*
 Step: 5
    * /MovieApp/src/screens/MovieSearchScreen.tsx
-Called by:
+Imported by:
    * /MovieApp/App.tsx
 Next step path:
    * /MovieApp/src/components/MovieSearchHeader.tsx
@@ -17,6 +17,8 @@ import { MovieResultsList } from '../components/MovieResultsList';
 import { PageTopHeader } from '../components/PageTopHeader';
 import type { MovieSearchParams } from '../types/movieSearchParams';
 import { colors } from '../theme/colors';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
 
 function getTodayDateString() {
   return new Date().toISOString().slice(0, 10);
@@ -167,7 +169,13 @@ export function MovieSearchScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
-        <Text style={styles.message}>Loading movies...</Text>
+        {/*
+          Lock these feedback messages to the shared UI typography so they keep
+          the same intended size instead of picking up extra device font scaling.
+        */}
+        <Text allowFontScaling={false} style={styles.message}>
+          Loading movies...
+        </Text>
       </View>
     );
   }
@@ -185,8 +193,12 @@ export function MovieSearchScreen() {
 
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Error loading movies</Text>
-        <Text style={styles.message}>{message}</Text>
+        <Text allowFontScaling={false} style={styles.errorText}>
+          Error loading movies
+        </Text>
+        <Text allowFontScaling={false} style={styles.message}>
+          {message}
+        </Text>
       </View>
     );
   }
@@ -238,20 +250,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   centered: {
+    /*
+      scaleSize(...) is only used here for the loading/error layout so the
+      horizontal breathing room stays proportional on compact and larger phones.
+    */
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: scaleSize(24),
     backgroundColor: colors.background,
   },
   message: {
-    marginTop: 10,
-    fontSize: 16,
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
     textAlign: 'center',
+    color: colors.textSecondary,
   },
   errorText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: 'red',
+    ...typography.feedbackTitle,
+    color: colors.brandText,
   },
 });

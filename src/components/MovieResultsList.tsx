@@ -1,7 +1,7 @@
 /*
 Step: 8
    * /MovieApp/src/components/MovieResultsList.tsx
-Called by:
+Imported by:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
 Next step path:

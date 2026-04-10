@@ -1,7 +1,7 @@
 /*
 Step: 6
    * /MovieApp/src/components/MovieSearchHeader.tsx
-Called by:
+Imported by:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
 Next step path:
    * /MovieApp/src/components/MovieResultsList.tsx
@@ -11,6 +11,8 @@ Purpose:
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
 
 const GENRE_ITEMS = [
   { label: 'Action', value: '28' },
@@ -97,7 +99,11 @@ type MovieSearchHeaderProps = {
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.sectionLabel}>{children}</Text>;
+  return (
+    <Text allowFontScaling={false} style={styles.sectionLabel}>
+      {children}
+    </Text>
+  );
 }
 
 function SelectChip({
@@ -114,7 +120,10 @@ function SelectChip({
       onPress={onPress}
       style={[styles.chip, selected && styles.chipSelected]}
     >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+      <Text
+        allowFontScaling={false}
+        style={[styles.chipText, selected && styles.chipTextSelected]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -162,7 +171,12 @@ export function MovieSearchHeader({
         onPress={() => setIsFiltersVisible((currentValue) => !currentValue)}
         style={styles.visibilityToggle}
       >
-        <Text style={styles.visibilityToggleText}>
+        {/*
+          Lock the filter-header labels to the shared typography tokens so
+          Android and iPhone do not drift apart by applying different device
+          font scaling on top of the chosen UI sizes.
+        */}
+        <Text allowFontScaling={false} style={styles.visibilityToggleText}>
           {isFiltersVisible ? 'Hide Filter ^' : 'Show Filter >'}
         </Text>
       </Pressable>
@@ -176,6 +190,7 @@ export function MovieSearchHeader({
         onChangeText={onBeginDateChange}
         placeholder="2024-01-01"
         autoCapitalize="none"
+        allowFontScaling={false}
       />
 
       <SectionLabel>End Date (YYYY-MM-DD)</SectionLabel>
@@ -185,6 +200,7 @@ export function MovieSearchHeader({
         onChangeText={onEndDateChange}
         placeholder="2024-12-31"
         autoCapitalize="none"
+        allowFontScaling={false}
       />
 
       <SectionLabel>Rating</SectionLabel>
@@ -260,17 +276,25 @@ export function MovieSearchHeader({
       </ScrollView>
 
       <View style={styles.summaryBox}>
-        <Text style={styles.summaryText}>Query Summary</Text>
-        <Text style={styles.summarySubText}>Rating: {appliedRating || 'Any'}</Text>
-        <Text style={styles.summarySubText}>
+        <Text allowFontScaling={false} style={styles.summaryText}>
+          Query Summary
+        </Text>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
+          Rating: {appliedRating || 'Any'}
+        </Text>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
           Genre: {formatSelectedLabels(appliedGenre, GENRE_ITEMS)}
         </Text>
-        <Text style={styles.summarySubText}>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
           Streamer: {formatSelectedLabels(appliedStreamer, STREAMER_ITEMS)}
         </Text>
-        <Text style={styles.summarySubText}>Sort By: {appliedSortBy || 'TMDB default'}</Text>
-        <Text style={styles.summarySubText}>Vote Count: {appliedVoteCount || 'None'}</Text>
-        <Text style={styles.summarySubText}>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
+          Sort By: {appliedSortBy || 'TMDB default'}
+        </Text>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
+          Vote Count: {appliedVoteCount || 'None'}
+        </Text>
+        <Text allowFontScaling={false} style={styles.summarySubText}>
           Pages Loaded: {loadedPages} of {totalPages ?? '-'}
         </Text>
       </View>
@@ -282,72 +306,78 @@ export function MovieSearchHeader({
 
 const styles = StyleSheet.create({
   visibilityToggle: {
+    /*
+      scaleSize(...) drives the spacing and control heights in this filter area
+      so inputs, chips, and summary spacing compress on narrow phones but keep
+      the same overall design system.
+    */
     alignSelf: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 6,
+    paddingHorizontal: scaleSize(14),
+    paddingVertical: scaleSize(8),
+    marginBottom: scaleSize(6),
   },
   visibilityToggleText: {
-    fontSize: 18,
+    ...typography.visibilityToggle,
     color: colors.brandText,
-    fontWeight: '500',
   },
   sectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-    marginBottom: 8,
+    ...typography.sectionLabel,
+    marginTop: scaleSize(12),
+    marginBottom: scaleSize(8),
     color: colors.brandText,
   },
   input: {
+    ...typography.inputText,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: scaleSize(8),
+    minHeight: scaleSize(44),
+    paddingHorizontal: scaleSize(12),
+    paddingVertical: scaleSize(10),
     backgroundColor: colors.background,
   },
   rowWrap: {
-    paddingBottom: 4,
-    gap: 8,
+    paddingBottom: scaleSize(4),
+    gap: scaleSize(8),
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
+    minHeight: scaleSize(34),
+    paddingHorizontal: scaleSize(12),
+    paddingVertical: scaleSize(6),
+    borderRadius: scaleSize(16),
     borderWidth: 1,
     borderColor: colors.chipBorder,
     backgroundColor: colors.background,
-    marginRight: 8,
+    marginRight: scaleSize(8),
+    justifyContent: 'center',
   },
   chipSelected: {
     backgroundColor: colors.chipBackgroundSelected,
   },
   chipText: {
+    ...typography.chipLabel,
     color: colors.chipBorder,
-    fontWeight: '600',
   },
   chipTextSelected: {
     color: colors.actionOnPrimary,
   },
   summaryBox: {
-    marginTop: 16,
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 10,
+    marginTop: scaleSize(16),
+    marginBottom: scaleSize(8),
+    padding: scaleSize(12),
+    borderRadius: scaleSize(10),
     backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
   summaryText: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
+    ...typography.summaryTitle,
+    marginBottom: scaleSize(6),
     color: colors.brandText,
   },
   summarySubText: {
-    fontSize: 14,
+    ...typography.summaryBody,
     color: colors.textSecondary,
-    marginBottom: 2,
+    marginBottom: scaleSize(2),
   },
 });

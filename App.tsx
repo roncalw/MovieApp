@@ -1,7 +1,7 @@
 /*
 Step: 1
    * /MovieApp/App.tsx
-Called by:
+Imported by:
    * /MovieApp/index.js
 Next step path:
    * /MovieApp/src/providers/AppProvider.tsx
@@ -25,7 +25,7 @@ export default function App() {
 /*
 1.) App.tsx
 Defined in: App.tsx
-Called by:
+Imported by:
 index.js
 Calls:
 AppProvider
@@ -37,7 +37,7 @@ MovieSearchScreen
 
 2.) AppProvider
 Defined in: src/providers/AppProvider.tsx
-Called by:
+Imported by:
 App.tsx
 Calls:
 SafeAreaProvider
@@ -47,7 +47,7 @@ QueryProvider
 
 3.) SafeAreaProvider
 Defined in: src/providers/SafeAreaProvider.tsx
-Called by:
+Imported by:
 AppProvider
 Calls:
 SafeAreaProvider (from react-native-safe-area-context)
@@ -60,7 +60,7 @@ UI doesn’t overlap notches / status bars
 
 4.) QueryProvider
 Defined in: src/providers/QueryProvider.tsx
-Called by:
+Imported by:
 SafeAreaProvider
 Calls:
 QueryClientProvider (from TanStack)
@@ -74,7 +74,7 @@ Without this, React Query does not work at all.
 
 5.) MovieSearchScreen
 Defined in: src/screens/MovieSearchScreen.tsx
-Called by:
+Imported by:
 QueryProvider
 Calls:
 useMovieSearchQuery()
@@ -88,7 +88,7 @@ It says:
 
 6.) MovieSearchHeader
 Defined in: src/components/MovieSearchHeader.tsx
-Called by:
+Imported by:
 MovieSearchScreen
 Calls:
 section labels
@@ -101,7 +101,7 @@ It says:
 
 7.) MovieResultsList
 Defined in: src/components/MovieResultsList.tsx
-Called by:
+Imported by:
 MovieSearchScreen
 PopularMoviesScreen
 Calls:
@@ -115,7 +115,7 @@ It says:
 
 8.) MovieCard
 Defined in: src/components/MovieCard.tsx
-Called by:
+Imported by:
 MovieResultsList
 Calls:
 Pressable
@@ -128,7 +128,7 @@ It says:
 
 9.) useMovieSearchQuery
 Defined in: src/hooks/queries/useMovieSearchQuery.ts
-Called by:
+Imported by:
 MovieSearchScreen
 Calls:
 useQuery (from TanStack)
@@ -143,7 +143,7 @@ query function (what to run)
 
 10.) fetchMovieSearchResults
 Defined in: src/api/tmdb/services/movieService.ts
-Called by:
+Imported by:
 useMovieSearchQuery
 Calls:
 tmdbClient.get(...)
@@ -158,7 +158,7 @@ It says:
 
 11.) tmdbClient (axios instance)
 Defined in: src/api/tmdb/client.ts
-Called by:
+Imported by:
 fetchMovieSearchResults
 fetchMovie
 Calls:
@@ -175,7 +175,7 @@ API key handling
 
 12.) config
 Defined in: src/api/tmdb/config.ts
-Called by:
+Imported by:
 tmdbClient
 fetchMovieSearchResults
 fetchMovie
@@ -189,7 +189,7 @@ apiKey
 
 13.) endpoints
 Defined in: src/api/tmdb/endpoints.ts
-Called by:
+Imported by:
 fetchMovieSearchResults
 fetchMovie
 Provides:
@@ -202,7 +202,7 @@ Provides:
 
 14.) responseTypes
 Defined in: src/api/tmdb/responseTypes.ts
-Called by:
+Imported by:
 fetchMovieSearchResults
 fetchMovie
 Defines:
@@ -214,7 +214,7 @@ shape of raw API responses
 
 15.) movieMapper
 Defined in: src/api/tmdb/mappers/movieMapper.ts
-Called by:
+Imported by:
 fetchMovieSearchResults
 fetchPopularMovies
 Transforms:
@@ -225,7 +225,7 @@ raw movie item → clean app movie model
 
 16.) TMDB API
 External system
-Called by:
+Imported by:
 tmdbClient request execution
 Returns:
 raw JSON movie data
@@ -235,7 +235,7 @@ raw JSON movie data
 “The supplier warehouse”
 
 17.) Back to useMovieSearchQuery
-Called by:
+Imported by:
 TMDB API → tmdbClient → fetchMovieSearchResults
 Receives:
 mapped movie data
@@ -246,7 +246,7 @@ TanStack caches it
 “Warehouse stores the goods”
 
 18.) Back to MovieSearchScreen
-Called by:
+Imported by:
 useMovieSearchQuery
 Receives:
 data, isLoading, error
@@ -256,7 +256,7 @@ data, isLoading, error
 “Storefront receives inventory and passes it into the shared results list”
 
 19.) UI Render
-Called by:
+Imported by:
 MovieSearchScreen + MovieResultsList
 Displays:
 filter controls + movie cards
@@ -267,7 +267,7 @@ filter controls + movie cards
 
 20.) User taps a movie card
 Defined in: src/components/MovieResultsList.tsx
-Called by:
+Imported by:
 the user tapping a Pressable movie card
 Calls:
 MovieDetail
@@ -278,7 +278,7 @@ MovieDetail
 
 21.) MovieDetail
 Defined in: src/screens/MovieDetail.tsx
-Called by:
+Imported by:
 MovieResultsList
 Calls:
 useMovieDetailsQuery()
@@ -290,7 +290,7 @@ It says:
 
 22.) useMovieDetailsQuery
 Defined in: src/hooks/queries/useMovieSearchQuery.ts
-Called by:
+Imported by:
 MovieDetail
 Calls:
 useQuery (from TanStack)
@@ -300,7 +300,7 @@ fetchMovie
 
 23.) fetchMovie
 Defined in: src/api/tmdb/services/movieService.ts
-Called by:
+Imported by:
 useMovieDetailsQuery
 Calls:
 tmdbClient.get(...)
@@ -314,7 +314,7 @@ It says:
 “Go to the movie-details endpoint for THIS id and bring back the full movie record.”
 
 24.) Back to MovieDetail
-Called by:
+Imported by:
 TMDB API → tmdbClient → fetchMovie → useMovieDetailsQuery
 Receives:
 data, isLoading, error

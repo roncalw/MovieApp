@@ -1,7 +1,7 @@
 /*
 Step: 6
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
-Called by:
+Imported by:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
    * /MovieApp/src/screens/MovieDetail.tsx
 Next step path:

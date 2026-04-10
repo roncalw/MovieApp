@@ -1,7 +1,7 @@
 /*
 Step: 7
    * /MovieApp/src/api/tmdb/services/movieService.ts
-Called by:
+Imported by:
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
 Next step path:
    * /MovieApp/src/api/tmdb/client.ts

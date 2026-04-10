@@ -1,7 +1,7 @@
 /*
 Step: 3
    * /MovieApp/src/providers/QueryProvider.tsx
-Called by:
+Imported by:
    * /MovieApp/src/providers/SafeAreaProvider.tsx
 Next step path:
    * /MovieApp/src/screens/MovieSearchScreen.tsx

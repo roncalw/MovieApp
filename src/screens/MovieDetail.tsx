@@ -1,7 +1,7 @@
 /*
 Step: 15
    * /MovieApp/src/screens/MovieDetail.tsx
-Called by:
+Imported by:
    * /MovieApp/src/components/MovieResultsList.tsx
 Next step path:
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
@@ -23,6 +23,8 @@ import { useMovieDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
 import type { movieType } from '../types/MovieTypes';
 import { colors } from '../theme/colors';
 import { buttons } from '../theme/buttons';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -58,10 +60,19 @@ export function MovieDetail({
     return (
       <View style={styles.centered}>
         <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Back to results</Text>
+          {/*
+            Keep the detail screen's app-owned labels and movie text on the
+            shared typography sizes so the content reads more consistently
+            between iPhone and Android.
+          */}
+          <Text allowFontScaling={false} style={styles.backButtonText}>
+            Back to results
+          </Text>
         </Pressable>
         <ActivityIndicator size="large" />
-        <Text style={styles.message}>Loading movie details...</Text>
+        <Text allowFontScaling={false} style={styles.message}>
+          Loading movie details...
+        </Text>
       </View>
     );
   }
@@ -73,10 +84,16 @@ export function MovieDetail({
     return (
       <View style={styles.centered}>
         <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Back to results</Text>
+          <Text allowFontScaling={false} style={styles.backButtonText}>
+            Back to results
+          </Text>
         </Pressable>
-        <Text style={styles.errorText}>Error loading movie details</Text>
-        <Text style={styles.message}>{message}</Text>
+        <Text allowFontScaling={false} style={styles.errorText}>
+          Error loading movie details
+        </Text>
+        <Text allowFontScaling={false} style={styles.message}>
+          {message}
+        </Text>
       </View>
     );
   }
@@ -84,7 +101,9 @@ export function MovieDetail({
   return (
     <ScrollView contentContainerStyle={styles.detailContent}>
       <Pressable onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back to results</Text>
+        <Text allowFontScaling={false} style={styles.backButtonText}>
+          Back to results
+        </Text>
       </Pressable>
 
       {detailImagePath ? (
@@ -95,78 +114,87 @@ export function MovieDetail({
         />
       ) : null}
 
-      <Text style={styles.detailTitle}>{movieDetails.title}</Text>
-      <Text style={styles.detailGenres}>{genreNames}</Text>
-      <Text style={styles.detailRating}>
+      <Text allowFontScaling={false} style={styles.detailTitle}>
+        {movieDetails.title}
+      </Text>
+      <Text allowFontScaling={false} style={styles.detailGenres}>
+        {genreNames}
+      </Text>
+      <Text allowFontScaling={false} style={styles.detailRating}>
         Rating: {movieDetails.vote_average} ({movieDetails.vote_count} votes)
       </Text>
-      <Text style={styles.detailOverview}>{movieDetails.overview}</Text>
+      <Text allowFontScaling={false} style={styles.detailOverview}>
+        {movieDetails.overview}
+      </Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   detailContent: {
-    padding: 16,
+    /*
+      scaleSize(...) lets the detail screen's padding, button size, poster
+      size, and spacing respond to the shared width-based scale instead of
+      assuming one fixed phone size.
+    */
+    padding: scaleSize(16),
     backgroundColor: colors.background,
   },
   backButton: {
     alignSelf: 'flex-start',
-    marginBottom: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: scaleSize(36),
+    marginBottom: scaleSize(16),
+    paddingHorizontal: scaleSize(14),
+    paddingVertical: scaleSize(10),
     borderRadius: 999,
     backgroundColor: buttons.primaryPill.backgroundColor,
+    justifyContent: 'center',
   },
   backButtonText: {
+    ...typography.buttonLabel,
     color: buttons.primaryPill.textColor,
-    fontWeight: '700',
   },
   detailPoster: {
     width: '100%',
-    height: 420,
-    borderRadius: 12,
-    marginBottom: 16,
+    height: scaleSize(420),
+    borderRadius: scaleSize(12),
+    marginBottom: scaleSize(16),
     backgroundColor: '#eef2f7',
   },
   detailTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 10,
+    ...typography.detailTitle,
+    marginBottom: scaleSize(10),
     color: '#111827',
   },
   detailGenres: {
-    fontSize: 16,
+    ...typography.detailMeta,
     color: '#4B5563',
-    marginBottom: 10,
+    marginBottom: scaleSize(10),
   },
   detailRating: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...typography.detailMetaStrong,
     color: '#1F2937',
-    marginBottom: 14,
+    marginBottom: scaleSize(14),
   },
   detailOverview: {
-    fontSize: 16,
+    ...typography.detailBody,
     color: '#374151',
-    lineHeight: 24,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: scaleSize(24),
     backgroundColor: colors.background,
   },
   message: {
-    marginTop: 10,
-    fontSize: 16,
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
     textAlign: 'center',
     color: colors.textSecondary,
   },
   errorText: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...typography.feedbackTitle,
     color: colors.brandText,
   },
 });

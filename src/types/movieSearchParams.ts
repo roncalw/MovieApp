@@ -1,7 +1,7 @@
 /*
 Step: 14
    * /MovieApp/src/types/movieSearchParams.ts
-Called by:
+Imported by:
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
    * /MovieApp/src/api/tmdb/services/movieService.ts
 Next step path:

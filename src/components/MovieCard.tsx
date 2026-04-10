@@ -1,7 +1,7 @@
 /*
 Step: 7
    * /MovieApp/src/components/MovieCard.tsx
-Called by:
+Imported by:
    * /MovieApp/src/components/MovieResultsList.tsx
 Next step path:
    * /MovieApp/src/screens/MovieDetail.tsx
@@ -11,6 +11,8 @@ Purpose:
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text } from 'react-native';
 import type { movieType } from '../types/MovieTypes';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -30,47 +32,59 @@ export function MovieCard({ movie, onPress }: MovieCardProps) {
         />
       ) : null}
 
-      <Text style={styles.movieTitle}>{movie.title}</Text>
-      <Text style={styles.subText}>
+      {/*
+        Keep the card's content text on the shared app-controlled sizes instead of
+        letting each device apply its own font scaling on top. This helps the
+        movie title, metadata, and overview stay closer between iPhone and Android.
+      */}
+      <Text allowFontScaling={false} style={styles.movieTitle}>
+        {movie.title}
+      </Text>
+      <Text allowFontScaling={false} style={styles.subText}>
         Release Date: {movie.release_date}
       </Text>
-      <Text style={styles.subText}>
+      <Text allowFontScaling={false} style={styles.subText}>
         Rating: {movie.vote_average} ({movie.vote_count} votes)
       </Text>
-      <Text style={styles.overview}>{movie.overview}</Text>
+      <Text allowFontScaling={false} style={styles.overview}>
+        {movie.overview}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    marginBottom: 16,
+    /*
+      scaleSize(...) lets this card expand or tighten its padding, margin, and
+      corner size based on the shared device-width scaling helper. That keeps
+      the same card design from feeling oversized on smaller phones.
+    */
+    padding: scaleSize(16),
+    marginBottom: scaleSize(16),
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 10,
+    borderRadius: scaleSize(10),
     backgroundColor: '#f9f9f9',
   },
   poster: {
     width: '100%',
-    height: 300,
-    borderRadius: 8,
-    marginBottom: 12,
+    height: scaleSize(300),
+    borderRadius: scaleSize(8),
+    marginBottom: scaleSize(12),
   },
   movieTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
+    ...typography.cardTitle,
+    marginBottom: scaleSize(6),
   },
   subText: {
-    fontSize: 14,
+    ...typography.cardMeta,
     color: '#555',
-    marginBottom: 4,
+    marginBottom: scaleSize(4),
   },
   overview: {
-    fontSize: 15,
+    ...typography.cardBody,
     color: '#333',
-    marginTop: 8,
-    lineHeight: 21,
+    marginTop: scaleSize(8),
   },
 });

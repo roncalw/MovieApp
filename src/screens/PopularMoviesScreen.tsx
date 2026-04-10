@@ -1,7 +1,7 @@
 /*
 Step: 16
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
-Called by:
+Imported by:
    * /MovieApp/App.tsx as an alternate legacy screen import
 Next step path:
    * /MovieApp/src/components/MovieResultsList.tsx
@@ -14,6 +14,8 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { usePopularMoviesQuery } from '../hooks/queries/useMovieSearchQuery';
 import { MovieResultsList } from '../components/MovieResultsList';
 import { colors } from '../theme/colors';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
 
 export function PopularMoviesScreen() {
   /*
@@ -33,7 +35,14 @@ export function PopularMoviesScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
-        <Text style={styles.message}>Loading popular movies...</Text>
+        {/*
+          Lock these screen-owned labels to the shared typography sizes so this
+          legacy screen's loading and error text stays aligned with the rest of
+          the app across iPhone and Android.
+        */}
+        <Text allowFontScaling={false} style={styles.message}>
+          Loading popular movies...
+        </Text>
       </View>
     );
   }
@@ -49,8 +58,12 @@ export function PopularMoviesScreen() {
 
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Error loading movies</Text>
-        <Text style={styles.message}>{message}</Text>
+        <Text allowFontScaling={false} style={styles.errorText}>
+          Error loading movies
+        </Text>
+        <Text allowFontScaling={false} style={styles.message}>
+          {message}
+        </Text>
       </View>
     );
   }
@@ -59,7 +72,9 @@ export function PopularMoviesScreen() {
     <MovieResultsList
       movies={data}
       ListHeaderComponent={
-        <Text style={styles.title}>Popular Movies</Text>
+        <Text allowFontScaling={false} style={styles.title}>
+          Popular Movies
+        </Text>
       }
     />
   );
@@ -73,29 +88,32 @@ const styles = StyleSheet.create({
     - these styles are only for PopularMoviesScreen
   */
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+    /*
+      scaleSize(...) controls the title spacing and fallback screen padding in
+      this file so the older screen still follows the same compact-device sizing
+      rules as the newer search flow.
+    */
+    ...typography.pageTitle,
+    paddingHorizontal: scaleSize(16),
+    paddingTop: scaleSize(8),
+    paddingBottom: scaleSize(8),
     color: colors.brandText,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: scaleSize(24),
     backgroundColor: colors.background,
   },
   message: {
-    marginTop: 10,
-    fontSize: 16,
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
     textAlign: 'center',
     color: colors.textSecondary,
   },
   errorText: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...typography.feedbackTitle,
     color: colors.brandText,
   },
 });

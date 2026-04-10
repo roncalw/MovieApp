@@ -1,7 +1,7 @@
 /*
 Step: 8
    * /MovieApp/src/api/tmdb/client.ts
-Called by:
+Imported by:
    * /MovieApp/src/api/tmdb/services/movieService.ts
 Next step path:
    * /MovieApp/src/api/tmdb/config.ts

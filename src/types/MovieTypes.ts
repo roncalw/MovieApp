@@ -1,7 +1,7 @@
 /*
 Step: 13
    * /MovieApp/src/types/MovieTypes.ts
-Called by:
+Imported by:
    * /MovieApp/src/api/tmdb/services/movieService.ts
    * /MovieApp/src/api/tmdb/responseTypes.ts
    * /MovieApp/src/api/tmdb/mappers/movieMapper.ts
