@@ -56,12 +56,12 @@ export function SafeAreaProvider({ children }: PropsWithChildren) {
         WHY:
         - Makes the safe-area wrapper fill the full screen
 
-        edges={['top', 'left', 'right']}
+        edges={['left', 'right']}
         WHY IN THIS PROJECT:
-        - Your current problem area was the top inset on iOS
-        - This is a clean starting choice for this screen layout
+        - The app should now draw behind the top status area
+        - Left and right safe-area protection still help avoid edge clipping
       */}
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right']}>
         {children}
       </SafeAreaView>
     </RNSafeAreaProvider>

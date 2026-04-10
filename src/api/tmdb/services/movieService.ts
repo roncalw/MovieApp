@@ -115,11 +115,15 @@ export async function fetchMovieSearchResults(
   }
 
   if (movieGenres) {
-    searchParams.set('with_genres', movieGenres);
+    if (movieGenres.length > 0) {
+      searchParams.set('with_genres', movieGenres.join(','));
+    }
   }
 
   if (movieStreamers) {
-    searchParams.set('with_watch_providers', movieStreamers);
+    if (movieStreamers.length > 0) {
+      searchParams.set('with_watch_providers', movieStreamers.join('|'));
+    }
   }
 
   if (movieVoteCount) {

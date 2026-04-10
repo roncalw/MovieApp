@@ -21,6 +21,8 @@ import {
 } from 'react-native';
 import { useMovieDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
 import type { movieType } from '../types/MovieTypes';
+import { colors } from '../theme/colors';
+import { buttons } from '../theme/buttons';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -106,7 +108,7 @@ export function MovieDetail({
 const styles = StyleSheet.create({
   detailContent: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -114,10 +116,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: '#68A1ED',
+    backgroundColor: buttons.primaryPill.backgroundColor,
   },
   backButtonText: {
-    color: '#fff',
+    color: buttons.primaryPill.textColor,
     fontWeight: '700',
   },
   detailPoster: {
@@ -154,16 +156,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   message: {
     marginTop: 10,
     fontSize: 16,
     textAlign: 'center',
+    color: colors.textSecondary,
   },
   errorText: {
     fontSize: 18,
     fontWeight: '700',
-    color: 'red',
+    color: colors.brandText,
   },
 });

@@ -13,6 +13,7 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { usePopularMoviesQuery } from '../hooks/queries/useMovieSearchQuery';
 import { MovieResultsList } from '../components/MovieResultsList';
+import { colors } from '../theme/colors';
 
 export function PopularMoviesScreen() {
   /*
@@ -77,22 +78,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 8,
+    color: colors.brandText,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   message: {
     marginTop: 10,
     fontSize: 16,
     textAlign: 'center',
+    color: colors.textSecondary,
   },
   errorText: {
     fontSize: 18,
     fontWeight: '700',
-    color: 'red',
+    color: colors.brandText,
   },
 });

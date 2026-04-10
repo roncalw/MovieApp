@@ -8,8 +8,9 @@ Next step path:
 Purpose:
    * Renders the search controls and query summary that appear above the shared movie results list on the search screen.
 */
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
 
 const GENRE_ITEMS = [
   { label: 'Action', value: '28' },
@@ -59,22 +60,39 @@ const SORT_ITEMS = [
   { id: '4', label: 'User Rating (1+ Reviews)', value: '1' },
 ];
 
+function formatSelectedLabels(
+  selectedValues: string[],
+  items: Array<{ label: string; value: string }>
+) {
+  if (selectedValues.length === 0) {
+    return 'Any';
+  }
+
+  return items
+    .filter((item) => selectedValues.includes(item.value))
+    .map((item) => item.label)
+    .join(', ');
+}
+
 type MovieSearchHeaderProps = {
   beginDate: string;
   endDate: string;
   selectedRating: string;
-  selectedGenre: string;
-  selectedStreamer: string;
+  selectedGenre: string[];
+  selectedStreamer: string[];
   selectedSortValue: string;
+  appliedRating: string;
+  appliedGenre: string[];
+  appliedStreamer: string[];
+  appliedSortBy: string;
+  appliedVoteCount: string;
   loadedPages: number;
   totalPages: number | null;
-  movieSortBy: string;
-  movieVoteCount: string;
   onBeginDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
   onRatingChange: (value: string) => void;
-  onGenreChange: (value: string) => void;
-  onStreamerChange: (value: string) => void;
+  onGenreChange: (value: string[]) => void;
+  onStreamerChange: (value: string[]) => void;
   onSortChange: (value: string) => void;
 };
 
@@ -103,6 +121,14 @@ function SelectChip({
   );
 }
 
+function toggleArrayValue(currentValues: string[], nextValue: string) {
+  if (currentValues.includes(nextValue)) {
+    return currentValues.filter((value) => value !== nextValue);
+  }
+
+  return [...currentValues, nextValue];
+}
+
 export function MovieSearchHeader({
   beginDate,
   endDate,
@@ -110,10 +136,13 @@ export function MovieSearchHeader({
   selectedGenre,
   selectedStreamer,
   selectedSortValue,
+  appliedRating,
+  appliedGenre,
+  appliedStreamer,
+  appliedSortBy,
+  appliedVoteCount,
   loadedPages,
   totalPages,
-  movieSortBy,
-  movieVoteCount,
   onBeginDateChange,
   onEndDateChange,
   onRatingChange,
@@ -121,10 +150,25 @@ export function MovieSearchHeader({
   onStreamerChange,
   onSortChange,
 }: MovieSearchHeaderProps) {
+  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+
+  function toggleValue(currentValue: string, nextValue: string, onChange: (value: string) => void) {
+    onChange(currentValue === nextValue ? '' : nextValue);
+  }
+
   return (
     <View>
-      <Text style={styles.title}>Movie Search</Text>
+      <Pressable
+        onPress={() => setIsFiltersVisible((currentValue) => !currentValue)}
+        style={styles.visibilityToggle}
+      >
+        <Text style={styles.visibilityToggleText}>
+          {isFiltersVisible ? 'Hide Filter ^' : 'Show Filter >'}
+        </Text>
+      </Pressable>
 
+      {!isFiltersVisible ? null : (
+        <>
       <SectionLabel>Begin Date (YYYY-MM-DD)</SectionLabel>
       <TextInput
         style={styles.input}
@@ -154,7 +198,9 @@ export function MovieSearchHeader({
             key={item.id}
             label={item.label}
             selected={selectedRating === item.id}
-            onPress={() => onRatingChange(item.id)}
+            onPress={() =>
+              toggleValue(selectedRating, item.id, onRatingChange)
+            }
           />
         ))}
       </ScrollView>
@@ -169,8 +215,10 @@ export function MovieSearchHeader({
           <SelectChip
             key={item.value}
             label={item.label}
-            selected={selectedGenre === item.value}
-            onPress={() => onGenreChange(item.value)}
+            selected={selectedGenre.includes(item.value)}
+            onPress={() =>
+              onGenreChange(toggleArrayValue(selectedGenre, item.value))
+            }
           />
         ))}
       </ScrollView>
@@ -185,8 +233,10 @@ export function MovieSearchHeader({
           <SelectChip
             key={item.value}
             label={item.label}
-            selected={selectedStreamer === item.value}
-            onPress={() => onStreamerChange(item.value)}
+            selected={selectedStreamer.includes(item.value)}
+            onPress={() =>
+              onStreamerChange(toggleArrayValue(selectedStreamer, item.value))
+            }
           />
         ))}
       </ScrollView>
@@ -202,39 +252,52 @@ export function MovieSearchHeader({
             key={item.id}
             label={item.label}
             selected={selectedSortValue === item.value}
-            onPress={() => onSortChange(item.value)}
+            onPress={() =>
+              toggleValue(selectedSortValue, item.value, onSortChange)
+            }
           />
         ))}
       </ScrollView>
 
       <View style={styles.summaryBox}>
         <Text style={styles.summaryText}>Query Summary</Text>
-        <Text style={styles.summarySubText}>Rating: {selectedRating || 'Any'}</Text>
-        <Text style={styles.summarySubText}>Genre: {selectedGenre || 'Any'}</Text>
-        <Text style={styles.summarySubText}>Streamer: {selectedStreamer || 'Any'}</Text>
-        <Text style={styles.summarySubText}>Sort By: {movieSortBy || 'TMDB default'}</Text>
-        <Text style={styles.summarySubText}>Vote Count: {movieVoteCount || 'None'}</Text>
+        <Text style={styles.summarySubText}>Rating: {appliedRating || 'Any'}</Text>
+        <Text style={styles.summarySubText}>
+          Genre: {formatSelectedLabels(appliedGenre, GENRE_ITEMS)}
+        </Text>
+        <Text style={styles.summarySubText}>
+          Streamer: {formatSelectedLabels(appliedStreamer, STREAMER_ITEMS)}
+        </Text>
+        <Text style={styles.summarySubText}>Sort By: {appliedSortBy || 'TMDB default'}</Text>
+        <Text style={styles.summarySubText}>Vote Count: {appliedVoteCount || 'None'}</Text>
         <Text style={styles.summarySubText}>
           Pages Loaded: {loadedPages} of {totalPages ?? '-'}
         </Text>
       </View>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+  visibilityToggle: {
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+  visibilityToggleText: {
+    fontSize: 18,
+    color: colors.brandText,
+    fontWeight: '500',
   },
   sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
     marginTop: 12,
     marginBottom: 8,
+    color: colors.brandText,
   },
   input: {
     borderWidth: 1,
@@ -242,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   rowWrap: {
     paddingBottom: 4,
@@ -253,37 +316,38 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#68A1ED',
-    backgroundColor: '#fff',
+    borderColor: colors.chipBorder,
+    backgroundColor: colors.background,
     marginRight: 8,
   },
   chipSelected: {
-    backgroundColor: '#68A1ED',
+    backgroundColor: colors.chipBackgroundSelected,
   },
   chipText: {
-    color: '#68A1ED',
+    color: colors.chipBorder,
     fontWeight: '600',
   },
   chipTextSelected: {
-    color: '#fff',
+    color: colors.actionOnPrimary,
   },
   summaryBox: {
     marginTop: 16,
     marginBottom: 8,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: '#f4f6f8',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.borderSubtle,
   },
   summaryText: {
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 6,
+    color: colors.brandText,
   },
   summarySubText: {
     fontSize: 14,
-    color: '#444',
+    color: colors.textSecondary,
     marginBottom: 2,
   },
 });

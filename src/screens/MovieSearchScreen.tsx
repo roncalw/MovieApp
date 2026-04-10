@@ -14,6 +14,9 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { MovieSearchHeader } from '../components/MovieSearchHeader';
 import { MovieResultsList } from '../components/MovieResultsList';
+import { PageTopHeader } from '../components/PageTopHeader';
+import type { MovieSearchParams } from '../types/movieSearchParams';
+import { colors } from '../theme/colors';
 
 function getTodayDateString() {
   return new Date().toISOString().slice(0, 10);
@@ -36,6 +39,9 @@ function getDefaultBeginDate() {
   - No second page should be added
 */
 export function MovieSearchScreen() {
+  const defaultBeginDate = getDefaultBeginDate();
+  const defaultEndDate = getTodayDateString();
+
   /*
     WHAT THESE STATE VALUES DO:
     - Hold the current filter selections for the query
@@ -44,11 +50,21 @@ export function MovieSearchScreen() {
     - The page is now query-driven by user selections
   */
   const [selectedRating, setSelectedRating] = useState<string>('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [selectedStreamer, setSelectedStreamer] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string[]>([]);
+  const [selectedStreamer, setSelectedStreamer] = useState<string[]>([]);
   const [selectedSortValue, setSelectedSortValue] = useState<string>('');
-  const [beginDate, setBeginDate] = useState<string>(getDefaultBeginDate);
-  const [endDate, setEndDate] = useState<string>(getTodayDateString);
+  const [beginDate, setBeginDate] = useState<string>(defaultBeginDate);
+  const [endDate, setEndDate] = useState<string>(defaultEndDate);
+  const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
+    movieRatings: '',
+    beginDate: defaultBeginDate,
+    endDate: defaultEndDate,
+    movieGenres: [],
+    movieStreamers: [],
+    movieVoteCount: '',
+    movieSortBy: '',
+  });
 
   /*
     WHAT THIS useMemo DOES:
@@ -89,7 +105,7 @@ export function MovieSearchScreen() {
     - Keeps the query call clean
     - Matches the typed service input
   */
-  const queryParams = useMemo(
+  const draftQueryParams = useMemo(
     () => ({
       movieRatings: selectedRating,
       beginDate,
@@ -110,6 +126,11 @@ export function MovieSearchScreen() {
     ]
   );
 
+  function handleApplyFilters() {
+    setSubmittedParams(draftQueryParams);
+    setHasSubmittedSearch(true);
+  }
+
   /*
     WHAT THIS HOOK CALL DOES:
     - Runs the query through TanStack Query
@@ -126,13 +147,13 @@ export function MovieSearchScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMovieSearchQuery(queryParams);
+  } = useMovieSearchQuery(submittedParams, hasSubmittedSearch);
 
   const movies = useMemo(
-    () => data?.pages.flatMap((page) => page.movies) ?? [],
-    [data]
+    () => (hasSubmittedSearch ? data?.pages.flatMap((page) => page.movies) ?? [] : []),
+    [data, hasSubmittedSearch]
   );
-  const loadedPages = data?.pages.length ?? 1;
+  const loadedPages = data?.pages.length ?? 0;
   const totalPages = data?.pages[0]?.totalPages ?? null;
 
   /*
@@ -142,7 +163,7 @@ export function MovieSearchScreen() {
     WHY:
     - The screen must handle loading explicitly
   */
-  if (isLoading) {
+  if (hasSubmittedSearch && isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -158,7 +179,7 @@ export function MovieSearchScreen() {
     WHY:
     - A failed search should show a clear error instead of failing silently
   */
-  if (isError) {
+  if (hasSubmittedSearch && isError) {
     const message =
       error instanceof Error ? error.message : 'Unknown error';
 
@@ -171,42 +192,57 @@ export function MovieSearchScreen() {
   }
 
   return (
-    <MovieResultsList
-      movies={movies}
-      onEndReached={fetchNextPage}
-      hasNextPage={hasNextPage}
-      isFetchingNextPage={isFetchingNextPage}
-      ListHeaderComponent={
-        <MovieSearchHeader
-          beginDate={beginDate}
-          endDate={endDate}
-          selectedRating={selectedRating}
-          selectedGenre={selectedGenre}
-          selectedStreamer={selectedStreamer}
-          selectedSortValue={selectedSortValue}
-          loadedPages={loadedPages}
-          totalPages={totalPages}
-          movieSortBy={movieSortBy}
-          movieVoteCount={movieVoteCount}
-          onBeginDateChange={setBeginDate}
-          onEndDateChange={setEndDate}
-          onRatingChange={setSelectedRating}
-          onGenreChange={setSelectedGenre}
-          onStreamerChange={setSelectedStreamer}
-          onSortChange={setSelectedSortValue}
-        />
-      }
-    />
+    <View style={styles.container}>
+      <PageTopHeader
+        title="Movie Search"
+        rightActionLabel="Submit"
+        onRightActionPress={handleApplyFilters}
+      />
+
+      <MovieResultsList
+        movies={movies}
+        onEndReached={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        ListHeaderComponent={
+          <MovieSearchHeader
+            beginDate={beginDate}
+            endDate={endDate}
+            selectedRating={selectedRating}
+            selectedGenre={selectedGenre}
+            selectedStreamer={selectedStreamer}
+            selectedSortValue={selectedSortValue}
+            appliedRating={submittedParams.movieRatings}
+            appliedGenre={submittedParams.movieGenres}
+            appliedStreamer={submittedParams.movieStreamers}
+            appliedSortBy={submittedParams.movieSortBy}
+            appliedVoteCount={submittedParams.movieVoteCount}
+            loadedPages={loadedPages}
+            totalPages={totalPages}
+            onBeginDateChange={setBeginDate}
+            onEndDateChange={setEndDate}
+            onRatingChange={setSelectedRating}
+            onGenreChange={setSelectedGenre}
+            onStreamerChange={setSelectedStreamer}
+            onSortChange={setSelectedSortValue}
+          />
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   message: {
     marginTop: 10,

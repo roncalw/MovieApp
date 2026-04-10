@@ -177,8 +177,12 @@ TMDB → axios → fetchMovieSearchResults → useQuery → useMovieSearchQuery 
 │ renders FlatList of movies    │
 │ tracks:                       │
 │  selectedMovieId              │
-│  shouldRestoreScroll          │
-│  last scroll offset           │
+│                               │
+│ keeps the FlatList mounted    │
+│ while MovieDetail appears     │
+│ in an absolute overlay above  │
+│ it, so returning naturally    │
+│ shows the same list position  │
 │                               │
 │ renders MovieCard for each    │
 │ result                        │

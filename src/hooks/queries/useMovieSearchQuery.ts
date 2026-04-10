@@ -81,7 +81,10 @@ import type { MovieSearchParams } from '../../types/movieSearchParams';
   - then TanStack Query knows it may need to run a new paged search request
 */
 
-export function useMovieSearchQuery(params: MovieSearchParams) {
+export function useMovieSearchQuery(
+  params: MovieSearchParams,
+  enabled = true
+) {
   return useInfiniteQuery({
     queryKey: ['movieSearch', params],
     queryFn: ({ pageParam }) => fetchMovieSearchResults(params, pageParam),
@@ -94,6 +97,7 @@ export function useMovieSearchQuery(params: MovieSearchParams) {
       return lastPage.page + 1;
     },
     staleTime: 1000 * 60 * 5,
+    enabled,
   });
 }
 

@@ -1,0 +1,75 @@
+{
+  // Treat package.json as plain text in this workspace so VS Code does not apply the built-in package.json schema validation.
+  "files.associations": {
+    "package.json": "plaintext"
+  },
+
+  // Highlight extension rules that color plain text files in this workspace.
+  "highlight.regexes": {
+    // For plaintext files that are not .json files, color each whole line green.
+    "([^\\r\\n]+)": {
+      "regexFlags": "g",
+      "filterLanguageRegex": "^plaintext$",
+      "filterFileRegex": "^(?!.*\\.json$).*",
+      "decorations": [
+        {
+          "color": "#7ee787"
+        }
+      ]
+    },
+
+    // In plaintext files whose filename ends with .json, color JSON-style keys green.
+    "(\"(?:\\\\.|[^\"\\\\])*\")(?=\\s*:)": {
+      "regexFlags": "g",
+      "filterLanguageRegex": "^plaintext$",
+      "filterFileRegex": "\\.json$",
+      "decorations": [
+        {
+          "color": "#7ee787"
+        }
+      ]
+    },
+
+    // In plaintext .json files, color string values light blue.
+    "(:)(\\s*)(\"(?:\\\\.|[^\"\\\\])*\")": {
+      "regexFlags": "g",
+      "filterLanguageRegex": "^plaintext$",
+      "filterFileRegex": "\\.json$",
+      "decorations": [
+        {},
+        {},
+        {
+          "color": "#a5d6ff"
+        }
+      ]
+    },
+
+    // In plaintext .json files, color numeric values blue.
+    "(:)(\\s*)(-?\\d+(?:\\.\\d+)?)": {
+      "regexFlags": "g",
+      "filterLanguageRegex": "^plaintext$",
+      "filterFileRegex": "\\.json$",
+      "decorations": [
+        {},
+        {},
+        {
+          "color": "#79c0ff"
+        }
+      ]
+    },
+
+    // In plaintext .json files, color true, false, and null blue.
+    "(:)(\\s*)(true|false|null)\\b": {
+      "regexFlags": "g",
+      "filterLanguageRegex": "^plaintext$",
+      "filterFileRegex": "\\.json$",
+      "decorations": [
+        {},
+        {},
+        {
+          "color": "#79c0ff"
+        }
+      ]
+    }
+  }
+}

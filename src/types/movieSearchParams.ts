@@ -22,8 +22,8 @@ export type MovieSearchParams = {
   movieRatings: string;
   beginDate: string;
   endDate: string;
-  movieGenres: string;
-  movieStreamers: string;
+  movieGenres: string[];
+  movieStreamers: string[];
   movieVoteCount: string;
   movieSortBy: string;
 };
