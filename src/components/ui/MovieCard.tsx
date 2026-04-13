@@ -1,8 +1,8 @@
 /*
 Step: 7
-   * /MovieApp/src/components/MovieCard.tsx
+   * /MovieApp/src/components/ui/MovieCard.tsx
 Imported by:
-   * /MovieApp/src/components/MovieResultsList.tsx
+   * /MovieApp/src/components/body/MovieResults.tsx
 Next step path:
    * /MovieApp/src/screens/MovieDetail.tsx
 Purpose:
@@ -10,9 +10,9 @@ Purpose:
 */
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text } from 'react-native';
-import type { movieType } from '../types/MovieTypes';
-import { scaleSize } from '../theme/scale';
-import { typography } from '../theme/typography';
+import type { movieType } from '../../types/MovieTypes';
+import { scaleSize } from '../../theme/scale';
+import { typography } from '../../theme/typography';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 

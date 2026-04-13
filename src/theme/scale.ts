@@ -3,9 +3,9 @@ Step: 9
    * /MovieApp/src/theme/scale.ts
 Imported by:
    * /MovieApp/src/theme/typography.ts
-   * /MovieApp/src/components/PageTopHeader.tsx
-   * /MovieApp/src/components/MovieSearchHeader.tsx
-   * /MovieApp/src/components/MovieCard.tsx
+   * /MovieApp/src/components/header/SubHeaderTop.tsx
+   * /MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx
+   * /MovieApp/src/components/ui/MovieCard.tsx
    * /MovieApp/src/screens/MovieDetail.tsx
    * /MovieApp/src/screens/MovieSearchScreen.tsx
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
@@ -22,7 +22,7 @@ import { Dimensions } from 'react-native';
 
   WHO USES IT IN THIS PROJECT:
   - typography.ts calls scaleSize(...) to scale shared text tokens
-  - components like PageTopHeader, MovieSearchHeader, MovieCard, and MovieDetail
+  - components like SubHeaderTop, SubHeaderMovieSearchFields, MovieCard, and MovieDetail
     use it for spacing, pill sizes, image sizes, and other app-owned layout values
 
   WHY THIS EXISTS:

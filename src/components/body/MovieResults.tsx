@@ -1,13 +1,14 @@
 /*
 Step: 8
-   * /MovieApp/src/components/MovieResultsList.tsx
+   * /MovieApp/src/components/body/MovieResults.tsx
 Imported by:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
 Next step path:
    * /MovieApp/src/screens/MovieDetail.tsx
 Purpose:
-   * Renders a reusable movie list, supports optional infinite scrolling, opens the shared movie detail screen when a card is tapped, and restores list scroll when the user returns.
+   * Renders a reusable movie list, supports optional infinite scrolling, and opens the shared movie detail screen when a card
+     is tapped.
 */
 import React, { useMemo, useRef, useState } from 'react';
 import {
@@ -16,11 +17,11 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import type { movieType } from '../types/MovieTypes';
-import { MovieCard } from './MovieCard';
-import { MovieDetail } from '../screens/MovieDetail';
+import type { movieType } from '../../types/MovieTypes';
+import { MovieCard } from '../ui/MovieCard';
+import { MovieDetail } from '../../screens/MovieDetail';
 
-type MovieResultsListProps = {
+type MovieResultsProps = {
   movies: movieType[] | undefined;
   ListHeaderComponent?: React.ReactElement | null;
   onEndReached?: () => void;
@@ -28,13 +29,13 @@ type MovieResultsListProps = {
   isFetchingNextPage?: boolean;
 };
 
-export function MovieResultsList({
+export function MovieResults({
   movies,
   ListHeaderComponent,
   onEndReached,
   hasNextPage = false,
   isFetchingNextPage = false,
-}: MovieResultsListProps) {
+}: MovieResultsProps) {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const listRef = useRef<FlatList<movieType> | null>(null);
 

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1120" viewBox="0 0 1500 1120">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d0d0d0" />
+    </marker>
+    <style>
+      .box { fill: #242424; stroke: #d0d0d0; stroke-width: 2; rx: 8; }
+      .title { fill: #7ee787; font: 700 17px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .body { fill: #f3f4f6; font: 400 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .line { stroke: #d0d0d0; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #d0d0d0; stroke-width: 2.5; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrow); }
+      .label { fill: #d1d5db; font: 400 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .section { fill: #f3f4f6; font: 700 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1500" height="1120" fill="#111111" />
+
+  <text class="section" x="750" y="36" text-anchor="middle">MovieSearch architecture with detailed header flow</text>
+  <text class="section" x="750" y="76" text-anchor="middle">(with analogies based on employees and department heads)</text>
+
+  <g transform="translate(0, 60)">
+  <!-- top-level flow -->
+  <path class="line" d="M 610 100 L 530 100 L 530 220" />
+  <path class="line" d="M 890 100 L 1210 100 L 1210 220" />
+
+  <!-- left header cluster -->
+  <path class="line" d="M 340 295 L 225 295 L 225 450" />
+  <path class="line" d="M 680 340 L 680 450" />
+  <path class="line" d="M 680 610 L 680 670" />
+
+  <path class="dash" d="M 180 610 L 180 900" />
+  <path class="dash" d="M 450 900 L 450 340" />
+  <path class="dash" d="M 525 610 L 525 900" />
+
+  <path class="line" d="M 870 520 L 750 520 L 750 150" />
+
+  <!-- right body cluster -->
+  <path class="line" d="M 1210 340 L 1210 450" />
+  <path class="line" d="M 1210 610 L 1210 720" />
+
+  <!-- labels -->
+  <text class="label" x="320" y="92">screen renders header and passes submitted params</text>
+  <text class="label" x="1040" y="92">screen renders body</text>
+  <text class="label" x="170" y="286">renders top employee</text>
+  <text class="label" x="550" y="392">renders fields employee</text>
+  <text class="label" x="705" y="646">renders year wheel field</text>
+  <text class="label" x="210" y="835">employee A uses shared channel</text>
+  <text class="label" x="570" y="835">employee B uses shared channel</text>
+  <text class="label" x="310" y="660">department head reads it</text>
+  <text class="label" x="760" y="200">valid submit sends final params upward</text>
+  <text class="label" x="1228" y="395">renders movie cards</text>
+  <text class="label" x="1235" y="670">tap opens full-screen detail</text>
+
+  <!-- boxes -->
+  <rect class="box" x="610" y="50" width="280" height="100" />
+  <text class="title" x="750" y="82" text-anchor="middle">MovieSearchScreen.tsx</text>
+  <text class="body" x="750" y="108" text-anchor="middle">page composer</text>
+  <text class="body" x="750" y="130" text-anchor="middle">stores submitted params and runs query</text>
+
+  <rect class="box" x="340" y="220" width="380" height="120" />
+  <text class="title" x="530" y="252" text-anchor="middle">HeaderMovieSearch.tsx</text>
+  <text class="body" x="530" y="278" text-anchor="middle">department head for the header section</text>
+  <text class="body" x="530" y="300" text-anchor="middle">reads the shared header channel</text>
+  <text class="body" x="530" y="322" text-anchor="middle">coordinates both header employees</text>
+
+  <rect class="box" x="55" y="450" width="340" height="160" />
+  <text class="title" x="225" y="482" text-anchor="middle">SubHeaderTop.tsx</text>
+  <text class="body" x="225" y="508" text-anchor="middle">header employee A</text>
+  <text class="body" x="225" y="530" text-anchor="middle">renders the title</text>
+  <text class="body" x="225" y="552" text-anchor="middle">renders Submit</text>
+  <text class="body" x="225" y="574" text-anchor="middle">reads whether Submit is disabled</text>
+  <text class="body" x="225" y="596" text-anchor="middle">triggers Submit</text>
+
+  <rect class="box" x="490" y="450" width="380" height="160" />
+  <text class="title" x="680" y="482" text-anchor="middle">SubHeaderMovieSearchFields.tsx</text>
+  <text class="body" x="680" y="508" text-anchor="middle">header employee B</text>
+  <text class="body" x="680" y="530" text-anchor="middle">owns draft filters and years</text>
+  <text class="body" x="680" y="552" text-anchor="middle">validates the year range</text>
+  <text class="body" x="680" y="574" text-anchor="middle">uses the shared channel</text>
+  <text class="body" x="680" y="596" text-anchor="middle">submits final valid params</text>
+
+  <rect class="box" x="560" y="670" width="240" height="100" />
+  <text class="title" x="680" y="702" text-anchor="middle">YearWheelField.tsx</text>
+  <text class="body" x="680" y="728" text-anchor="middle">reusable UI</text>
+  <text class="body" x="680" y="750" text-anchor="middle">year-only wheel field</text>
+
+  <rect class="box" x="100" y="900" width="660" height="90" />
+  <text class="title" x="430" y="932" text-anchor="middle">HeaderMovieSearchContext.tsx</text>
+  <text class="body" x="430" y="958" text-anchor="middle">shared clipboard / radio used by the header family</text>
+
+  <rect class="box" x="1030" y="220" width="360" height="120" />
+  <text class="title" x="1210" y="252" text-anchor="middle">MovieResults.tsx</text>
+  <text class="body" x="1210" y="278" text-anchor="middle">body section</text>
+  <text class="body" x="1210" y="300" text-anchor="middle">renders the movie list</text>
+  <text class="body" x="1210" y="322" text-anchor="middle">stays separate from header logic</text>
+
+  <rect class="box" x="1060" y="450" width="300" height="160" />
+  <text class="title" x="1210" y="482" text-anchor="middle">MovieCard.tsx</text>
+  <text class="body" x="1210" y="508" text-anchor="middle">reusable UI</text>
+  <text class="body" x="1210" y="530" text-anchor="middle">renders one movie card</text>
+  <text class="body" x="1210" y="552" text-anchor="middle">tap opens detail</text>
+
+  <rect class="box" x="1020" y="720" width="380" height="120" />
+  <text class="title" x="1210" y="752" text-anchor="middle">MovieDetail.tsx</text>
+  <text class="body" x="1210" y="778" text-anchor="middle">full-screen overlay</text>
+  <text class="body" x="1210" y="800" text-anchor="middle">opened after a MovieCard tap</text>
+  <text class="body" x="1210" y="822" text-anchor="middle">not a card popup</text>
+  </g>
+</svg>

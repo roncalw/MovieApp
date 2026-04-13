@@ -2,9 +2,9 @@
 Step: 10
    * /MovieApp/src/theme/typography.ts
 Imported by:
-   * /MovieApp/src/components/PageTopHeader.tsx
-   * /MovieApp/src/components/MovieSearchHeader.tsx
-   * /MovieApp/src/components/MovieCard.tsx
+   * /MovieApp/src/components/header/SubHeaderTop.tsx
+   * /MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx
+   * /MovieApp/src/components/ui/MovieCard.tsx
    * /MovieApp/src/screens/MovieDetail.tsx
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
    * /MovieApp/src/screens/MovieSearchScreen.tsx

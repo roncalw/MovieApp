@@ -1,33 +1,30 @@
 /*
 Step: 5
-   * /MovieApp/src/components/PageTopHeader.tsx
+   * /MovieApp/src/components/header/SubHeaderTop.tsx
 Imported by:
-   * /MovieApp/src/screens/MovieSearchScreen.tsx
+   * /MovieApp/src/components/header/HeaderMovieSearch.tsx
 Next step path:
-   * /MovieApp/src/components/MovieSearchHeader.tsx
+   * /MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx
 Purpose:
-   * Renders the shared page-level top header with safe-area-aware spacing, a placeholder left action, and an optional right action button.
+   * Renders the shared top header row while reading the search-button disabled state and submit trigger from the parent
+     header context.
 */
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../theme/colors';
-import { buttons } from '../theme/buttons';
-import { typography } from '../theme/typography';
-import { scaleSize } from '../theme/scale';
+import { colors } from '../../theme/colors';
+import { buttons } from '../../theme/buttons';
+import { typography } from '../../theme/typography';
+import { scaleSize } from '../../theme/scale';
+import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
 
-type PageTopHeaderProps = {
+type SubHeaderTopProps = {
   title: string;
-  rightActionLabel?: string;
-  onRightActionPress?: () => void;
 };
 
-export function PageTopHeader({
-  title,
-  rightActionLabel,
-  onRightActionPress,
-}: PageTopHeaderProps) {
+export function SubHeaderTop({ title }: SubHeaderTopProps) {
   const insets = useSafeAreaInsets();
+  const { isSubmitDisabled, submitDraftFilters } = useHeaderMovieSearchContext();
 
   return (
     /*
@@ -44,17 +41,20 @@ export function PageTopHeader({
           {title}
         </Text>
 
-        {rightActionLabel ? (
-          <View style={styles.sideSlot}>
-            <Pressable onPress={onRightActionPress} style={styles.rightAction}>
-              <Text allowFontScaling={false} style={styles.rightActionText}>
-                {rightActionLabel}
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View style={styles.sideSlot} />
-        )}
+        <View style={styles.sideSlot}>
+          <Pressable
+            disabled={isSubmitDisabled}
+            onPress={submitDraftFilters}
+            style={[
+              styles.rightAction,
+              isSubmitDisabled && styles.rightActionDisabled,
+            ]}
+          >
+            <Text allowFontScaling={false} style={styles.rightActionText}>
+              Submit
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -103,13 +103,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  rightActionDisabled: {
+    opacity: 0.45,
+  },
   rightActionText: {
     ...typography.buttonLabel,
     color: buttons.primaryPill.textColor,
     textAlign: 'center',
-  },
-  rightSpacer: {
-    width: scaleSize(42),
-    height: scaleSize(32),
   },
 });

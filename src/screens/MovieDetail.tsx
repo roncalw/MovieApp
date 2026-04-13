@@ -2,7 +2,7 @@
 Step: 15
    * /MovieApp/src/screens/MovieDetail.tsx
 Imported by:
-   * /MovieApp/src/components/MovieResultsList.tsx
+   * /MovieApp/src/components/body/MovieResults.tsx
 Next step path:
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
 Purpose:

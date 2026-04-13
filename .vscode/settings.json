@@ -1,4 +1,11 @@
 {
+  // In this workspace, do not relaunch old terminal processes when VS Code is reopened later.
+  // This prevents extension environment-change relaunch prompts on restored terminals while keeping normal shell history.
+  "terminal.integrated.persistentSessionReviveProcess": "never",
+
+  // In Markdown preview, let double-click behave like text selection instead of jumping back to the editor source.
+  "markdown.preview.doubleClickToSwitchToEditor": false,
+
   // Treat package.json as plain text in this workspace so VS Code does not apply the built-in package.json schema validation.
   "files.associations": {
     "package.json": "plaintext"

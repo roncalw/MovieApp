@@ -11,7 +11,6 @@ Purpose:
 */
 import React from 'react';
 import { AppProvider } from './src/providers/AppProvider';
-import { PopularMoviesScreen } from './src/screens/PopularMoviesScreen';
 import { MovieSearchScreen } from './src/screens/MovieSearchScreen';
 
 export default function App() {
@@ -78,29 +77,29 @@ Imported by:
 QueryProvider
 Calls:
 useMovieSearchQuery()
-MovieSearchHeader
-MovieResultsList
+HeaderMovieSearch
+MovieResults
 
 👉 This is your main screen.
 It says:
 
 “Show the search filters, load the movie results, and hand the shared list/detail behavior to reusable components.”
 
-6.) MovieSearchHeader
-Defined in: src/components/MovieSearchHeader.tsx
+6.) HeaderMovieSearch
+Defined in: src/components/header/HeaderMovieSearch.tsx
 Imported by:
 MovieSearchScreen
 Calls:
-section labels
-select chips
+SubHeaderTop
+SubHeaderMovieSearchFields
 
-👉 This is the filter header.
+👉 This is the parent header.
 It says:
 
-“Render the search controls and query summary above the results list.”
+“Coordinate the two header siblings so the top submit button and the search fields stay in sync.”
 
-7.) MovieResultsList
-Defined in: src/components/MovieResultsList.tsx
+7.) MovieResults
+Defined in: src/components/body/MovieResults.tsx
 Imported by:
 MovieSearchScreen
 PopularMoviesScreen
@@ -114,9 +113,9 @@ It says:
 “Show movie cards, open details when one is tapped, and restore the list position when the user comes back.”
 
 8.) MovieCard
-Defined in: src/components/MovieCard.tsx
+Defined in: src/components/ui/MovieCard.tsx
 Imported by:
-MovieResultsList
+MovieResults
 Calls:
 Pressable
 Image
@@ -257,7 +256,7 @@ data, isLoading, error
 
 19.) UI Render
 Imported by:
-MovieSearchScreen + MovieResultsList
+MovieSearchScreen + MovieResults
 Displays:
 filter controls + movie cards
 
@@ -266,7 +265,7 @@ filter controls + movie cards
 “Customer sees the products”
 
 20.) User taps a movie card
-Defined in: src/components/MovieResultsList.tsx
+Defined in: src/components/body/MovieResults.tsx
 Imported by:
 the user tapping a Pressable movie card
 Calls:
@@ -279,7 +278,7 @@ MovieDetail
 21.) MovieDetail
 Defined in: src/screens/MovieDetail.tsx
 Imported by:
-MovieResultsList
+MovieResults
 Calls:
 useMovieDetailsQuery()
 

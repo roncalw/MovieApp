@@ -4,31 +4,26 @@ Step: 5
 Imported by:
    * /MovieApp/App.tsx
 Next step path:
-   * /MovieApp/src/components/MovieSearchHeader.tsx
-   * /MovieApp/src/components/MovieResultsList.tsx
+   * /MovieApp/src/components/header/HeaderMovieSearch.tsx
+   * /MovieApp/src/components/body/MovieResults.tsx
 Purpose:
-   * Renders the movie search filters and delegates the shared results-list/detail flow to the reusable movie results component.
+   * Renders the movie search page, lets the parent header coordinate its two subheaders, and delegates the shared list/detail
+     flow to the reusable movie results body component.
 */
 import React, { useMemo, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
-import { MovieSearchHeader } from '../components/MovieSearchHeader';
-import { MovieResultsList } from '../components/MovieResultsList';
-import { PageTopHeader } from '../components/PageTopHeader';
+import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
+import { SubHeaderMovieSearchFields } from '../components/header/SubHeaderMovieSearchFields';
+import { MovieResults } from '../components/body/MovieResults';
 import type { MovieSearchParams } from '../types/movieSearchParams';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
-
-function getTodayDateString() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getDefaultBeginDate() {
-  const currentYear = new Date().getFullYear();
-
-  return `${currentYear - 5}-01-01`;
-}
+import {
+  getDefaultBeginDate,
+  getDefaultEndDate,
+} from '../utils/movieSearchDates';
 
 /*
   WHAT THIS SCREEN DOES:
@@ -42,21 +37,8 @@ function getDefaultBeginDate() {
 */
 export function MovieSearchScreen() {
   const defaultBeginDate = getDefaultBeginDate();
-  const defaultEndDate = getTodayDateString();
+  const defaultEndDate = getDefaultEndDate();
 
-  /*
-    WHAT THESE STATE VALUES DO:
-    - Hold the current filter selections for the query
-
-    WHY THEY EXIST:
-    - The page is now query-driven by user selections
-  */
-  const [selectedRating, setSelectedRating] = useState<string>('');
-  const [selectedGenre, setSelectedGenre] = useState<string[]>([]);
-  const [selectedStreamer, setSelectedStreamer] = useState<string[]>([]);
-  const [selectedSortValue, setSelectedSortValue] = useState<string>('');
-  const [beginDate, setBeginDate] = useState<string>(defaultBeginDate);
-  const [endDate, setEndDate] = useState<string>(defaultEndDate);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
@@ -68,68 +50,8 @@ export function MovieSearchScreen() {
     movieSortBy: '',
   });
 
-  /*
-    WHAT THIS useMemo DOES:
-    - Converts the sort selector choice into:
-        movieVoteCount
-        movieSortBy
-
-    WHY THIS EXISTS:
-    - Your previous code used one radio selection to drive both values
-    - This preserves that logic clearly in one place
-  */
-  const { movieVoteCount, movieSortBy } = useMemo(() => {
-    let sortByForQuery = '';
-    let voteCount = '';
-
-    if (selectedSortValue === '') {
-      sortByForQuery = '';
-      voteCount = '';
-    } else if (selectedSortValue === '0') {
-      voteCount = '0';
-      sortByForQuery = 'popularity.desc';
-    } else {
-      voteCount = selectedSortValue;
-      sortByForQuery = 'vote_average.desc';
-    }
-
-    return {
-      movieVoteCount: voteCount,
-      movieSortBy: sortByForQuery,
-    };
-  }, [selectedSortValue]);
-
-  /*
-    WHAT THIS useMemo DOES:
-    - Builds the params object for the query hook
-
-    WHY THIS EXISTS:
-    - Keeps the query call clean
-    - Matches the typed service input
-  */
-  const draftQueryParams = useMemo(
-    () => ({
-      movieRatings: selectedRating,
-      beginDate,
-      endDate,
-      movieGenres: selectedGenre,
-      movieStreamers: selectedStreamer,
-      movieVoteCount,
-      movieSortBy,
-    }),
-    [
-      selectedRating,
-      beginDate,
-      endDate,
-      selectedGenre,
-      selectedStreamer,
-      movieVoteCount,
-      movieSortBy,
-    ]
-  );
-
-  function handleApplyFilters() {
-    setSubmittedParams(draftQueryParams);
+  function handleApplyFilters(nextParams: MovieSearchParams) {
+    setSubmittedParams(nextParams);
     setHasSubmittedSearch(true);
   }
 
@@ -205,41 +127,21 @@ export function MovieSearchScreen() {
 
   return (
     <View style={styles.container}>
-      <PageTopHeader
+      <HeaderMovieSearch
         title="Movie Search"
-        rightActionLabel="Submit"
-        onRightActionPress={handleApplyFilters}
-      />
-
-      <MovieResultsList
-        movies={movies}
-        onEndReached={fetchNextPage}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        ListHeaderComponent={
-          <MovieSearchHeader
-            beginDate={beginDate}
-            endDate={endDate}
-            selectedRating={selectedRating}
-            selectedGenre={selectedGenre}
-            selectedStreamer={selectedStreamer}
-            selectedSortValue={selectedSortValue}
-            appliedRating={submittedParams.movieRatings}
-            appliedGenre={submittedParams.movieGenres}
-            appliedStreamer={submittedParams.movieStreamers}
-            appliedSortBy={submittedParams.movieSortBy}
-            appliedVoteCount={submittedParams.movieVoteCount}
-            loadedPages={loadedPages}
-            totalPages={totalPages}
-            onBeginDateChange={setBeginDate}
-            onEndDateChange={setEndDate}
-            onRatingChange={setSelectedRating}
-            onGenreChange={setSelectedGenre}
-            onStreamerChange={setSelectedStreamer}
-            onSortChange={setSelectedSortValue}
-          />
-        }
-      />
+        appliedParams={submittedParams}
+        loadedPages={loadedPages}
+        totalPages={totalPages}
+        onSubmitFilters={handleApplyFilters}
+      >
+        <MovieResults
+          movies={movies}
+          onEndReached={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          ListHeaderComponent={<SubHeaderMovieSearchFields />}
+        />
+      </HeaderMovieSearch>
     </View>
   );
 }

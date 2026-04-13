@@ -4,7 +4,7 @@ Step: 16
 Imported by:
    * /MovieApp/App.tsx as an alternate legacy screen import
 Next step path:
-   * /MovieApp/src/components/MovieResultsList.tsx
+   * /MovieApp/src/components/body/MovieResults.tsx
 Purpose:
    * Displays the older popular-movies list flow and remains available as a simpler screen while the newer search-and-detail 
      experience evolves.
@@ -12,7 +12,7 @@ Purpose:
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { usePopularMoviesQuery } from '../hooks/queries/useMovieSearchQuery';
-import { MovieResultsList } from '../components/MovieResultsList';
+import { MovieResults } from '../components/body/MovieResults';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
@@ -69,7 +69,7 @@ export function PopularMoviesScreen() {
   }
 
   return (
-    <MovieResultsList
+    <MovieResults
       movies={data}
       ListHeaderComponent={
         <Text allowFontScaling={false} style={styles.title}>
