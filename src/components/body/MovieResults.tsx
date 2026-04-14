@@ -10,7 +10,7 @@ Purpose:
    * Renders a reusable movie list, supports optional infinite scrolling, and opens the shared movie detail screen when a card
      is tapped.
 */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -20,6 +20,7 @@ import {
 import type { movieType } from '../../types/MovieTypes';
 import { MovieCard } from '../ui/MovieCard';
 import { MovieDetail } from '../../screens/MovieDetail';
+import { HeaderMovieSearchContext } from '../header/HeaderMovieSearchContext';
 
 type MovieResultsProps = {
   movies: movieType[] | undefined;
@@ -36,6 +37,7 @@ export function MovieResults({
   hasNextPage = false,
   isFetchingNextPage = false,
 }: MovieResultsProps) {
+  const headerMovieSearchContext = React.useContext(HeaderMovieSearchContext);
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const listRef = useRef<FlatList<movieType> | null>(null);
 
@@ -44,13 +46,29 @@ export function MovieResults({
     [movies, selectedMovieId]
   );
 
-  function handleOpenMovie(movieId: number) {
+  const handleOpenMovie = useCallback((movieId: number) => {
     setSelectedMovieId(movieId);
-  }
+  }, []);
 
-  function handleBackFromMovie() {
+  const handleBackFromMovie = useCallback(() => {
     setSelectedMovieId(null);
-  }
+  }, []);
+
+  useEffect(() => {
+    headerMovieSearchContext?.onDetailVisibilityChange(selectedMovieId !== null);
+
+    return () => {
+      headerMovieSearchContext?.onDetailVisibilityChange(false);
+    };
+  }, [headerMovieSearchContext, selectedMovieId]);
+
+  useEffect(() => {
+    headerMovieSearchContext?.registerDetailBackHandler(handleBackFromMovie);
+
+    return () => {
+      headerMovieSearchContext?.registerDetailBackHandler(null);
+    };
+  }, [handleBackFromMovie, headerMovieSearchContext]);
 
   return (
     <View style={styles.container}>
@@ -87,7 +105,6 @@ export function MovieResults({
           <MovieDetail
             movieId={selectedMovieId}
             initialMovie={selectedMovieFromList}
-            onBack={handleBackFromMovie}
           />
         </View>
       ) : null}

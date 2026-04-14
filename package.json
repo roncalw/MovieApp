@@ -3,16 +3,31 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "==================================================================================================================================================": "ANDROID",
+    "======================================================================": "ANDROID DEVICE (my-android) - NOTE 4",
     "list-androids": "adb devices",
     "my-android": "react-native run-android  --device R3CMC035PHN",
+    "======================================================================": "ANDROID AVD (load-galaxys22 - android-galaxys22) - LOAD & RUN ON GALAXY S22",
+    "list-avds": "emulator -list-avds",
+    "load-galaxys22": "emulator -avd Galaxy_S22_API_34 -port 5554 -no-snapshot-load &",
+    "android-galaxys22": "npx react-native run-android --device emulator-5554",
+    "======================================================================": "ANDROID AVD (android) - ANY AVAILABLE AVD",
     "android": "react-native run-android",
-    "dev-android": "adb shell input keyevent 82",
+    "======================================================================": "ANDROID DEBUGGING",
+    "reload-androids": "adb shell input keyevent 82",
+    "==================================================================================================================================================": "iOS",
+    "======================================================================": "iOS DEVICE (my-iphone) - iPHONE 16 PRO MAX",
     "list-iphones": "xcrun xctrace list devices",
     "my-iphone": "react-native run-ios --device 'Carlo’s iPhone'",
+    "======================================================================": "iOS SIMULATOR (ios-17promax) - iPHONE 17 PRO MAX",
+    "ios-17promax": "react-native run-ios --simulator 'iPhone 17 Pro Max'",
+    "======================================================================": "iOS SIMULATOR (ios) - ANY AVAILABLE AVD",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "==================================================================================================================================================": "METRO",
     "start": "react-native start",
     "start-reset": "react-native start --reset-cache",
+    "==================================================================================================================================================": "TESTS",
+    "lint": "eslint .",
     "test": "jest"
   },
   "appDependencyComments": {
@@ -34,7 +49,8 @@
     "react-native-safe-area-context": "^5.5.2",
     "axios": "^1.13.6",
     "@tanstack/react-query": "^5.95.2",
-    "@quidone/react-native-wheel-picker": "^1.6.4"
+    "@quidone/react-native-wheel-picker": "^1.6.4",
+    "@react-native-vector-icons/ionicons": "^13.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

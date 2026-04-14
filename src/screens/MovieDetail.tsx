@@ -16,13 +16,11 @@ import {
   ActivityIndicator,
   StyleSheet,
   Image,
-  Pressable,
   ScrollView,
 } from 'react-native';
 import { useMovieDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
 import type { movieType } from '../types/MovieTypes';
 import { colors } from '../theme/colors';
-import { buttons } from '../theme/buttons';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 
@@ -30,13 +28,11 @@ const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 type MovieDetailProps = {
   movieId: number;
-  onBack: () => void;
   initialMovie?: movieType | null;
 };
 
 export function MovieDetail({
   movieId,
-  onBack,
   initialMovie,
 }: MovieDetailProps) {
   const {
@@ -59,16 +55,6 @@ export function MovieDetail({
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <Pressable onPress={onBack} style={styles.backButton}>
-          {/*
-            Keep the detail screen's app-owned labels and movie text on the
-            shared typography sizes so the content reads more consistently
-            between iPhone and Android.
-          */}
-          <Text allowFontScaling={false} style={styles.backButtonText}>
-            Back to results
-          </Text>
-        </Pressable>
         <ActivityIndicator size="large" />
         <Text allowFontScaling={false} style={styles.message}>
           Loading movie details...
@@ -83,11 +69,6 @@ export function MovieDetail({
 
     return (
       <View style={styles.centered}>
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <Text allowFontScaling={false} style={styles.backButtonText}>
-            Back to results
-          </Text>
-        </Pressable>
         <Text allowFontScaling={false} style={styles.errorText}>
           Error loading movie details
         </Text>
@@ -100,12 +81,6 @@ export function MovieDetail({
 
   return (
     <ScrollView contentContainerStyle={styles.detailContent}>
-      <Pressable onPress={onBack} style={styles.backButton}>
-        <Text allowFontScaling={false} style={styles.backButtonText}>
-          Back to results
-        </Text>
-      </Pressable>
-
       {detailImagePath ? (
         <Image
           source={{ uri: `${POSTER_BASE_URL}${detailImagePath}` }}
@@ -139,20 +114,6 @@ const styles = StyleSheet.create({
     */
     padding: scaleSize(16),
     backgroundColor: colors.background,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    minHeight: scaleSize(36),
-    marginBottom: scaleSize(16),
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(10),
-    borderRadius: 999,
-    backgroundColor: buttons.primaryPill.backgroundColor,
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    ...typography.buttonLabel,
-    color: buttons.primaryPill.textColor,
   },
   detailPoster: {
     width: '100%',

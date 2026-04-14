@@ -37,7 +37,9 @@ export function HeaderMovieSearch({
   children,
 }: HeaderMovieSearchProps) {
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
+  const detailBackHandlerRef = useRef<(() => void) | null>(null);
 
   const registerSubmitHandler = useCallback((handler: (() => void) | null) => {
     submitHandlerRef.current = handler;
@@ -47,6 +49,14 @@ export function HeaderMovieSearch({
     submitHandlerRef.current?.();
   }, []);
 
+  const registerDetailBackHandler = useCallback((handler: (() => void) | null) => {
+    detailBackHandlerRef.current = handler;
+  }, []);
+
+  const triggerDetailBack = useCallback(() => {
+    detailBackHandlerRef.current?.();
+  }, []);
+
   const contextValue = useMemo<HeaderMovieSearchContextValue>(
     () => ({
       appliedParams,
@@ -54,17 +64,24 @@ export function HeaderMovieSearch({
       totalPages,
       onSubmitFilters,
       isSubmitDisabled,
+      isDetailOpen,
       onValidityChange: setIsSubmitDisabled,
+      onDetailVisibilityChange: setIsDetailOpen,
       registerSubmitHandler,
+      registerDetailBackHandler,
       submitDraftFilters,
+      triggerDetailBack,
     }),
     [
       appliedParams,
+      isDetailOpen,
       isSubmitDisabled,
       loadedPages,
       onSubmitFilters,
+      registerDetailBackHandler,
       registerSubmitHandler,
       submitDraftFilters,
+      triggerDetailBack,
       totalPages,
     ]
   );

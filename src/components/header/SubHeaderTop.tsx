@@ -12,6 +12,7 @@ Purpose:
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { colors } from '../../theme/colors';
 import { buttons } from '../../theme/buttons';
 import { typography } from '../../theme/typography';
@@ -24,7 +25,12 @@ type SubHeaderTopProps = {
 
 export function SubHeaderTop({ title }: SubHeaderTopProps) {
   const insets = useSafeAreaInsets();
-  const { isSubmitDisabled, submitDraftFilters } = useHeaderMovieSearchContext();
+  const {
+    isDetailOpen,
+    isSubmitDisabled,
+    submitDraftFilters,
+    triggerDetailBack,
+  } = useHeaderMovieSearchContext();
 
   return (
     /*
@@ -34,26 +40,34 @@ export function SubHeaderTop({ title }: SubHeaderTopProps) {
     <View style={[styles.container, { paddingTop: insets.top + scaleSize(10) }]}>
       <View style={styles.row}>
         <View style={styles.sideSlot}>
-          <View style={styles.leftPlaceholder} />
+          {isDetailOpen ? (
+            <Pressable onPress={triggerDetailBack} style={styles.detailBackButton}>
+              <Ionicons name="chevron-back" size={42} color="#800000" />
+            </Pressable>
+          ) : (
+            <View style={styles.leftPlaceholder} />
+          )}
         </View>
 
         <Text allowFontScaling={false} style={styles.title}>
-          {title}
+          {isDetailOpen ? 'Movie Details' : title}
         </Text>
 
         <View style={styles.sideSlot}>
-          <Pressable
-            disabled={isSubmitDisabled}
-            onPress={submitDraftFilters}
-            style={[
-              styles.rightAction,
-              isSubmitDisabled && styles.rightActionDisabled,
-            ]}
-          >
-            <Text allowFontScaling={false} style={styles.rightActionText}>
-              Submit
-            </Text>
-          </Pressable>
+          {isDetailOpen ? null : (
+            <Pressable
+              disabled={isSubmitDisabled}
+              onPress={submitDraftFilters}
+              style={[
+                styles.rightAction,
+                isSubmitDisabled && styles.rightActionDisabled,
+              ]}
+            >
+              <Text allowFontScaling={false} style={styles.rightActionText}>
+                Submit
+              </Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -86,6 +100,12 @@ const styles = StyleSheet.create({
     height: scaleSize(32),
     borderRadius: scaleSize(12),
     backgroundColor: colors.placeholderAccent,
+  },
+  detailBackButton: {
+    width: '100%',
+    minHeight: scaleSize(48),
+    marginLeft: scaleSize(10),
+    justifyContent: 'center',
   },
   title: {
     flex: 1,

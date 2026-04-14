@@ -20,9 +20,13 @@ export type HeaderMovieSearchContextValue = {
   totalPages: number | null;
   onSubmitFilters: (params: MovieSearchParams) => void;
   isSubmitDisabled: boolean;
+  isDetailOpen: boolean;
   onValidityChange: (isInvalid: boolean) => void;
+  onDetailVisibilityChange: (isOpen: boolean) => void;
   registerSubmitHandler: (handler: (() => void) | null) => void;
+  registerDetailBackHandler: (handler: (() => void) | null) => void;
   submitDraftFilters: () => void;
+  triggerDetailBack: () => void;
 };
 
 export const HeaderMovieSearchContext =
