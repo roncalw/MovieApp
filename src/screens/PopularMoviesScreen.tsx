@@ -2,7 +2,7 @@
 Step: 16
    * /MovieApp/src/screens/PopularMoviesScreen.tsx
 Imported by:
-   * /MovieApp/App.tsx as an alternate legacy screen import
+   * /MovieApp/App.tsx as an alternate older screen import
 Next step path:
    * /MovieApp/src/components/body/MovieResults.tsx
 Purpose:
@@ -37,7 +37,7 @@ export function PopularMoviesScreen() {
         <ActivityIndicator size="large" />
         {/*
           Lock these screen-owned labels to the shared typography sizes so this
-          legacy screen's loading and error text stays aligned with the rest of
+          older screen's loading and error text stays aligned with the rest of
           the app across iPhone and Android.
         */}
         <Text allowFontScaling={false} style={styles.message}>
