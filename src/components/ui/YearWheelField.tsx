@@ -6,15 +6,23 @@ Imported by:
 Next step path:
    * /MovieApp/src/screens/MovieSearchScreen.tsx
 Purpose:
-   * Renders a reusable year-only picker field that opens a one-column wheel modal for the movie search filters.
+   * Renders a reusable year picker field for the movie search filters using the shared native date picker package.
 */
 import React, { useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import WheelPicker from '@quidone/react-native-wheel-picker';
+import DatePicker from 'react-native-date-picker';
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { buttons } from '../../theme/buttons';
 import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
+import { getCurrentYear } from '../../utils/movieSearchDates';
 
 type YearWheelFieldProps = {
   title: string;
@@ -22,7 +30,14 @@ type YearWheelFieldProps = {
   years: number[];
   onChange: (year: number) => void;
   variant?: 'default' | 'anchoredDate';
+  dateRole?: 'begin' | 'end';
 };
+
+function buildDate(year: number, month: number, day: number) {
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+
+  return new Date(year, month, Math.min(day, lastDayOfMonth));
+}
 
 export function YearWheelField({
   title,
@@ -30,43 +45,59 @@ export function YearWheelField({
   years,
   onChange,
   variant = 'default',
+  dateRole,
 }: YearWheelFieldProps) {
+  const today = useMemo(() => new Date(), []);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [draftYear, setDraftYear] = useState(value);
-  const [anchoredOpenedYear, setAnchoredOpenedYear] = useState(value);
   const [anchoredModalTop, setAnchoredModalTop] = useState(scaleSize(96));
   const [anchoredModalLeft, setAnchoredModalLeft] = useState(scaleSize(16));
   const isAnchoredDate = variant === 'anchoredDate';
   const anchorRef = useRef<View>(null);
   const { width: windowWidth } = useWindowDimensions();
-  const anchoredModalWidth = scaleSize(210);
+  const anchoredModalWidth = scaleSize(320);
+  const anchoredPickerWidth = anchoredModalWidth - scaleSize(28);
+  const minimumYear = useMemo(() => Math.min(...years), [years]);
+  const maximumYear = useMemo(() => Math.max(...years), [years]);
+  const minimumDate = useMemo(() => new Date(minimumYear, 0, 1), [minimumYear]);
+  const maximumDate = useMemo(() => new Date(maximumYear, 11, 31), [maximumYear]);
 
-  const yearItems = useMemo(
-    () =>
-      years.map((year) => ({
-        value: year,
-        label: year.toString(),
-      })),
-    [years]
+  function getDisplayDateForYear(year: number) {
+    if (dateRole === 'begin') {
+      return new Date(year, 0, 1);
+    }
+
+    if (dateRole === 'end') {
+      if (year >= getCurrentYear()) {
+        return buildDate(year, today.getMonth(), today.getDate());
+      }
+
+      return new Date(year, 11, 31);
+    }
+
+    return new Date(year, 0, 1);
+  }
+
+  const [draftDate, setDraftDate] = useState(() => getDisplayDateForYear(value));
+  const [anchoredOpenedDate, setAnchoredOpenedDate] = useState(() =>
+    getDisplayDateForYear(value)
   );
+  const pickerDate = useMemo(() => new Date(draftDate), [draftDate]);
 
   function openModal() {
-    setDraftYear(value);
-    setAnchoredOpenedYear(value);
+    const initialDate = getDisplayDateForYear(value);
+    setDraftDate(initialDate);
+    setAnchoredOpenedDate(initialDate);
 
     if (!isAnchoredDate) {
       setIsModalVisible(true);
       return;
     }
 
-    anchorRef.current?.measure((_, __, width, height, pageX, pageY) => {
+    anchorRef.current?.measure((_, __, _width, height, _pageX, pageY) => {
       const horizontalPadding = scaleSize(16);
-      const desiredLeft = pageX + width / 2 - anchoredModalWidth / 2;
-      const nextLeft = Math.min(
-        Math.max(horizontalPadding, desiredLeft),
-        windowWidth - anchoredModalWidth - horizontalPadding
-      );
-      const nextTop = Math.max(scaleSize(105), pageY + height - scaleSize(43));
+      const centeredLeft = (windowWidth - anchoredModalWidth) / 2;
+      const nextLeft = Math.max(horizontalPadding, centeredLeft);
+      const nextTop = Math.max(scaleSize(85), pageY + height - scaleSize(63));
 
       setAnchoredModalLeft(nextLeft);
       setAnchoredModalTop(nextTop);
@@ -76,34 +107,25 @@ export function YearWheelField({
 
   function closeModal() {
     if (isAnchoredDate) {
-      onChange(draftYear);
+      onChange(draftDate.getFullYear());
     }
 
     if (!isAnchoredDate) {
-      setDraftYear(value);
+      setDraftDate(getDisplayDateForYear(value));
     }
 
-    setIsModalVisible(false);
-  }
-
-  function cancelAnchoredSelection() {
-    setDraftYear(anchoredOpenedYear);
-    onChange(anchoredOpenedYear);
     setIsModalVisible(false);
   }
 
   function applySelection() {
-    onChange(draftYear);
+    onChange(draftDate.getFullYear());
     setIsModalVisible(false);
   }
 
-  function handleAnchoredValueChanging(nextYear: number) {
-    setDraftYear(nextYear);
-  }
-
-  function handleAnchoredValueChanged(nextYear: number) {
-    setDraftYear(nextYear);
-    onChange(nextYear);
+  function cancelAnchoredSelection() {
+    setDraftDate(anchoredOpenedDate);
+    onChange(anchoredOpenedDate.getFullYear());
+    setIsModalVisible(false);
   }
 
   return (
@@ -151,34 +173,16 @@ export function YearWheelField({
               ]}
             >
               <View style={styles.anchoredDateModalCard}>
-                <WheelPicker
-                  data={yearItems}
-                  value={draftYear}
-                  width="100%"
-                  itemHeight={scaleSize(42)}
-                  visibleItemCount={3}
-                  enableScrollByTapOnItem
-                  onValueChanging={({ item }) =>
-                    handleAnchoredValueChanging(Number(item.value))
-                  }
-                  onValueChanged={({ item }) =>
-                    handleAnchoredValueChanged(Number(item.value))
-                  }
-                  style={styles.anchoredDateWheel}
-                  itemTextStyle={styles.anchoredDateWheelItemText}
-                  overlayItemStyle={styles.anchoredDateWheelOverlay}
-                  renderItem={({ item, itemTextStyle }) => (
-                    <Text
-                      allowFontScaling={false}
-                      style={[
-                        itemTextStyle,
-                        styles.anchoredDateWheelText,
-                        item.value === draftYear && styles.anchoredDateWheelTextActive,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  )}
+                <DatePicker
+                  date={pickerDate}
+                  mode="date"
+                  minimumDate={minimumDate}
+                  maximumDate={maximumDate}
+                  onDateChange={setDraftDate}
+                  theme="light"
+                  locale="en-US"
+                  dividerColor="#000000"
+                  style={[styles.anchoredDatePicker, { width: anchoredPickerWidth }]}
                 />
               </View>
 
@@ -208,17 +212,16 @@ export function YearWheelField({
                 {title}
               </Text>
 
-              <WheelPicker
-                data={yearItems}
-                value={draftYear}
-                width="100%"
-                itemHeight={scaleSize(44)}
-                visibleItemCount={5}
-                enableScrollByTapOnItem
-                onValueChanged={({ item }) => setDraftYear(Number(item.value))}
-                style={styles.wheel}
-                itemTextStyle={styles.wheelItemText}
-                overlayItemStyle={styles.wheelOverlay}
+              <DatePicker
+                date={pickerDate}
+                mode="date"
+                minimumDate={minimumDate}
+                maximumDate={maximumDate}
+                onDateChange={setDraftDate}
+                theme="light"
+                locale="en-US"
+                dividerColor="#000000"
+                style={styles.modalDatePicker}
               />
 
               <View style={styles.actionsRow}>
@@ -307,33 +310,15 @@ const styles = StyleSheet.create({
     borderRadius: scaleSize(30),
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#771F14',
-    borderColor: '#59170F',
+    backgroundColor: '#F8EBCE',
+    borderColor: '#771F14',
     borderStartWidth: 3,
     borderEndWidth: 7,
     borderTopWidth: 1,
     borderBottomWidth: 5,
   },
-  anchoredDateWheel: {
-    width: '100%',
-    alignSelf: 'center',
-  },
-  anchoredDateWheelItemText: {
-    fontSize: scaleSize(30),
-    lineHeight: scaleSize(36),
-    fontWeight: '400',
-  },
-  anchoredDateWheelText: {
-    color: '#F0D0CB',
-    textAlign: 'center',
-  },
-  anchoredDateWheelTextActive: {
-    color: '#FFF8F6',
-  },
-  anchoredDateWheelOverlay: {
-    borderRadius: scaleSize(16),
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
-    borderWidth: 0,
+  anchoredDatePicker: {
+    height: scaleSize(180),
   },
   anchoredDateActionsRow: {
     flexDirection: 'row',
@@ -397,19 +382,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: scaleSize(12),
   },
-  wheel: {
-    width: '100%',
+  modalDatePicker: {
     alignSelf: 'center',
-  },
-  wheelItemText: {
-    ...typography.pageTitle,
-    color: colors.textPrimary,
-  },
-  wheelOverlay: {
-    borderRadius: scaleSize(12),
-    backgroundColor: colors.surfaceMuted,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   actionsRow: {
     flexDirection: 'row',

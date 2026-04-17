@@ -13,9 +13,9 @@ This is meant to be a plain-English explanation of the architecture, not just a 
 
 ## Architecture diagram
 
-[![Header and body hierarchy](./header-body-hierarchy.svg)](./header-body-hierarchy.svg)
+[![Header and body hierarchy](./assets/header-body-hierarchy.svg)](./assets/header-body-hierarchy.svg)
 
-Direct file link: [header-body-hierarchy.svg](./header-body-hierarchy.svg)
+Direct file link: [header-body-hierarchy.svg](./assets/header-body-hierarchy.svg)
 
 ### How to read the hierarchy
 
@@ -63,7 +63,7 @@ MovieSearchScreen
 
 ### Screen
 
-- [MovieSearchScreen.tsx](/Users/croncallo/repo/MovieApp/src/screens/MovieSearchScreen.tsx)
+- [MovieSearchScreen.tsx](../src/screens/MovieSearchScreen.tsx)
 
 This is the page-level screen.
 
@@ -78,23 +78,23 @@ It is intentionally closer to a page composer than a giant state bucket.
 
 ### Header folder
 
-- [HeaderMovieSearch.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx)
-- [SubHeaderTop.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderTop.tsx)
-- [SubHeaderMovieSearchFields.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx)
-- [HeaderMovieSearchContext.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearchContext.tsx)
+- [HeaderMovieSearch.tsx](../src/components/header/HeaderMovieSearch.tsx)
+- [SubHeaderTop.tsx](../src/components/header/SubHeaderTop.tsx)
+- [SubHeaderMovieSearchFields.tsx](../src/components/header/SubHeaderMovieSearchFields.tsx)
+- [HeaderMovieSearchContext.tsx](../src/components/header/HeaderMovieSearchContext.tsx)
 
 These files are specifically about the page header and its coordination.
 
 ### Body folder
 
-- [MovieResults.tsx](/Users/croncallo/repo/MovieApp/src/components/body/MovieResults.tsx)
+- [MovieResults.tsx](../src/components/body/MovieResults.tsx)
 
 This is the reusable results-list/detail body section.
 
 ### UI folder
 
-- [MovieCard.tsx](/Users/croncallo/repo/MovieApp/src/components/ui/MovieCard.tsx)
-- [YearWheelField.tsx](/Users/croncallo/repo/MovieApp/src/components/ui/YearWheelField.tsx)
+- [MovieCard.tsx](../src/components/ui/MovieCard.tsx)
+- [YearWheelField.tsx](../src/components/ui/YearWheelField.tsx)
 
 These are reusable visual building blocks.
 
@@ -119,10 +119,10 @@ It became the coordinator.
 
 The children still do the visible work:
 
-- [SubHeaderTop.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderTop.tsx)
+- [SubHeaderTop.tsx](../src/components/header/SubHeaderTop.tsx)
   renders the top bar and the `Submit` button
 
-- [SubHeaderMovieSearchFields.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx)
+- [SubHeaderMovieSearchFields.tsx](../src/components/header/SubHeaderMovieSearchFields.tsx)
   renders the filter controls, year wheels, validation, and summary
 
 So the parent is the manager, not the worker doing both jobs itself.
@@ -154,7 +154,7 @@ We wanted:
 
 So we introduced:
 
-- [HeaderMovieSearch.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx)
+- [HeaderMovieSearch.tsx](../src/components/header/HeaderMovieSearch.tsx)
 
 Its job is to be the shared parent that coordinates the two header children without pushing all of that sibling wiring back into the screen.
 
@@ -172,7 +172,7 @@ This was the extra question:
 
 If the parent already exists, why also create:
 
-- [HeaderMovieSearchContext.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearchContext.tsx)
+- [HeaderMovieSearchContext.tsx](../src/components/header/HeaderMovieSearchContext.tsx)
 
 ### Short answer
 
@@ -216,10 +216,10 @@ The context file is a mechanism, not a visual layer.
 
 So the real visual/structural hierarchy is still:
 
-1. [MovieSearchScreen.tsx](/Users/croncallo/repo/MovieApp/src/screens/MovieSearchScreen.tsx)
-2. [HeaderMovieSearch.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx)
-3. [SubHeaderTop.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderTop.tsx)
-4. [SubHeaderMovieSearchFields.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx)
+1. [MovieSearchScreen.tsx](../src/screens/MovieSearchScreen.tsx)
+2. [HeaderMovieSearch.tsx](../src/components/header/HeaderMovieSearch.tsx)
+3. [SubHeaderTop.tsx](../src/components/header/SubHeaderTop.tsx)
+4. [SubHeaderMovieSearchFields.tsx](../src/components/header/SubHeaderMovieSearchFields.tsx)
 
 The context is just the shared hallway clipboard those pieces use.
 
@@ -243,7 +243,7 @@ So this is a design choice, not a hard React requirement.
 
 ## Why the body does not need the same kind of department head
 
-- [MovieResults.tsx](/Users/croncallo/repo/MovieApp/src/components/body/MovieResults.tsx)
+- [MovieResults.tsx](../src/components/body/MovieResults.tsx)
 
 This component is a sibling to the header area, but right now it does not need to coordinate closely with the header in the same way.
 
@@ -308,29 +308,29 @@ so that each layer has a clearer job and we do not keep stuffing every concern i
 
 ### Page composer
 
-- [MovieSearchScreen.tsx](/Users/croncallo/repo/MovieApp/src/screens/MovieSearchScreen.tsx)
+- [MovieSearchScreen.tsx](../src/screens/MovieSearchScreen.tsx)
 
 ### Header coordinator
 
-- [HeaderMovieSearch.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx)
+- [HeaderMovieSearch.tsx](../src/components/header/HeaderMovieSearch.tsx)
 
 ### Header children
 
-- [SubHeaderTop.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderTop.tsx)
-- [SubHeaderMovieSearchFields.tsx](/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx)
+- [SubHeaderTop.tsx](../src/components/header/SubHeaderTop.tsx)
+- [SubHeaderMovieSearchFields.tsx](../src/components/header/SubHeaderMovieSearchFields.tsx)
 
 ### Header shared channel
 
-- [HeaderMovieSearchContext.tsx](/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearchContext.tsx)
+- [HeaderMovieSearchContext.tsx](../src/components/header/HeaderMovieSearchContext.tsx)
 
 ### Body
 
-- [MovieResults.tsx](/Users/croncallo/repo/MovieApp/src/components/body/MovieResults.tsx)
+- [MovieResults.tsx](../src/components/body/MovieResults.tsx)
 
 ### Shared UI parts
 
-- [MovieCard.tsx](/Users/croncallo/repo/MovieApp/src/components/ui/MovieCard.tsx)
-- [YearWheelField.tsx](/Users/croncallo/repo/MovieApp/src/components/ui/YearWheelField.tsx)
+- [MovieCard.tsx](../src/components/ui/MovieCard.tsx)
+- [YearWheelField.tsx](../src/components/ui/YearWheelField.tsx)
 
 ## Final takeaway
 

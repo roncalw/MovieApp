@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">react-native-date-picker current patched 5.0.13 flow</title>
+  <desc id="desc">Diagram showing the broken unpatched 5.0.13 paths and the current patched 5.0.13 setup with one shared popup shell on both platforms.</desc>
+  <style>
+    .bg { fill: #fffaf2; }
+    .panel { fill: #fff7e8; stroke: #8c2418; stroke-width: 3; rx: 20; }
+    .panelAlt { fill: #f7f7f7; stroke: #8c2418; stroke-width: 3; rx: 20; }
+    .title { font: 700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #8c2418; }
+    .subtitle { font: 600 21px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #8c2418; }
+    .body { font: 400 19px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2a2a2a; }
+    .small { font: 400 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2a2a2a; }
+    .arrow { stroke: #8c2418; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    .danger { fill: #b42318; font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .ok { fill: #1d6b3a; font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#8c2418"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="700" />
+
+  <text class="title" x="60" y="60">react-native-date-picker: patched 5.0.13 current state</text>
+
+  <rect class="panel" x="60" y="110" width="500" height="220" rx="20"/>
+  <text class="subtitle" x="85" y="150">Problem path: 5.0.13</text>
+  <text class="body" x="85" y="195">Package metadata adds iOS codegen provider wiring</text>
+  <text class="body" x="85" y="230">React Native startup tries to register RNDatePickerManager</text>
+  <text class="body" x="85" y="265">Provider contract check fails</text>
+  <text class="danger" x="85" y="305">Crash: "RNDatePickerManager does not conform to RCTModuleProvider"</text>
+
+  <rect class="panel" x="640" y="110" width="500" height="220" rx="20"/>
+  <text class="subtitle" x="665" y="150">Current version: patched 5.0.13</text>
+  <text class="body" x="665" y="195">Remove ios.modulesProvider and componentProvider metadata</text>
+  <text class="body" x="665" y="230">Patch DatePickerIOS inline wrapper to send only supported iOS props</text>
+  <text class="ok" x="665" y="270">Shared popup shell can stay the same on iOS and Android</text>
+
+  <path class="arrow" d="M560 220 L640 220" />
+
+  <rect class="panelAlt" x="60" y="400" width="500" height="220" rx="20"/>
+  <text class="subtitle" x="85" y="440">iOS current path</text>
+  <text class="small" x="85" y="485">Launcher:</text>
+  <text class="body" x="170" y="485">our app-owned custom popup shell</text>
+  <text class="small" x="85" y="520">Picker:</text>
+  <text class="body" x="160" y="520">inline picker through patched library wrapper</text>
+  <text class="ok" x="85" y="565">Same launcher and same formatting strategy as Android</text>
+
+  <rect class="panelAlt" x="640" y="400" width="500" height="220" rx="20"/>
+  <text class="subtitle" x="665" y="440">Android current path</text>
+  <text class="body" x="665" y="485">Same custom popup shell</text>
+  <text class="body" x="665" y="520">Same inline picker layout and button row</text>
+  <text class="ok" x="665" y="565">Tan card, red border, custom placement, custom buttons</text>
+</svg>

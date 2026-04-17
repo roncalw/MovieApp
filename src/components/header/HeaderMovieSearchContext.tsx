@@ -19,6 +19,7 @@ export type HeaderMovieSearchContextValue = {
   loadedPages: number;
   totalPages: number | null;
   onSubmitFilters: (params: MovieSearchParams) => void;
+  onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
   isSubmitDisabled: boolean;
   isDetailOpen: boolean;
   onValidityChange: (isInvalid: boolean) => void;

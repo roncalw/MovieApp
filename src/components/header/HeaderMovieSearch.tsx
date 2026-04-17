@@ -25,6 +25,7 @@ type HeaderMovieSearchProps = {
   loadedPages: number;
   totalPages: number | null;
   onSubmitFilters: (params: MovieSearchParams) => void;
+  onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
   children: ReactNode;
 };
 
@@ -34,6 +35,7 @@ export function HeaderMovieSearch({
   loadedPages,
   totalPages,
   onSubmitFilters,
+  onDisplayedFiltersDirtyChange,
   children,
 }: HeaderMovieSearchProps) {
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
@@ -63,6 +65,7 @@ export function HeaderMovieSearch({
       loadedPages,
       totalPages,
       onSubmitFilters,
+      onDisplayedFiltersDirtyChange,
       isSubmitDisabled,
       isDetailOpen,
       onValidityChange: setIsSubmitDisabled,
@@ -77,6 +80,7 @@ export function HeaderMovieSearch({
       isDetailOpen,
       isSubmitDisabled,
       loadedPages,
+      onDisplayedFiltersDirtyChange,
       onSubmitFilters,
       registerDetailBackHandler,
       registerSubmitHandler,

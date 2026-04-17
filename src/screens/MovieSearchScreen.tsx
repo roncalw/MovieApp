@@ -10,8 +10,9 @@ Purpose:
    * Renders the movie search page, lets the parent header coordinate its two subheaders, and delegates the shared list/detail
      flow to the reusable movie results body component.
 */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
 import { SubHeaderMovieSearchFields } from '../components/header/SubHeaderMovieSearchFields';
@@ -38,8 +39,10 @@ import {
 export function MovieSearchScreen() {
   const defaultBeginDate = getDefaultBeginDate();
   const defaultEndDate = getDefaultEndDate();
+  const queryClient = useQueryClient();
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] = useState(false);
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
     beginDate: defaultBeginDate,
@@ -49,11 +52,30 @@ export function MovieSearchScreen() {
     movieVoteCount: '',
     movieSortBy: '',
   });
+  const hasActiveSubmittedSearch = hasSubmittedSearch && !hasDisplayedFilterChanges;
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
+    setHasDisplayedFilterChanges(false);
     setSubmittedParams(nextParams);
     setHasSubmittedSearch(true);
   }
+
+  useEffect(() => {
+    if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
+      return;
+    }
+
+    queryClient.removeQueries({
+      queryKey: ['movieSearch', submittedParams],
+      exact: true,
+    });
+    setHasSubmittedSearch(false);
+  }, [
+    hasDisplayedFilterChanges,
+    hasSubmittedSearch,
+    queryClient,
+    submittedParams,
+  ]);
 
   /*
     WHAT THIS HOOK CALL DOES:
@@ -71,14 +93,15 @@ export function MovieSearchScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMovieSearchQuery(submittedParams, hasSubmittedSearch);
+  } = useMovieSearchQuery(submittedParams, hasActiveSubmittedSearch);
 
   const movies = useMemo(
-    () => (hasSubmittedSearch ? data?.pages.flatMap((page) => page.movies) ?? [] : []),
-    [data, hasSubmittedSearch]
+    () =>
+      hasActiveSubmittedSearch ? data?.pages.flatMap((page) => page.movies) ?? [] : [],
+    [data, hasActiveSubmittedSearch]
   );
-  const loadedPages = data?.pages.length ?? 0;
-  const totalPages = data?.pages[0]?.totalPages ?? null;
+  const loadedPages = hasActiveSubmittedSearch ? data?.pages.length ?? 0 : 0;
+  const totalPages = hasActiveSubmittedSearch ? data?.pages[0]?.totalPages ?? null : 0;
 
   /*
     WHAT THIS DOES:
@@ -87,7 +110,7 @@ export function MovieSearchScreen() {
     WHY:
     - The screen must handle loading explicitly
   */
-  if (hasSubmittedSearch && isLoading) {
+  if (hasActiveSubmittedSearch && isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -109,7 +132,7 @@ export function MovieSearchScreen() {
     WHY:
     - A failed search should show a clear error instead of failing silently
   */
-  if (hasSubmittedSearch && isError) {
+  if (hasActiveSubmittedSearch && isError) {
     const message =
       error instanceof Error ? error.message : 'Unknown error';
 
@@ -133,6 +156,7 @@ export function MovieSearchScreen() {
         loadedPages={loadedPages}
         totalPages={totalPages}
         onSubmitFilters={handleApplyFilters}
+        onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
       >
         <MovieResults
           movies={movies}

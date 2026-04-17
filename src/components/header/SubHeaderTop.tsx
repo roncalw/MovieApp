@@ -14,7 +14,6 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { colors } from '../../theme/colors';
-import { buttons } from '../../theme/buttons';
 import { typography } from '../../theme/typography';
 import { scaleSize } from '../../theme/scale';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
@@ -119,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleSize(14),
     paddingVertical: scaleSize(8),
     borderRadius: 999,
-    backgroundColor: buttons.primaryPill.backgroundColor,
+    backgroundColor: '#F8EBCE',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -128,7 +127,7 @@ const styles = StyleSheet.create({
   },
   rightActionText: {
     ...typography.buttonLabel,
-    color: buttons.primaryPill.textColor,
+    color: colors.brandText,
     textAlign: 'center',
   },
 });

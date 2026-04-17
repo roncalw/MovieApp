@@ -77,6 +77,10 @@ const SORT_ITEMS = [
 const TMDB_RESULTS_PER_PAGE = 20;
 const MOVIE_COUNT_FORMATTER = new Intl.NumberFormat('en-US');
 
+function getSortedValueSignature(values: string[]) {
+  return [...values].sort().join('|');
+}
+
 function formatSelectedLabels(
   selectedValues: string[],
   items: Array<{ label: string; value: string }>
@@ -168,19 +172,26 @@ function PopupChip({
   selected,
   onPress,
   reversedSelectionAppearance = false,
+  fixedWidth = false,
+  subtleBorder = false,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
   reversedSelectionAppearance?: boolean;
+  fixedWidth?: boolean;
+  subtleBorder?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.popupChip,
+        fixedWidth && styles.popupChipFixedWidth,
+        subtleBorder && styles.popupChipSubtleBorder,
         reversedSelectionAppearance && styles.popupChipReversed,
         selected && styles.popupChipSelected,
+        selected && subtleBorder && styles.popupChipSubtleBorderSelected,
         selected && reversedSelectionAppearance && styles.popupChipSelectedReversed,
       ]}
     >
@@ -229,6 +240,7 @@ export function SubHeaderMovieSearchFields() {
     appliedParams,
     totalPages,
     onSubmitFilters,
+    onDisplayedFiltersDirtyChange,
     onValidityChange,
     registerSubmitHandler,
   } = useHeaderMovieSearchContext();
@@ -272,6 +284,7 @@ export function SubHeaderMovieSearchFields() {
   );
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const searchYears = useMemo(() => buildSearchYearOptions(), []);
   const selectedGenreSummary = useMemo(
     () => formatInlineSummary(selectedGenre, GENRE_ITEMS),
@@ -283,10 +296,51 @@ export function SubHeaderMovieSearchFields() {
     [selectedStreamer]
   );
   const selectedSortSummary = useMemo(
-    () => SORT_ITEMS.find((item) => item.value === selectedSortValue)?.label ?? 'Popular',
+    () => SORT_ITEMS.find((item) => item.value === selectedSortValue)?.label ?? '',
     [selectedSortValue]
   );
   const estimatedMovieCount = (totalPages ?? 0) * TMDB_RESULTS_PER_PAGE;
+  const appliedGenreSignature = useMemo(
+    () => getSortedValueSignature(appliedParams.movieGenres),
+    [appliedParams.movieGenres]
+  );
+  const appliedStreamerSignature = useMemo(
+    () => getSortedValueSignature(appliedParams.movieStreamers),
+    [appliedParams.movieStreamers]
+  );
+  const selectedGenreSignature = useMemo(
+    () => getSortedValueSignature(selectedGenre),
+    [selectedGenre]
+  );
+  const selectedStreamerSignature = useMemo(
+    () => getSortedValueSignature(selectedStreamer),
+    [selectedStreamer]
+  );
+  const displayedFiltersAreDirty = useMemo(
+    () =>
+      getBeginDateFromYear(beginYear) !== appliedParams.beginDate ||
+      getEndDateFromYear(endYear) !== appliedParams.endDate ||
+      selectedRating !== appliedParams.movieRatings ||
+      selectedGenreSignature !== appliedGenreSignature ||
+      selectedStreamerSignature !== appliedStreamerSignature ||
+      selectedSortValue !==
+        getInitialSortValue(appliedParams.movieSortBy, appliedParams.movieVoteCount),
+    [
+      appliedGenreSignature,
+      appliedParams.beginDate,
+      appliedParams.endDate,
+      appliedParams.movieRatings,
+      appliedParams.movieSortBy,
+      appliedParams.movieVoteCount,
+      appliedStreamerSignature,
+      beginYear,
+      endYear,
+      selectedGenreSignature,
+      selectedRating,
+      selectedSortValue,
+      selectedStreamerSignature,
+    ]
+  );
 
   const { movieVoteCount, movieSortBy } = useMemo(() => {
     let nextVoteCount = '';
@@ -338,6 +392,10 @@ export function SubHeaderMovieSearchFields() {
   useEffect(() => {
     onValidityChange(isYearRangeInvalid);
   }, [isYearRangeInvalid, onValidityChange]);
+
+  useEffect(() => {
+    onDisplayedFiltersDirtyChange(displayedFiltersAreDirty);
+  }, [displayedFiltersAreDirty, onDisplayedFiltersDirtyChange]);
 
   useEffect(() => {
     registerSubmitHandler(submitFilters);
@@ -467,6 +525,7 @@ export function SubHeaderMovieSearchFields() {
                 years={searchYears}
                 onChange={setBeginYear}
                 variant="anchoredDate"
+                dateRole="begin"
               />
             </View>
 
@@ -480,6 +539,7 @@ export function SubHeaderMovieSearchFields() {
                 years={searchYears}
                 onChange={setEndYear}
                 variant="anchoredDate"
+                dateRole="end"
               />
             </View>
           </View>
@@ -540,6 +600,7 @@ export function SubHeaderMovieSearchFields() {
                       selected={draftGenre.includes(item.value)}
                       onPress={() => toggleDraftGenre(item.value)}
                       reversedSelectionAppearance
+                      subtleBorder
                     />
                   ))}
                 </View>
@@ -694,6 +755,9 @@ export function SubHeaderMovieSearchFields() {
                       label={item.label}
                       selected={draftSortValue === item.value}
                       onPress={() => toggleDraftSortValue(item.value)}
+                      fixedWidth
+                      reversedSelectionAppearance
+                      subtleBorder
                     />
                   ))}
                 </View>
@@ -725,31 +789,57 @@ export function SubHeaderMovieSearchFields() {
           </Modal>
 
           <View style={styles.summaryBox}>
-            <Text allowFontScaling={false} style={styles.summaryText}>
-              Movie Search Summary
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Released: {getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear())} to{' '}
-              {getYearFromDateString(appliedParams.endDate, getDefaultEndYear())}
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Genre: {formatSelectedLabels(appliedParams.movieGenres, GENRE_ITEMS)}
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Rating: {appliedParams.movieRatings || 'Any'}
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Streaming On:{' '}
-              {formatSelectedLabels(appliedParams.movieStreamers, STREAMER_ITEMS)}
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Sort By: {getAppliedSortLabel(appliedParams.movieSortBy, appliedParams.movieVoteCount)}
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>              
-            </Text>
-            <Text allowFontScaling={false} style={styles.summarySubText}>
-              Movies Found: {MOVIE_COUNT_FORMATTER.format(estimatedMovieCount)}
-            </Text>
+            <Pressable
+              onPress={() => setIsSummaryCollapsed((currentValue) => !currentValue)}
+              style={[
+                styles.summaryHeaderRow,
+                !isSummaryCollapsed && styles.summaryHeaderRowExpanded,
+              ]}
+            >
+              <View style={styles.summaryHeaderInline}>
+                <Text
+                  allowFontScaling={false}
+                  style={styles.summaryText}
+                >
+                  Movie Search Summary
+                </Text>
+                <Ionicons
+                  name={isSummaryCollapsed ? 'chevron-down' : 'chevron-up'}
+                  size={scaleSize(24)}
+                  color={colors.brandText}
+                />
+              </View>
+            </Pressable>
+
+            {isSummaryCollapsed ? null : (
+              <>
+                <Text allowFontScaling={false} style={styles.summarySubText}>
+                  Released: {getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear())}{' '}
+                  to {getYearFromDateString(appliedParams.endDate, getDefaultEndYear())}
+                </Text>
+                <Text allowFontScaling={false} style={styles.summarySubText}>
+                  Genre: {formatSelectedLabels(appliedParams.movieGenres, GENRE_ITEMS)}
+                </Text>
+                <Text allowFontScaling={false} style={styles.summarySubText}>
+                  Rating: {appliedParams.movieRatings || 'Any'}
+                </Text>
+                <Text allowFontScaling={false} style={styles.summarySubText}>
+                  Streaming On:{' '}
+                  {formatSelectedLabels(appliedParams.movieStreamers, STREAMER_ITEMS)}
+                </Text>
+                <Text allowFontScaling={false} style={styles.summarySubText}>
+                  Sort By: {getAppliedSortLabel(appliedParams.movieSortBy, appliedParams.movieVoteCount)}
+                </Text>
+                <Text allowFontScaling={false} style={styles.summarySubTextSpaced}>
+                  Movies Found: {MOVIE_COUNT_FORMATTER.format(estimatedMovieCount)}
+                </Text>
+                {estimatedMovieCount === 0 ? (
+                  <Text allowFontScaling={false} style={styles.summarySubTextItalic}>
+                    Submit New Search
+                  </Text>
+                ) : null}
+              </>
+            )}
           </View>
         </>
       )}
@@ -955,6 +1045,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  popupChipFixedWidth: {
+    alignSelf: 'center',
+    width: scaleSize(230),
+  },
+  popupChipSubtleBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(119, 31, 20, 0.12)',
+  },
+  popupChipSubtleBorderSelected: {
+    borderColor: 'rgba(119, 31, 20, 0.18)',
+  },
   popupChipSelected: {
     backgroundColor: 'rgba(251, 235, 202, 0.999)',
   },
@@ -1037,17 +1138,40 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     ...typography.summaryTitle,
-    marginBottom: scaleSize(6),
     color: colors.brandText,
+  },
+  summaryHeaderRow: {
+    alignSelf: 'flex-start',
+  },
+  summaryHeaderRowExpanded: {
+    marginBottom: scaleSize(6),
+  },
+  summaryHeaderInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleSize(6),
   },
   summarySubText: {
     ...typography.summaryBody,
     color: colors.textSecondary,
     marginBottom: scaleSize(2),
   },
+  summarySubTextSpaced: {
+    ...typography.summaryBody,
+    color: colors.textSecondary,
+    marginTop: scaleSize(12),
+    marginBottom: scaleSize(2),
+  },
+  summarySubTextItalic: {
+    ...typography.summaryBody,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    marginBottom: scaleSize(2),
+  },
   validationText: {
     ...typography.summaryBody,
     color: colors.brandText,
+    textAlign: 'center',
     marginTop: scaleSize(8),
     marginBottom: scaleSize(4),
   },

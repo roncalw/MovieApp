@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="700" viewBox="0 0 1760 700" role="img" aria-labelledby="title desc">
+  <title id="title">Submitted params request and response flow</title>
+  <desc id="desc">Simple flow diagram showing how submittedParams goes from MovieSearchScreen to TMDB and how the response returns to MovieResults.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d0d0d0" />
+    </marker>
+    <style>
+      .bg { fill: #111111; }
+      .panel { fill: #181818; stroke: #d0d0d0; stroke-width: 2; rx: 16; }
+      .accent { fill: #f8ebce; stroke: #8c2418; stroke-width: 3; rx: 14; }
+      .title { fill: #f3f4f6; font: 700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .section { fill: #7ee787; font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .boxTitle { fill: #7ee787; font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .body { fill: #f3f4f6; font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .warnTitle { fill: #8c2418; font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .warnBody { fill: #3b2417; font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .line { stroke: #d0d0d0; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .num { fill: #111111; font: 700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .numCircle { fill: #f8ebce; stroke: #8c2418; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1760" height="700" />
+
+  <text class="title" x="60" y="55">Submitted Params Request And Response Flow</text>
+  <text class="body" x="60" y="84">Read arrows 1-4 across the top for the request path. Read arrows 5-8 back across the bottom for the response path.</text>
+
+  <text class="section" x="70" y="135">Request Path</text>
+
+  <rect class="panel" x="60" y="165" width="280" height="120" />
+  <text class="boxTitle" x="82" y="195">MovieSearchScreen.tsx</text>
+  <text class="body" x="82" y="223">`submittedParams` state line 46</text>
+  <text class="body" x="82" y="247">calls `useMovieSearchQuery` line 96</text>
+
+  <rect class="panel" x="400" y="165" width="280" height="120" />
+  <text class="boxTitle" x="422" y="195">useMovieSearchQuery.ts</text>
+  <text class="body" x="422" y="223">`queryKey` line 89</text>
+  <text class="body" x="422" y="247">`queryFn` line 90</text>
+
+  <rect class="panel" x="740" y="165" width="280" height="120" />
+  <text class="boxTitle" x="762" y="195">movieService.ts</text>
+  <text class="body" x="762" y="223">`fetchMovieSearchResults` line 90</text>
+  <text class="body" x="762" y="247">receives the submitted object</text>
+
+  <rect class="panel" x="1080" y="165" width="280" height="120" />
+  <text class="boxTitle" x="1102" y="195">Request Builder</text>
+  <text class="body" x="1102" y="223">`URLSearchParams` line 104</text>
+  <text class="body" x="1102" y="247">final path line 148</text>
+
+  <rect class="accent" x="1420" y="165" width="280" height="120" />
+  <text class="warnTitle" x="1442" y="195">TMDB</text>
+  <text class="warnBody" x="1442" y="223">`/discover/movie?...` endpoint</text>
+  <text class="warnBody" x="1442" y="247">returns raw JSON</text>
+
+  <path class="line" d="M 340 225 L 400 225" />
+  <circle class="numCircle" cx="370" cy="205" r="14" />
+  <text class="num" x="366" y="210">1</text>
+
+  <path class="line" d="M 680 225 L 740 225" />
+  <circle class="numCircle" cx="710" cy="205" r="14" />
+  <text class="num" x="706" y="210">2</text>
+
+  <path class="line" d="M 1020 225 L 1080 225" />
+  <circle class="numCircle" cx="1050" cy="205" r="14" />
+  <text class="num" x="1046" y="210">3</text>
+
+  <path class="line" d="M 1360 225 L 1420 225" />
+  <circle class="numCircle" cx="1390" cy="205" r="14" />
+  <text class="num" x="1386" y="210">4</text>
+
+  <text class="section" x="70" y="385">Response Path</text>
+
+  <rect class="panel" x="1340" y="455" width="320" height="120" />
+  <text class="boxTitle" x="1362" y="485">movieService.ts</text>
+  <text class="body" x="1362" y="513">returns `{ page, movies, totalPages }`</text>
+  <text class="body" x="1362" y="537">maps `response.data.results` line 154</text>
+
+  <rect class="panel" x="980" y="455" width="300" height="120" />
+  <text class="boxTitle" x="1002" y="485">TanStack Query</text>
+  <text class="body" x="1002" y="513">stores result in `data.pages`</text>
+  <text class="body" x="1002" y="537">hook returns data to the screen</text>
+
+  <rect class="panel" x="600" y="455" width="320" height="120" />
+  <text class="boxTitle" x="622" y="485">MovieSearchScreen.tsx</text>
+  <text class="body" x="622" y="513">flattens `data.pages` line 98</text>
+  <text class="body" x="622" y="537">builds the final `movies` array</text>
+
+  <rect class="accent" x="220" y="455" width="320" height="120" />
+  <text class="warnTitle" x="242" y="485">MovieResults.tsx</text>
+  <text class="warnBody" x="242" y="513">receives `movies` prop line 34</text>
+  <text class="warnBody" x="242" y="537">renders `FlatList data={movies}` line 77</text>
+
+  <path class="line" d="M 1560 285 L 1560 455" />
+  <circle class="numCircle" cx="1580" cy="370" r="14" />
+  <text class="num" x="1576" y="375">5</text>
+
+  <path class="line" d="M 1340 515 L 1280 515" />
+  <circle class="numCircle" cx="1310" cy="495" r="14" />
+  <text class="num" x="1306" y="500">6</text>
+
+  <path class="line" d="M 980 515 L 920 515" />
+  <circle class="numCircle" cx="950" cy="495" r="14" />
+  <text class="num" x="946" y="500">7</text>
+
+  <path class="line" d="M 600 515 L 540 515" />
+  <circle class="numCircle" cx="570" cy="495" r="14" />
+  <text class="num" x="566" y="500">8</text>
+</svg>
