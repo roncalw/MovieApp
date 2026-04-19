@@ -76,4 +76,4 @@ yarn-error.log
 
 # References
 /.legacy_code/
-
+/.codex/_rollback/

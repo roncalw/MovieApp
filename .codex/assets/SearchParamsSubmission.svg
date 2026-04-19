@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1610" viewBox="0 0 1800 1610">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ec5ff" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb86b" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ee89a" />
+    </marker>
+    <style>
+      .bg { fill: #111111; }
+      .box { fill: #242424; stroke: #d0d0d0; stroke-width: 2; rx: 12; }
+      .note { fill: #f8ebce; stroke: #a16207; stroke-width: 2; rx: 12; }
+      .title { fill: #7ee787; font: 700 19px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .body { fill: #f3f4f6; font: 400 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .muted { fill: #d1d5db; font: 400 15px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .code { fill: #caa6ff; font: 600 14px 'SFMono-Regular', Menlo, Consolas, monospace; }
+      .section { fill: #f3f4f6; font: 700 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .sub { fill: #d1d5db; font: 400 15px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .labelBlue { fill: #cfe6ff; font: 600 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .labelOrange { fill: #ffd5a6; font: 600 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .labelGreen { fill: #d9ffe0; font: 600 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .noteTitle { fill: #9a3412; font: 700 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .noteBody { fill: #4b3621; font: 400 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .lineBlue { stroke: #8ec5ff; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .dashBlue { stroke: #8ec5ff; stroke-width: 3; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrow-blue); }
+      .lineOrange { stroke: #ffb86b; stroke-width: 3; fill: none; marker-end: url(#arrow-orange); }
+      .lineGreen { stroke: #8ee89a; stroke-width: 3; fill: none; marker-end: url(#arrow-green); }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="1610" />
+
+  <text class="section" x="900" y="54" text-anchor="middle">SearchParamsSubmission</text>
+  <text class="sub" x="900" y="86" text-anchor="middle">Code-validated submit flow: how the top Submit button ultimately sends final MovieSearchParams back to MovieSearchScreen</text>
+
+  <text class="labelBlue" x="250" y="130">Blue = setup path</text>
+  <text class="labelOrange" x="900" y="130">Orange = top Submit wiring path</text>
+  <text class="labelGreen" x="1490" y="130">Green = final params + query path</text>
+
+  <rect class="box" x="70" y="200" width="390" height="200" />
+  <text class="title" x="265" y="242" text-anchor="middle">MovieSearchScreen.tsx</text>
+  <text class="body" x="265" y="284" text-anchor="middle">owns the real submit callback</text>
+  <text class="code" x="265" y="326" text-anchor="middle">handleApplyFilters(nextParams)</text>
+  <text class="body" x="265" y="368" text-anchor="middle">passes it down as</text>
+  <text class="code" x="265" y="410" text-anchor="middle">onSubmitFilters={handleApplyFilters}</text>
+
+  <rect class="box" x="540" y="150" width="720" height="300" />
+  <text class="title" x="900" y="194" text-anchor="middle">HeaderMovieSearch.tsx</text>
+  <text class="body" x="900" y="236" text-anchor="middle">receives the callback prop from MovieSearchScreen</text>
+  <text class="body" x="900" y="274" text-anchor="middle">renders the two header children</text>
+  <text class="code" x="900" y="314" text-anchor="middle">&lt;SubHeaderTop /&gt; and &lt;SubHeaderMovieSearchFields /&gt;</text>
+  <text class="body" x="900" y="352" text-anchor="middle">owns the submit coordinator pieces</text>
+  <text class="code" x="900" y="392" text-anchor="middle">registerSubmitHandler(), submitDraftFilters(), submitHandlerRef</text>
+
+  <rect class="box" x="700" y="520" width="500" height="190" />
+  <text class="title" x="950" y="562" text-anchor="middle">HeaderMovieSearchContext.tsx</text>
+  <text class="body" x="950" y="604" text-anchor="middle">defines the shared header channel + hook</text>
+  <text class="code" x="950" y="646" text-anchor="middle">HeaderMovieSearchContext, useHeaderMovieSearchContext()</text>
+  <text class="body" x="950" y="688" text-anchor="middle">HeaderMovieSearch uses .Provider from this module</text>
+
+  <rect class="box" x="430" y="810" width="340" height="210" />
+  <text class="title" x="600" y="852" text-anchor="middle">SubHeaderTop.tsx</text>
+  <text class="body" x="600" y="894" text-anchor="middle">reads shared values with</text>
+  <text class="code" x="600" y="936" text-anchor="middle">useHeaderMovieSearchContext()</text>
+  <text class="body" x="600" y="978" text-anchor="middle">Submit button calls</text>
+  <text class="code" x="600" y="1020" text-anchor="middle">submitDraftFilters()</text>
+
+  <rect class="box" x="980" y="780" width="650" height="340" />
+  <text class="title" x="1305" y="822" text-anchor="middle">SubHeaderMovieSearchFields.tsx</text>
+  <text class="body" x="1305" y="864" text-anchor="middle">reads shared values with</text>
+  <text class="code" x="1305" y="906" text-anchor="middle">useHeaderMovieSearchContext()</text>
+  <text class="body" x="1305" y="948" text-anchor="middle">registers its field submit function with</text>
+  <text class="code" x="1305" y="990" text-anchor="middle">registerSubmitHandler(submitFilters)</text>
+  <text class="body" x="1305" y="1032" text-anchor="middle">then</text>
+  <text class="code" x="1305" y="1074" text-anchor="middle">submitFilters()</text>
+  <text class="body" x="1305" y="1116" text-anchor="middle">builds final MovieSearchParams and calls</text>
+  <text class="code" x="1305" y="1158" text-anchor="middle">onSubmitFilters(finalParams)</text>
+
+  <rect class="box" x="70" y="1160" width="540" height="230" />
+  <text class="title" x="340" y="1204" text-anchor="middle">MovieSearchScreen.tsx After Callback Returns</text>
+  <text class="body" x="340" y="1248" text-anchor="middle">execution lands back in</text>
+  <text class="code" x="340" y="1290" text-anchor="middle">handleApplyFilters(nextParams)</text>
+  <text class="code" x="340" y="1332" text-anchor="middle">setSubmittedParams(nextParams)</text>
+  <text class="code" x="340" y="1374" text-anchor="middle">setHasSubmittedSearch(true)</text>
+
+  <rect class="box" x="760" y="1190" width="470" height="170" />
+  <text class="title" x="995" y="1234" text-anchor="middle">TMDB Query Flow</text>
+  <text class="code" x="995" y="1278" text-anchor="middle">useMovieSearchQuery(submittedParams, ...)</text>
+  <text class="body" x="995" y="1320" text-anchor="middle">runs with the new submitted params</text>
+  <text class="body" x="995" y="1352" text-anchor="middle">and starts the TMDB request path</text>
+
+  <rect class="note" x="125" y="1430" width="1550" height="150" />
+  <text class="noteTitle" x="900" y="1470" text-anchor="middle">Important HeaderMovieSearchContext Clarification</text>
+  <text class="noteBody" x="900" y="1504" text-anchor="middle">Context is useful here because HeaderMovieSearch, SubHeaderTop, and SubHeaderMovieSearchFields all need some shared header-only values and handlers.</text>
+  <text class="noteBody" x="900" y="1534" text-anchor="middle">Instead of repeatedly passing those items through props across the whole header subtree, HeaderMovieSearch publishes one shared channel for that header family to read.</text>
+  <text class="noteBody" x="900" y="1564" text-anchor="middle">Analogy: HeaderMovieSearchContext.tsx is the radio-system blueprint, .Provider is the live base station inside HeaderMovieSearch, and contextValue is today’s shared broadcast packet; it broadcasts downward only.</text>
+
+  <path class="lineBlue" d="M 460 326 L 540 326" />
+  <text class="labelBlue" x="500" y="308" text-anchor="middle">1. screen passes callback prop into HeaderMovieSearch</text>
+
+  <path class="lineBlue" d="M 900 450 L 900 520" />
+  <text class="labelBlue" x="1080" y="500" text-anchor="middle">2. HeaderMovieSearch uses .Provider from the context module</text>
+
+  <path class="dashBlue" d="M 840 710 L 650 810" />
+  <text class="labelBlue" x="620" y="782" text-anchor="middle">3a. SubHeaderTop reads via the hook</text>
+
+  <path class="dashBlue" d="M 1060 710 L 1180 780" />
+  <text class="labelBlue" x="1210" y="752" text-anchor="middle">3b. Fields read via the hook</text>
+
+  <path class="lineOrange" d="M 1510 780 L 1510 450" />
+  <text class="labelOrange" x="1510" y="742" text-anchor="middle">4. fields register submitFilters upward</text>
+
+  <path class="lineOrange" d="M 520 810 L 520 450" />
+  <text class="labelOrange" x="520" y="782" text-anchor="middle">5. user taps Submit in SubHeaderTop</text>
+
+  <path class="lineOrange" d="M 1160 450 L 1160 780" />
+  <text class="labelOrange" x="1160" y="752" text-anchor="middle">6. HeaderMovieSearch runs submitHandlerRef.current?.()</text>
+
+  <path class="lineGreen" d="M 980 1030 L 700 1030 L 700 1302 L 610 1302" />
+  <text class="labelGreen" x="850" y="1010" text-anchor="middle">7. submitFilters() calls onSubmitFilters(finalParams)</text>
+
+  <path class="lineGreen" d="M 610 1302 L 760 1302" />
+  <text class="labelGreen" x="685" y="1284" text-anchor="middle">8. setSubmittedParams() then useMovieSearchQuery()</text>
+</svg>

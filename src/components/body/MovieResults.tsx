@@ -7,10 +7,10 @@ Imported by:
 Next step path:
    * /MovieApp/src/screens/MovieDetail.tsx
 Purpose:
-   * Renders a reusable movie list, supports optional infinite scrolling, and opens the shared movie detail screen when a card
-     is tapped.
+   * Renders a reusable movie list, supports optional infinite scrolling, and lets the parent decide what should happen when a
+     card is tapped.
 */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -19,12 +19,11 @@ import {
 } from 'react-native';
 import type { movieType } from '../../types/MovieTypes';
 import { MovieCard } from '../ui/MovieCard';
-import { MovieDetail } from '../../screens/MovieDetail';
-import { HeaderMovieSearchContext } from '../header/HeaderMovieSearchContext';
 
 type MovieResultsProps = {
   movies: movieType[] | undefined;
   ListHeaderComponent?: React.ReactElement | null;
+  onMoviePress?: (movie: movieType) => void;
   onEndReached?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
@@ -33,42 +32,12 @@ type MovieResultsProps = {
 export function MovieResults({
   movies,
   ListHeaderComponent,
+  onMoviePress,
   onEndReached,
   hasNextPage = false,
   isFetchingNextPage = false,
 }: MovieResultsProps) {
-  const headerMovieSearchContext = React.useContext(HeaderMovieSearchContext);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const listRef = useRef<FlatList<movieType> | null>(null);
-
-  const selectedMovieFromList = useMemo(
-    () => movies?.find((movie) => movie.id === selectedMovieId) ?? null,
-    [movies, selectedMovieId]
-  );
-
-  const handleOpenMovie = useCallback((movieId: number) => {
-    setSelectedMovieId(movieId);
-  }, []);
-
-  const handleBackFromMovie = useCallback(() => {
-    setSelectedMovieId(null);
-  }, []);
-
-  useEffect(() => {
-    headerMovieSearchContext?.onDetailVisibilityChange(selectedMovieId !== null);
-
-    return () => {
-      headerMovieSearchContext?.onDetailVisibilityChange(false);
-    };
-  }, [headerMovieSearchContext, selectedMovieId]);
-
-  useEffect(() => {
-    headerMovieSearchContext?.registerDetailBackHandler(handleBackFromMovie);
-
-    return () => {
-      headerMovieSearchContext?.registerDetailBackHandler(null);
-    };
-  }, [handleBackFromMovie, headerMovieSearchContext]);
 
   return (
     <View style={styles.container}>
@@ -95,19 +64,10 @@ export function MovieResults({
         renderItem={({ item }: { item: movieType }) => (
           <MovieCard
             movie={item}
-            onPress={() => handleOpenMovie(item.id)}
+            onPress={() => onMoviePress?.(item)}
           />
         )}
       />
-
-      {selectedMovieId !== null ? (
-        <View style={styles.detailOverlay}>
-          <MovieDetail
-            movieId={selectedMovieId}
-            initialMovie={selectedMovieFromList}
-          />
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -119,10 +79,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    backgroundColor: '#fff',
-  },
-  detailOverlay: {
-    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#fff',
   },
   footer: {

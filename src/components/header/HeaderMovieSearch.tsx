@@ -12,11 +12,13 @@ Purpose:
 */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
 import {
   HeaderMovieSearchContext,
   type HeaderMovieSearchContextValue,
 } from './HeaderMovieSearchContext';
+import { SubHeaderMovieSearchFields } from './SubHeaderMovieSearchFields';
 import { SubHeaderTop } from './SubHeaderTop';
 
 type HeaderMovieSearchProps = {
@@ -24,6 +26,8 @@ type HeaderMovieSearchProps = {
   appliedParams: MovieSearchParams;
   loadedPages: number;
   totalPages: number | null;
+  isDetailOpen: boolean;
+  onRequestDetailBack: () => void;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
   children: ReactNode;
@@ -34,14 +38,14 @@ export function HeaderMovieSearch({
   appliedParams,
   loadedPages,
   totalPages,
+  isDetailOpen,
+  onRequestDetailBack,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
   children,
 }: HeaderMovieSearchProps) {
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
-  const detailBackHandlerRef = useRef<(() => void) | null>(null);
 
   const registerSubmitHandler = useCallback((handler: (() => void) | null) => {
     submitHandlerRef.current = handler;
@@ -49,14 +53,6 @@ export function HeaderMovieSearch({
 
   const submitDraftFilters = useCallback(() => {
     submitHandlerRef.current?.();
-  }, []);
-
-  const registerDetailBackHandler = useCallback((handler: (() => void) | null) => {
-    detailBackHandlerRef.current = handler;
-  }, []);
-
-  const triggerDetailBack = useCallback(() => {
-    detailBackHandlerRef.current?.();
   }, []);
 
   const contextValue = useMemo<HeaderMovieSearchContextValue>(
@@ -69,11 +65,9 @@ export function HeaderMovieSearch({
       isSubmitDisabled,
       isDetailOpen,
       onValidityChange: setIsSubmitDisabled,
-      onDetailVisibilityChange: setIsDetailOpen,
       registerSubmitHandler,
-      registerDetailBackHandler,
       submitDraftFilters,
-      triggerDetailBack,
+      triggerDetailBack: onRequestDetailBack,
     }),
     [
       appliedParams,
@@ -81,11 +75,10 @@ export function HeaderMovieSearch({
       isSubmitDisabled,
       loadedPages,
       onDisplayedFiltersDirtyChange,
+      onRequestDetailBack,
       onSubmitFilters,
-      registerDetailBackHandler,
       registerSubmitHandler,
       submitDraftFilters,
-      triggerDetailBack,
       totalPages,
     ]
   );
@@ -93,7 +86,12 @@ export function HeaderMovieSearch({
   return (
     <HeaderMovieSearchContext.Provider value={contextValue}>
       <SubHeaderTop title={title} />
-      {children}
+      <View style={{ display: isDetailOpen ? 'none' : 'flex' }}>
+        <SubHeaderMovieSearchFields />
+      </View>
+      <View style={{ display: isDetailOpen ? 'none' : 'flex', flex: 1 }}>
+        {children}
+      </View>
     </HeaderMovieSearchContext.Provider>
   );
 }

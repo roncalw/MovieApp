@@ -7,17 +7,18 @@ Next step path:
    * /MovieApp/src/components/header/HeaderMovieSearch.tsx
    * /MovieApp/src/components/body/MovieResults.tsx
 Purpose:
-   * Renders the movie search page, lets the parent header coordinate its two subheaders, and delegates the shared list/detail
-     flow to the reusable movie results body component.
+   * Renders the movie search page, lets the parent header coordinate its two subheaders, and owns the screen-level switch
+     between search results mode and movie-detail mode.
 */
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
-import { SubHeaderMovieSearchFields } from '../components/header/SubHeaderMovieSearchFields';
 import { MovieResults } from '../components/body/MovieResults';
 import type { MovieSearchParams } from '../types/movieSearchParams';
+import type { movieType } from '../types/MovieTypes';
+import { MovieDetail } from './MovieDetail';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
@@ -43,6 +44,8 @@ export function MovieSearchScreen() {
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] = useState(false);
+  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
+  const [selectedMovieFromList, setSelectedMovieFromList] = useState<movieType | null>(null);
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
     beginDate: defaultBeginDate,
@@ -55,9 +58,21 @@ export function MovieSearchScreen() {
   const hasActiveSubmittedSearch = hasSubmittedSearch && !hasDisplayedFilterChanges;
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
+    setSelectedMovieId(null);
+    setSelectedMovieFromList(null);
     setHasDisplayedFilterChanges(false);
     setSubmittedParams(nextParams);
     setHasSubmittedSearch(true);
+  }
+
+  function handleOpenMovie(nextMovie: movieType) {
+    setSelectedMovieId(nextMovie.id);
+    setSelectedMovieFromList(nextMovie);
+  }
+
+  function handleCloseMovieDetail() {
+    setSelectedMovieId(null);
+    setSelectedMovieFromList(null);
   }
 
   useEffect(() => {
@@ -102,6 +117,7 @@ export function MovieSearchScreen() {
   );
   const loadedPages = hasActiveSubmittedSearch ? data?.pages.length ?? 0 : 0;
   const totalPages = hasActiveSubmittedSearch ? data?.pages[0]?.totalPages ?? null : 0;
+  const isDetailOpen = selectedMovieId !== null;
 
   /*
     WHAT THIS DOES:
@@ -155,23 +171,38 @@ export function MovieSearchScreen() {
         appliedParams={submittedParams}
         loadedPages={loadedPages}
         totalPages={totalPages}
+        isDetailOpen={isDetailOpen}
+        onRequestDetailBack={handleCloseMovieDetail}
         onSubmitFilters={handleApplyFilters}
         onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
       >
         <MovieResults
           movies={movies}
+          onMoviePress={handleOpenMovie}
           onEndReached={fetchNextPage}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
-          ListHeaderComponent={<SubHeaderMovieSearchFields />}
         />
       </HeaderMovieSearch>
+
+      {selectedMovieId !== null ? (
+        <View style={styles.detailContainer}>
+          <MovieDetail
+            movieId={selectedMovieId}
+            initialMovie={selectedMovieFromList}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  detailContainer: {
     flex: 1,
     backgroundColor: colors.background,
   },
