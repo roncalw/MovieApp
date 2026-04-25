@@ -10,6 +10,12 @@ This file records repo-specific collaboration rules that should survive across c
 - Treat this file as the first local source of truth for workflow rules, backup rules, rollback rules, and recurring user preferences tied to this repo.
 - Do not assume those workflow rules from memory when a quick re-read would avoid drift.
 
+## Carry-Forward Context
+
+- When a request depends on prior Page03 chat context, use `Page03-CONTEXT.md` in this same folder.
+- Do not reread the full Page03 local Codex session unless the user explicitly asks for full-thread forensics.
+- `Page03-CONTEXT.md` is a compact memory aid; still inspect actual source files before editing code.
+
 ## Backup Before Edit
 
 - Before editing any existing file, create a side backup first.

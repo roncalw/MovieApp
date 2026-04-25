@@ -1,6 +1,6 @@
 # Date Picker Architecture
 
-Last updated: April 16, 2026
+Last updated: April 19, 2026
 
 ## Purpose Of This File
 
@@ -286,7 +286,7 @@ A patch is a saved correction sheet for vendor code inside `node_modules` instea
 
 `patch-package`, which is wired in [package.json](vscode://file/Users/croncallo/repo/MovieApp/package.json:35:1), is the tool that reapplies that repair sheet every time `npm install` restocks `node_modules`. The analogy is: the warehouse receives the same vendor shipment each time, and `patch-package` is the warehouse rule that reapplies our approved repair steps immediately.
 
-The current patch changes four places.
+The current patch changes five places.
 
 ### 1. Vendor `package.json`
 
@@ -300,18 +300,26 @@ What that file is:
 
 What the patch does:
 
-- it removes the remaining iOS `componentProvider` registration block by changing the package's iOS section to an empty object
+- it removes both the iOS `componentProvider` and `modulesProvider` registration blocks by changing the package's iOS section to an empty object
 
 Why this matters:
 
-- that registration block was one of the directions telling React Native to route this picker through the newer iOS component-provider path
+- those registration blocks were the directions telling React Native to route this picker through the newer iOS provider path
 - for this app's setup, that route did not stay compatible with the rest of the integration
 
 Analogy:
 
 - the shipping label told the building crew to carry this machine through the new wiring corridor
 - in this building, that corridor led to the wrong installation route
-- the patch removes that instruction from the label
+- the patch removes those wrong corridor instructions from the label
+
+Fresh-install lesson:
+
+- the original patch failed on a real clean machine for two different reasons
+- first, its first hunk header was malformed, so `patch-package` could not parse it
+- second, even after that parse fix, the old `package.json` hunk had drifted and only removed `componentProvider`
+- a true fresh install of `react-native-date-picker@5.0.13` also contained `modulesProvider`, so the patch no longer matched the real vendor file
+- the repaired patch had to fix both the hunk header and the full iOS provider-removal block
 
 ### 2. `RNDatePicker.h` and `RNDatePicker.mm`
 
@@ -534,7 +542,30 @@ That meant there were really two iOS problems at once:
 
 The current patch fixes both.
 
-## Stage 10: Final Stable Direction
+## Stage 10: Fresh-Install Patch Failure
+
+After the app was already working on one machine, a true fresh-install test from GitHub exposed one more patch problem.
+
+What happened:
+
+- `npm install` failed during `patch-package`
+- the first patch file was malformed, so it could not even be parsed
+- after that parse issue was corrected, the patch still failed on a clean install because the vendor `package.json` shape had drifted
+- the clean vendor file now had both `componentProvider` and `modulesProvider`
+- the old patch only removed `componentProvider`
+
+Why this mattered:
+
+- a machine that had already been hand-fixed could appear stable
+- a real fresh machine still failed
+- that meant the repo patch itself, not only the runtime code, had become part of the problem
+
+Architectural lesson:
+
+- a "working machine" and a "working fresh install" are not the same proof
+- the final patch must always be validated against a true clean install path, not just against an already-edited local environment
+
+## Stage 11: Final Stable Direction
 
 The current stable direction is:
 
@@ -584,15 +615,16 @@ If this feature breaks again, use this order:
 1. Confirm [package.json](vscode://file/Users/croncallo/repo/MovieApp/package.json:64:1) still pins `react-native-date-picker` to `5.0.13`.
 2. Confirm [package.json](vscode://file/Users/croncallo/repo/MovieApp/package.json:35:1) still runs `patch-package` in `postinstall`.
 3. Confirm [react-native-date-picker+5.0.13.patch](vscode://file/Users/croncallo/repo/MovieApp/patches/react-native-date-picker+5.0.13.patch:1:1) still exists.
-4. Run `npm install`.
-5. Run `pod install` from `ios/`.
-6. Rebuild iOS.
-7. If the popup visuals are wrong but the app runs, inspect [YearWheelField.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/ui/YearWheelField.tsx:269:1).
-8. If the query dates are wrong, inspect [movieSearchDates.ts](vscode://file/Users/croncallo/repo/MovieApp/src/utils/movieSearchDates.ts:33:1) and [SubHeaderMovieSearchFields.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx:367:1).
-9. If the top `Submit` button stops reflecting date validity, inspect [HeaderMovieSearch.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx:41:1) and [SubHeaderMovieSearchFields.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx:392:1).
-10. If iOS build errors mention `isoString`, the manager patch was not applied.
-11. If iOS runtime crashes mention `setMinimumDate` or `doesNotRecognizeSelector`, the native manager and native view have drifted apart again.
-12. If a generated iOS ReactCodegen folder exists after build, inspect `ios/build/generated/ios/ReactCodegen/RCTModuleProviders.mm` and `ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.mm` to make sure the picker is not being routed back through the wrong registration path.
+4. If `npm install` fails in `patch-package`, inspect the top `package.json` hunk in [react-native-date-picker+5.0.13.patch](vscode://file/Users/croncallo/repo/MovieApp/patches/react-native-date-picker+5.0.13.patch:1:1). Confirm it removes both `componentProvider` and `modulesProvider`, and confirm the hunk header is valid.
+5. Run `npm install`.
+6. Run `pod install` from `ios/`.
+7. Rebuild iOS.
+8. If the popup visuals are wrong but the app runs, inspect [YearWheelField.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/ui/YearWheelField.tsx:269:1).
+9. If the query dates are wrong, inspect [movieSearchDates.ts](vscode://file/Users/croncallo/repo/MovieApp/src/utils/movieSearchDates.ts:33:1) and [SubHeaderMovieSearchFields.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx:367:1).
+10. If the top `Submit` button stops reflecting date validity, inspect [HeaderMovieSearch.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/HeaderMovieSearch.tsx:41:1) and [SubHeaderMovieSearchFields.tsx](vscode://file/Users/croncallo/repo/MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx:392:1).
+11. If iOS build errors mention `isoString`, the manager patch was not applied.
+12. If iOS runtime crashes mention `setMinimumDate` or `doesNotRecognizeSelector`, the native manager and native view have drifted apart again.
+13. If a generated iOS ReactCodegen folder exists after build, inspect `ios/build/generated/ios/ReactCodegen/RCTModuleProviders.mm` and `ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.mm` to make sure the picker is not being routed back through the wrong registration path.
 
 ## External References
 
