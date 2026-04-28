@@ -12,9 +12,10 @@ This file records repo-specific collaboration rules that should survive across c
 
 ## Carry-Forward Context
 
-- When a request depends on prior Page03 chat context, use `Page03-CONTEXT.md` in this same folder.
-- Do not reread the full Page03 local Codex session unless the user explicitly asks for full-thread forensics.
-- `Page03-CONTEXT.md` is a compact memory aid; still inspect actual source files before editing code.
+- Use `MovieAppContext.md` in this same folder as the single carry-forward context file for this workspace.
+- Read `MovieAppContext.md` as required startup background for future MovieApp or MovieApp-Cloudflare work.
+- Do not reread the full old raw session files unless there is a specific contradiction or missing detail that `MovieAppContext.md` does not cover.
+- `MovieAppContext.md` is a compact memory aid; still inspect actual source files before editing code.
 
 ## Backup Before Edit
 
