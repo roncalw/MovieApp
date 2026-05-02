@@ -11,12 +11,12 @@ Purpose:
 */
 import React from 'react';
 import { AppProvider } from './src/providers/AppProvider';
-import { MoviesToIMDBJoinTest } from './src/screens/MoviesToIMDBJoinTest';
+import { MovieSearchScreen } from './src/screens/MovieSearchScreen';
 
 export default function App() {
   return (
     <AppProvider>
-      <MoviesToIMDBJoinTest />
+      <MovieSearchScreen />
     </AppProvider>
   );
 }

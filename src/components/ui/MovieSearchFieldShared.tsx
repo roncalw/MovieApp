@@ -3,6 +3,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
+import { typography } from '../../theme/typography';
 
 type MovieSearchFieldTriggerProps = {
   label: string;
@@ -29,6 +30,11 @@ type MovieSearchStreamerTileProps = {
 type MovieSearchModalActionsProps = {
   onCancel: () => void;
   onClose: () => void;
+};
+
+type MovieSearchBulkSelectionLinksProps = {
+  onClearAll: () => void;
+  onAddAll: () => void;
 };
 
 export function MovieSearchFieldTrigger({
@@ -129,6 +135,27 @@ export function MovieSearchModalActions({
       <Pressable onPress={onClose} style={styles.modalPrimaryButton}>
         <Text allowFontScaling={false} style={styles.modalPrimaryButtonText}>
           Close
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+export function MovieSearchBulkSelectionLinks({
+  onClearAll,
+  onAddAll,
+}: MovieSearchBulkSelectionLinksProps) {
+  return (
+    <View style={styles.bulkSelectionRow}>
+      <Pressable onPress={onClearAll} style={styles.bulkSelectionLink}>
+        <Text allowFontScaling={false} style={styles.bulkSelectionText}>
+          Clear All
+        </Text>
+      </Pressable>
+
+      <Pressable onPress={onAddAll} style={styles.bulkSelectionLink}>
+        <Text allowFontScaling={false} style={styles.bulkSelectionText}>
+          Add All
         </Text>
       </Pressable>
     </View>
@@ -259,6 +286,26 @@ export const movieSearchFieldSharedStyles = StyleSheet.create({
   streamerLogo: {
     width: scaleSize(70),
     height: scaleSize(35),
+  },
+  bulkSelectionRow: {
+    width: '100%',
+    maxWidth: scaleSize(250),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: scaleSize(10),
+    paddingHorizontal: scaleSize(8),
+  },
+  bulkSelectionLink: {
+    minHeight: scaleSize(32),
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: scaleSize(8),
+  },
+  bulkSelectionText: {
+    ...typography.visibilityToggle,
+    color: colors.brandText,
+    textAlign: 'center',
   },
   modalActionsRow: {
     flexDirection: 'row',

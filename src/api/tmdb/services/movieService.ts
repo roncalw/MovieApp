@@ -19,6 +19,45 @@ import type {
   MovieDetailsResponse,
 } from '../responseTypes';
 import { mapMovieToMovie } from '../mappers/movieMapper';
+import {
+  getDefaultBeginDate,
+  getDefaultEndDate,
+} from '../../../utils/movieSearchDates';
+
+const CLOUDFLARE_MOVIE_SEARCH_URL =
+  'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
+
+const ALL_STREAMER_PROVIDER_IDS = [
+  '8',
+  '15',
+  '9',
+  '1899',
+  '192',
+  '337',
+  '350',
+  '387',
+  '526',
+  '531',
+];
+
+type CloudflareMovieSearchItem = {
+  tmdb_id: number;
+  poster_path: string;
+  imdb_rating: number | null;
+};
+
+type CloudflareMovieSearchResponse = {
+  movies: CloudflareMovieSearchItem[];
+  nextCursor: string | null;
+  pageSize: number;
+  sort: string;
+  beginDate: string;
+  endDate: string;
+};
+
+type CloudflareMovieSearchResults = movieSearchResults & {
+  nextCursor: string | null;
+};
 
 /*
 ======================================================== fetchPopularMovies ====================================================
@@ -89,8 +128,24 @@ export async function fetchPopularMovies(): Promise<movieType[]> {
 */
 export async function fetchMovieSearchResults(
   params: MovieSearchParams,
-  pageNum: number
-): Promise<movieSearchResults> {
+  cursor: string | null
+): Promise<CloudflareMovieSearchResults> {
+  return fetchCloudflareMovieSearchResults(params, cursor);
+}
+
+/*
+======================================================== fetchCloudflareMovieSearchResults ====================================================
+
+  WHAT THIS DOES:
+  - Calls the Cloudflare Worker movie search endpoint instead of TMDB Discover.
+  - Keeps the returned object shaped like the current app movie search result.
+  - Maps Cloudflare's IMDb score into vote_average so the existing movieType can
+    carry it without changing shared app types during this POC.
+*/
+export async function fetchCloudflareMovieSearchResults(
+  params: MovieSearchParams,
+  cursor: string | null
+): Promise<CloudflareMovieSearchResults> {
   const {
     movieRatings,
     beginDate,
@@ -101,40 +156,54 @@ export async function fetchMovieSearchResults(
     movieSortBy,
   } = params;
 
-  const searchParams = new URLSearchParams(CONFIG.apiKey);
+  const searchParams = new URLSearchParams();
 
-  searchParams.set('primary_release_date.gte', beginDate);
-  searchParams.set('primary_release_date.lte', endDate);
-  searchParams.set('region', 'US');
-  searchParams.set('watch_region', 'US');
-  searchParams.set('with_watch_monetization_types', 'flatrate');
+  searchParams.set('pageSize', '20');
+
+  if (beginDate === getDefaultBeginDate() && endDate === getDefaultEndDate()) {
+    searchParams.set('datePreset', 'last5years');
+  } else {
+    searchParams.set('beginDate', beginDate);
+
+    if (endDate === getDefaultEndDate()) {
+      searchParams.set('endDatePreset', 'today');
+    } else {
+      searchParams.set('endDate', endDate);
+    }
+  }
 
   if (movieRatings) {
-    searchParams.set('certification', movieRatings);
-    searchParams.set('certification_country', 'US');
+    searchParams.set('certifications', movieRatings);
   }
 
   if (movieGenres) {
     if (movieGenres.length > 0) {
-      searchParams.set('with_genres', movieGenres.join(','));
+      searchParams.set('genreIds', movieGenres.join(','));
     }
   }
 
   if (movieStreamers) {
-    if (movieStreamers.length > 0) {
-      searchParams.set('with_watch_providers', movieStreamers.join('|'));
+    if (allStreamersAreSelected(movieStreamers)) {
+      searchParams.set('watchMonetizationTypes', 'flatrate');
+    } else if (movieStreamers.length > 0) {
+      searchParams.set('providerIds', movieStreamers.join(','));
     }
   }
 
   if (movieVoteCount) {
-    searchParams.set('vote_count.gte', movieVoteCount);
+    searchParams.set('minImdbVotes', movieVoteCount);
   }
 
   if (movieSortBy) {
-    searchParams.set('sort_by', movieSortBy);
+    searchParams.set(
+      'sort',
+      movieSortBy === 'vote_average.desc' ? 'imdb' : 'popularity'
+    );
   }
 
-  searchParams.set('page', String(pageNum));
+  if (cursor) {
+    searchParams.set('cursor', cursor);
+  }
 
   /*
     WHAT THIS PATH DOES:
@@ -145,14 +214,65 @@ export async function fetchMovieSearchResults(
     - The axios client should only apply shared config like baseURL
     - Empty filters are skipped so the search screen can start with only the date range filled in
   */
-  const path = `${ENDPOINTS.MOVIE_SEARCH}?${searchParams.toString()}`;
+  const response = await fetch(
+    `${CLOUDFLARE_MOVIE_SEARCH_URL}?${searchParams.toString()}`
+  );
 
-  const response = await tmdbClient.get<MovieListResponse>(path);
+  if (!response.ok) {
+    throw new Error(`Cloudflare movie search failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as CloudflareMovieSearchResponse;
 
   return {
-    page: response.data.page,
-    movies: response.data.results.map(mapMovieToMovie),
-    totalPages: response.data.total_pages,
+    page: 1,
+    movies: data.movies.map(mapCloudflareMovieToMovie),
+    totalPages: data.nextCursor ? 2 : 1,
+    nextCursor: data.nextCursor,
+  };
+}
+
+function allStreamersAreSelected(streamerIds: string[]) {
+  if (streamerIds.length !== ALL_STREAMER_PROVIDER_IDS.length) {
+    return false;
+  }
+
+  const selectedIds = new Set(streamerIds);
+
+  return ALL_STREAMER_PROVIDER_IDS.every((providerId) =>
+    selectedIds.has(providerId)
+  );
+}
+
+function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType {
+  return {
+    id: movie.tmdb_id,
+    adult: false,
+    backdrop_path: '',
+    genres: [],
+    original_language: '',
+    original_title: '',
+    overview: '',
+    popularity: 0,
+    poster_path: movie.poster_path,
+    release_date: '',
+    title: '',
+    video: false,
+    vote_average: movie.imdb_rating ?? 0,
+    vote_count: 0,
+    genreIds: [],
+    budget: 0,
+    revenue: 0,
+    runtime: 0,
+    credits: {
+      cast: [],
+      crew: [],
+    },
+    release_dates: {
+      results: [],
+    },
+    production_companies: [],
+    production_countries: [],
   };
 }
 

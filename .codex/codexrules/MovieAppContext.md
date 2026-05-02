@@ -259,6 +259,79 @@ Important additions from this thread:
 
 The dry-run helper was later improved so it no longer stores every parsed row in memory.
 
+## Current TMDB Primary Load State
+
+The TMDB primary staging load has been completed remotely for:
+
+- `1874-12-09` through `2026-04-29`
+
+Verified remote counts:
+
+- `tmdb_movies_staging`: `1,011,396`
+- `movie_genres`: `1,220,401`
+
+The primary load matches MovieApp/TMDB Discover behavior:
+
+- `include_adult=false`
+- `include_video=false`
+
+## Step 9B Enrichment Plan And Code State
+
+Step 9B should refresh all enrichment data together from:
+
+```text
+/movie/{tmdb_id}?append_to_response=external_ids,release_dates,watch/providers
+```
+
+This refreshes:
+
+- `imdb_id`
+- `us_certification`
+- US flatrate watch providers / streamers
+
+Do not use TMDB `/movie/changes` as the main driver because watch-provider changes are not reliably included there.
+
+The new plan uses one D1 selector based on `tmdb_enriched_at`:
+
+```sql
+WHERE tmdb_enriched_at IS NULL
+   OR tmdb_enriched_at < datetime('now', '-' || ? || ' days')
+```
+
+Null means the movie has never gone through the full enrichment pass. Do not select by `imdb_id IS NULL` or `us_certification IS NULL`, because those nulls can be valid TMDB results.
+
+Implemented Cloudflare Worker pieces:
+
+- migration: `/Users/croncallo/repo/MovieApp-Cloudflare/migrations/0002_add_tmdb_enriched_at.sql`
+- migration: `/Users/croncallo/repo/MovieApp-Cloudflare/migrations/0003_add_import_job_locks.sql`
+- manual route: `/admin/import/tmdb/enrich-manual`
+- shared runner: `runTmdbEnrichment(...)`
+- scheduled handler calls the same runner
+- `tmdbConcurrency` controls how many TMDB detail requests can be in flight; default is `25`
+- the existing `fetchTmdbJson(...)` request governor still limits TMDB request starts to about `35` per second
+- manual and cron enrichment both use a D1 lock named `tmdb-enrich` so overlapping runs skip instead of running concurrently
+- follow up: update `.codex/MovieAppOnCloudflare.md` with the lock details in Step 9B when time permits
+- structured logs:
+  - `import-job-lock-acquired`
+  - `import-job-lock-skipped`
+  - `import-job-lock-released`
+  - `tmdb-enrich-start`
+  - `tmdb-enrich-progress`
+  - `tmdb-enrich-row-error`
+  - `tmdb-enrich-end`
+
+The guide explains testing from:
+
+- `limit=1000`
+- `limit=5000`
+- `limit=10000`
+- `limit=20000`
+
+Progress logs should be visible in:
+
+- Cloudflare Dashboard -> Workers & Pages -> movieapp-cloudflare -> Observability -> Events
+- `npx wrangler tail`
+
 Current dry-run sampling behavior:
 
 - keep first `33` rows
@@ -341,6 +414,27 @@ Primary TMDB load fills:
 - `tmdb_movies_staging`
 - `movie_genres`
 
+Primary TMDB load implementation notes:
+
+- The manual endpoint is `/admin/import/tmdb/load-manual`.
+- The manual endpoint now requires a finite `beginDate` and `endDate`.
+- TMDB Discover cannot be read past page 500.
+- The Worker preflights each date window by reading page 1 and checking `total_pages`.
+- If a requested window is over 500 pages, the Worker splits that date window in half and retries the smaller windows.
+- Each safe window is loaded with page-level D1 batching via `env.DB.batch(...)`.
+- Response/log summary includes:
+  - `totalPagesSeen`
+  - `tmdbDiscoverMaxPage`
+  - `windowsLoaded`
+  - `windowsSplit`
+  - `pendingWindows`
+  - `stoppedWindow`
+  - `stopReason`
+- Important stop reasons:
+  - `limit_reached`
+  - `end_of_windows`
+  - `single_day_page_cap_reached`
+
 TMDB enrichment fills/updates:
 
 - `imdb_id`
@@ -422,7 +516,42 @@ Current important SVG facts:
 
 ## Current Tail Of The Work
 
-The last change in this thread was:
+Latest Cloudflare Step 9B state:
+
+- TMDB primary staging is fully loaded remote:
+  - `tmdb_movies_staging`: `1,011,396`
+  - min/max release date: `1874-12-09` through `2026-04-29`
+- TMDB enrichment is now running from Cloudflare cron.
+- Cron schedule:
+  - `*/15 * * * *`
+- Cron code:
+  - selects up to `20,000` rows where `tmdb_enriched_at IS NULL OR tmdb_enriched_at < now - 7 days`
+  - enriches them with TMDB details, external IDs, certifications, and US flatrate providers
+  - uses `tmdbConcurrency=25`
+  - logs every `5,000` rows
+- A D1 lock table prevents overlapping manual/cron enrichment jobs:
+  - `import_job_locks`
+- Remote enrichment count after the last verified run:
+  - `32,000` enriched rows
+- One important issue was discovered and fixed:
+  - a 20K run initially half-failed at `10,000` updates because Workers Paid defaults to `10,000` subrequests per invocation
+  - `wrangler.jsonc` now sets `limits.subrequests` to `50000`
+
+Tomorrow / next-chat todo:
+
+- Update `/Users/croncallo/repo/MovieApp-Cloudflare/.codex/MovieAppOnCloudflare.md` Step 9B with:
+  - job lock explanation
+  - cron trigger setup
+  - `limits.subrequests` explanation and why the 10K default mattered
+  - dashboard monitoring steps
+  - note that Cloudflare Observability logs may appear batched instead of live
+- Add a D1 progress table so the user can query progress while a cron/manual enrichment run is active:
+  - likely `import_job_runs` or `import_job_progress`
+  - update every `5,000` processed rows
+  - show selected, processed, updated, errors, duration, and current status
+  - this is needed because dashboard log events may arrive in a batch after the invocation finishes
+
+Older tail note:
 
 - create this merged context file
 - replace the old Page03/Page04 carry-forward notes with one current note

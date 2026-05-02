@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { scaleSize } from '../../theme/scale';
-import { RATING_ITEMS } from './movieSearchFieldUtils';
 import {
+  RATING_ITEMS,
+  toggleArrayValue,
+} from './movieSearchFieldUtils';
+import {
+  MovieSearchBulkSelectionLinks,
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
   MovieSearchPopupChip,
@@ -15,33 +19,39 @@ type RatingFieldProps = {
 };
 
 export function RatingField({ value, onChange }: RatingFieldProps) {
-  const [draftValue, setDraftValue] = useState(value);
-  const [snapshotValue, setSnapshotValue] = useState(value);
+  const [draftValue, setDraftValue] = useState(() => parseRatingValue(value));
+  const [snapshotValue, setSnapshotValue] = useState(() => parseRatingValue(value));
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const selectedRatings = useMemo(() => parseRatingValue(value), [value]);
+  const summary = useMemo(
+    () => formatRatingSummary(selectedRatings),
+    [selectedRatings]
+  );
 
   function openModal() {
-    setDraftValue(value);
-    setSnapshotValue(value);
+    const nextValue = parseRatingValue(value);
+    setDraftValue(nextValue);
+    setSnapshotValue(nextValue);
     setIsModalVisible(true);
   }
 
   function closeModal() {
-    onChange(draftValue);
+    onChange(formatRatingValue(draftValue));
     setIsModalVisible(false);
   }
 
   function cancelModal() {
-    setDraftValue(snapshotValue);
+    setDraftValue([...snapshotValue]);
     setIsModalVisible(false);
   }
 
   function toggleDraftValue(nextValue: string) {
-    setDraftValue((currentValue) => (currentValue === nextValue ? '' : nextValue));
+    setDraftValue((currentValue) => toggleArrayValue(currentValue, nextValue));
   }
 
   return (
     <>
-      <MovieSearchFieldTrigger label="Rating" value={value || ''} onPress={openModal} />
+      <MovieSearchFieldTrigger label="Rating" value={summary} onPress={openModal} />
 
       <Modal
         transparent
@@ -62,11 +72,16 @@ export function RatingField({ value, onChange }: RatingFieldProps) {
                 <MovieSearchPopupChip
                   key={item.id}
                   label={item.label}
-                  selected={draftValue === item.id}
+                  selected={draftValue.includes(item.id)}
                   onPress={() => toggleDraftValue(item.id)}
                 />
               ))}
             </View>
+
+            <MovieSearchBulkSelectionLinks
+              onClearAll={() => setDraftValue([])}
+              onAddAll={() => setDraftValue(RATING_ITEMS.map((item) => item.id))}
+            />
           </View>
 
           <MovieSearchModalActions onCancel={cancelModal} onClose={closeModal} />
@@ -77,6 +92,37 @@ export function RatingField({ value, onChange }: RatingFieldProps) {
 }
 
 const sharedStyles = movieSearchFieldSharedStyles;
+
+function parseRatingValue(value: string) {
+  if (value.trim() === '') {
+    return [];
+  }
+
+  const allowedValues = new Set(RATING_ITEMS.map((item) => item.id));
+
+  return value
+    .split(',')
+    .map((rating) => rating.trim())
+    .filter((rating) => allowedValues.has(rating));
+}
+
+function formatRatingValue(values: string[]) {
+  return RATING_ITEMS
+    .filter((item) => values.includes(item.id))
+    .map((item) => item.id)
+    .join(',');
+}
+
+function formatRatingSummary(values: string[]) {
+  if (values.length === 0) {
+    return '';
+  }
+
+  return RATING_ITEMS
+    .filter((item) => values.includes(item.id))
+    .map((item) => item.label)
+    .join(' | ');
+}
 
 const styles = StyleSheet.create({
   ratingModalCard: {

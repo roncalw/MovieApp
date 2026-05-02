@@ -178,6 +178,7 @@ export function MovieSearchScreen() {
       >
         <MovieResults
           movies={movies}
+          cardVariant="posterRating"
           onMoviePress={handleOpenMovie}
           onEndReached={fetchNextPage}
           hasNextPage={hasNextPage}

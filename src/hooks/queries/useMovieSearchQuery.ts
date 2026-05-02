@@ -18,6 +18,8 @@ import {
 } from '../../api/tmdb/services/movieService';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
 
+type CursorMovieSearchPage = Awaited<ReturnType<typeof fetchMovieSearchResults>>;
+
 /*
 ======================================================== useMovieSearchQuery ===================================================
 
@@ -88,13 +90,11 @@ export function useMovieSearchQuery(
   return useInfiniteQuery({
     queryKey: ['movieSearch', params],
     queryFn: ({ pageParam }) => fetchMovieSearchResults(params, pageParam),
-    initialPageParam: 1,
+    initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => {
-      if (lastPage.page >= lastPage.totalPages) {
-        return undefined;
-      }
+      const nextCursor = (lastPage as CursorMovieSearchPage).nextCursor;
 
-      return lastPage.page + 1;
+      return nextCursor ?? undefined;
     },
     staleTime: 1000 * 60 * 5,
     enabled,

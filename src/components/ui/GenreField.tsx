@@ -7,6 +7,7 @@ import {
   toggleArrayValue,
 } from './movieSearchFieldUtils';
 import {
+  MovieSearchBulkSelectionLinks,
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
   MovieSearchPopupChip,
@@ -75,6 +76,11 @@ export function GenreField({ value, onChange }: GenreFieldProps) {
                 />
               ))}
             </View>
+
+            <MovieSearchBulkSelectionLinks
+              onClearAll={() => setDraftValue([])}
+              onAddAll={() => setDraftValue(GENRE_ITEMS.map((item) => item.value))}
+            />
           </View>
 
           <MovieSearchModalActions onCancel={cancelModal} onClose={closeModal} />

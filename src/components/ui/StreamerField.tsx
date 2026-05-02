@@ -9,6 +9,7 @@ import {
 import {
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
+  MovieSearchBulkSelectionLinks,
   MovieSearchStreamerTile,
   movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
@@ -78,6 +79,13 @@ export function StreamerField({ value, onChange }: StreamerFieldProps) {
                 />
               ))}
             </View>
+
+            <MovieSearchBulkSelectionLinks
+              onClearAll={() => setDraftValue([])}
+              onAddAll={() =>
+                setDraftValue(STREAMER_ITEMS.map((item) => item.value))
+              }
+            />
           </View>
 
           <MovieSearchModalActions onCancel={cancelModal} onClose={closeModal} />

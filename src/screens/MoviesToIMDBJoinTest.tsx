@@ -1,193 +1,103 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
+  Image,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import axios from 'axios';
-import { tmdbClient } from '../api/tmdb/client';
-import { CONFIG } from '../api/tmdb/config';
-import { ENDPOINTS } from '../api/tmdb/endpoints';
-import type { movieType } from '../types/MovieTypes';
 import {
   getDefaultBeginDate,
   getDefaultEndDate,
 } from '../utils/movieSearchDates';
-import type { MovieSearchParams } from '../types/movieSearchParams';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { fetchMovieSearchResults } from '../api/tmdb/services/movieService';
 
-const OMDB_API_URL = 'https://www.omdbapi.com';
-const OMDB_API_KEY = 'apikey=77bdf9d5';
-const MAX_JOIN_CONCURRENCY = 4;
-const TEST_PAGES = [1, 2, 3, 4, 5];
+const CLOUDFLARE_MOVIE_SEARCH_URL =
+  'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
+const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w92';
+const PAGE_SIZE = 20;
 
-type TmdbExternalIdsResponse = {
-  id: number;
-  imdb_id: string | null;
+type CloudflareMovieSearchItem = {
+  tmdb_id: number;
+  poster_path: string;
+  imdb_rating: number | null;
 };
 
-type OmdbMovieResponse = {
-  Response?: string;
-  Error?: string;
-  imdbID?: string;
-  imdbRating?: string;
-  imdbVotes?: string;
+type CloudflareMovieSearchResponse = {
+  movies: CloudflareMovieSearchItem[];
+  nextCursor: string | null;
+  pageSize: number;
+  sort: string;
+  beginDate: string;
+  endDate: string;
 };
 
-type JoinedMovieRow = {
-  id: number;
-  title: string;
-  imdbID: string;
-  imdbRating: string;
-  imdbVotes: string;
-};
+async function fetchCloudflareMovieSearchPage(cursor: string | null) {
+  const queryParts = [
+    `pageSize=${PAGE_SIZE}`,
+    `beginDate=${getDefaultBeginDate()}`,
+    'endDatePreset=today',
+  ];
 
-function chunkArray<T>(items: T[], chunkSize: number) {
-  const chunks: T[][] = [];
-
-  for (let index = 0; index < items.length; index += chunkSize) {
-    chunks.push(items.slice(index, index + chunkSize));
+  if (cursor) {
+    queryParts.push(`cursor=${encodeURIComponent(cursor)}`);
   }
 
-  return chunks;
-}
-
-async function fetchTestSearchPage(pageNum: number) {
-  const defaultParams: MovieSearchParams = {
-    movieRatings: '',
-    beginDate: getDefaultBeginDate(),
-    endDate: getDefaultEndDate(),
-    movieGenres: [],
-    movieStreamers: [],
-    movieVoteCount: '',
-    movieSortBy: '',
-  };
-
-  return fetchMovieSearchResults(defaultParams, pageNum);
-}
-
-async function fetchImdbIdForMovie(tmdbMovieId: number) {
-  const response = await tmdbClient.get<TmdbExternalIdsResponse>(
-    `${ENDPOINTS.MOVIE_DETAILS}/${tmdbMovieId}/external_ids?${CONFIG.apiKey}`
+  const response = await fetch(
+    `${CLOUDFLARE_MOVIE_SEARCH_URL}?${queryParts.join('&')}`
   );
 
-  return response.data.imdb_id ?? '';
-}
-
-async function fetchOmdbRating(imdbID: string) {
-  if (!imdbID) {
-    return {
-      imdbID: '',
-      imdbRating: 'No IMDb ID',
-      imdbVotes: 'No IMDb ID',
-    };
+  if (!response.ok) {
+    throw new Error(`Cloudflare movie search failed: ${response.status}`);
   }
 
-  const response = await axios.get<OmdbMovieResponse>(
-    `${OMDB_API_URL}/?i=${imdbID}&${OMDB_API_KEY}`
-  );
-
-  const data = response.data;
-
-  return {
-    imdbID,
-    imdbRating:
-      data.Response === 'False' || !data.imdbRating || data.imdbRating === 'N/A'
-        ? 'No Data'
-        : data.imdbRating,
-    imdbVotes:
-      data.Response === 'False' || !data.imdbVotes || data.imdbVotes === 'N/A'
-        ? 'No Data'
-        : data.imdbVotes,
-  };
-}
-
-async function buildJoinedRows(
-  movies: movieType[],
-  onProgress: (completed: number, total: number) => void
-) {
-  const batches = chunkArray(movies, MAX_JOIN_CONCURRENCY);
-  const total = movies.length;
-  let completed = 0;
-  const joinedRows: JoinedMovieRow[] = [];
-
-  for (const batch of batches) {
-    const batchRows = await Promise.all(
-      batch.map(async (movie) => {
-        const imdbID = await fetchImdbIdForMovie(movie.id);
-        const imdbData = await fetchOmdbRating(imdbID);
-
-        return {
-          id: movie.id,
-          title: movie.title,
-          imdbID: imdbData.imdbID,
-          imdbRating: imdbData.imdbRating,
-          imdbVotes: imdbData.imdbVotes,
-        };
-      })
-    );
-
-    joinedRows.push(...batchRows);
-    completed += batch.length;
-    onProgress(completed, total);
-  }
-
-  return joinedRows;
+  return response.json() as Promise<CloudflareMovieSearchResponse>;
 }
 
 export function MoviesToIMDBJoinTest() {
-  const [rows, setRows] = useState<JoinedMovieRow[]>([]);
+  const [rows, setRows] = useState<CloudflareMovieSearchItem[]>([]);
   const [phase, setPhase] = useState('Starting test...');
   const [progressText, setProgressText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPage, setSelectedPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadedPages, setLoadedPages] = useState(0);
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
+  const nextCursorRef = useRef<string | null>(null);
+  const isLoadingMoreRef = useRef(false);
 
   useEffect(() => {
     let isCancelled = false;
 
-    async function runJoinTest() {
+    async function loadFirstPage() {
       try {
         setIsLoading(true);
+        setIsLoadingMore(false);
         setErrorMessage(null);
         setElapsedMs(null);
-        setPhase(`Fetching TMDB search page ${selectedPage}...`);
+        setPhase('Fetching Cloudflare search page 1...');
         setProgressText('');
         setRows([]);
+        setNextCursor(null);
+        nextCursorRef.current = null;
+        setLoadedPages(0);
 
         const startedAt = Date.now();
-
-        const searchPage = await fetchTestSearchPage(selectedPage);
-
-        if (isCancelled) {
-          return;
-        }
-
-        const movies = searchPage.movies;
-
-        setPhase('Joining TMDB movie IDs to IMDb IDs and OMDb ratings...');
-        setProgressText(`0 / ${movies.length}`);
-
-        const joinedRows = await buildJoinedRows(movies, (completed, total) => {
-          if (isCancelled) {
-            return;
-          }
-
-          setProgressText(`${completed} / ${total}`);
-        });
+        const searchPage = await fetchCloudflareMovieSearchPage(null);
 
         if (isCancelled) {
           return;
         }
 
-        setRows(joinedRows);
-        setPhase('Join complete.');
+        nextCursorRef.current = searchPage.nextCursor;
+        setNextCursor(searchPage.nextCursor);
+        setLoadedPages(1);
+        setRows(searchPage.movies);
+        setPhase('Cloudflare search ready.');
+        setProgressText(`${searchPage.movies.length} movies, sort ${searchPage.sort}`);
         setElapsedMs(Date.now() - startedAt);
       } catch (error) {
         if (isCancelled) {
@@ -205,50 +115,58 @@ export function MoviesToIMDBJoinTest() {
       }
     }
 
-    runJoinTest();
+    loadFirstPage();
 
     return () => {
       isCancelled = true;
     };
-  }, [selectedPage]);
+  }, []);
+
+  const loadNextPage = useCallback(async () => {
+    if (isLoadingMoreRef.current || !nextCursorRef.current) {
+      return;
+    }
+
+    const cursor = nextCursorRef.current;
+    const pageToLoad = loadedPages + 1;
+
+    try {
+      isLoadingMoreRef.current = true;
+      setIsLoadingMore(true);
+      setErrorMessage(null);
+      setPhase(`Fetching Cloudflare search page ${pageToLoad}...`);
+
+      const startedAt = Date.now();
+      const searchPage = await fetchCloudflareMovieSearchPage(cursor);
+
+      nextCursorRef.current = searchPage.nextCursor;
+      setNextCursor(searchPage.nextCursor);
+      setLoadedPages(pageToLoad);
+      setRows((currentRows) => [...currentRows, ...searchPage.movies]);
+      setPhase('Cloudflare search ready.');
+      setProgressText(
+        `${rows.length + searchPage.movies.length} movies loaded across ${pageToLoad} pages`
+      );
+      setElapsedMs(Date.now() - startedAt);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Unknown search paging error'
+      );
+      setPhase('Next page failed.');
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [loadedPages, rows.length]);
 
   return (
     <View style={styles.container}>
       <Text allowFontScaling={false} style={styles.title}>
-        Movies To IMDb Join Test
+        Cloudflare Movie Search Test
       </Text>
       <Text allowFontScaling={false} style={styles.subtitle}>
-        TMDB default search submit to TMDB external_ids to OMDb rating join
+        Cloudflare movie search endpoint using automatic cursor paging
       </Text>
-      <View style={styles.pagePickerRow}>
-        <Text allowFontScaling={false} style={styles.pagePickerLabel}>
-          Pages:
-        </Text>
-        {TEST_PAGES.map((pageNum) => {
-          const isSelected = pageNum === selectedPage;
-
-          return (
-            <Pressable
-              key={pageNum}
-              onPress={() => setSelectedPage(pageNum)}
-              style={[
-                styles.pageButton,
-                isSelected ? styles.pageButtonSelected : null,
-              ]}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.pageButtonText,
-                  isSelected ? styles.pageButtonTextSelected : null,
-                ]}
-              >
-                {pageNum}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
       <View style={styles.statusRow}>
         <Text allowFontScaling={false} style={styles.phase}>
           {phase}
@@ -273,30 +191,45 @@ export function MoviesToIMDBJoinTest() {
 
       <View style={styles.headerRow}>
         <Text allowFontScaling={false} style={[styles.headerCell, styles.titleColumn]}>
-          Movie Title
+          Poster
+        </Text>
+        <Text allowFontScaling={false} style={[styles.headerCell, styles.ratingColumn]}>
+          TMDB ID
         </Text>
         <Text allowFontScaling={false} style={[styles.headerCell, styles.ratingColumn]}>
           IMDb Rating
-        </Text>
-        <Text allowFontScaling={false} style={[styles.headerCell, styles.votesColumn]}>
-          IMDb Votes
         </Text>
       </View>
 
       <FlatList
         data={rows}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.tmdb_id.toString()}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadNextPage}
+        onEndReachedThreshold={0.45}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <ActivityIndicator size="small" style={styles.footerSpinner} />
+          ) : !nextCursor && rows.length > 0 ? (
+            <Text allowFontScaling={false} style={styles.endText}>
+              End of results
+            </Text>
+          ) : null
+        }
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <Text allowFontScaling={false} style={[styles.cell, styles.titleColumn]}>
-              {item.title}
+            <View style={[styles.cell, styles.titleColumn]}>
+              <Image
+                source={{ uri: `${POSTER_BASE_URL}${item.poster_path}` }}
+                style={styles.poster}
+                resizeMode="cover"
+              />
+            </View>
+            <Text allowFontScaling={false} style={[styles.cell, styles.ratingColumn]}>
+              {item.tmdb_id}
             </Text>
             <Text allowFontScaling={false} style={[styles.cell, styles.ratingColumn]}>
-              {item.imdbRating}
-            </Text>
-            <Text allowFontScaling={false} style={[styles.cell, styles.votesColumn]}>
-              {item.imdbVotes}
+              {item.imdb_rating ?? 'N/A'}
             </Text>
           </View>
         )}
@@ -321,46 +254,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
   },
-  pagePickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  pagePickerLabel: {
-    ...typography.feedbackBody,
-    color: colors.textPrimary,
-    marginRight: 8,
-  },
-  pageButton: {
-    minWidth: 36,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: colors.background,
-  },
-  pageButtonSelected: {
-    backgroundColor: colors.textPrimary,
-    borderColor: colors.textPrimary,
-  },
-  pageButtonText: {
-    ...typography.cardMeta,
-    color: colors.textPrimary,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  pageButtonTextSelected: {
-    color: colors.actionOnPrimary,
-  },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 16,
   },
   phase: {
     ...typography.feedbackBody,
@@ -380,6 +278,15 @@ const styles = StyleSheet.create({
   },
   spinner: {
     marginTop: 12,
+  },
+  footerSpinner: {
+    paddingVertical: 16,
+  },
+  endText: {
+    ...typography.cardMeta,
+    color: colors.textSecondary,
+    paddingVertical: 16,
+    textAlign: 'center',
   },
   error: {
     ...typography.feedbackBody,
@@ -403,6 +310,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ececec',
     paddingVertical: 10,
@@ -419,7 +327,10 @@ const styles = StyleSheet.create({
     flex: 0.7,
     paddingRight: 8,
   },
-  votesColumn: {
-    flex: 1,
+  poster: {
+    width: 46,
+    height: 69,
+    borderRadius: 4,
+    backgroundColor: '#ececec',
   },
 });
