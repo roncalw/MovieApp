@@ -238,7 +238,7 @@ export const movieSearchFieldSharedStyles = StyleSheet.create({
   },
   popupChipFixedWidth: {
     alignSelf: 'center',
-    width: scaleSize(230),
+    width: scaleSize(290),
   },
   popupChipSubtleBorder: {
     borderWidth: 1,

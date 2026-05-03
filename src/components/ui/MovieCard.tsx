@@ -15,6 +15,7 @@ import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const imageIMDB = require('../../assets/images/imdb.png');
 
 type MovieCardProps = {
   movie: movieType;
@@ -41,6 +42,12 @@ export function MovieCard({ movie, onPress, variant = 'summary' }: MovieCardProp
             resizeMode={isPosterRating ? 'contain' : 'cover'}
           />
           <View style={styles.ratingBadge}>
+            <Image
+              source={imageIMDB}
+              style={styles.imdbLogo}
+              resizeMode="contain"
+              accessibilityLabel="IMDb rating"
+            />
             <Text allowFontScaling={false} style={styles.ratingBadgeText}>
               {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}
             </Text>
@@ -109,19 +116,29 @@ const styles = StyleSheet.create({
   },
   ratingBadge: {
     position: 'absolute',
-    top: scaleSize(6),
-    right: scaleSize(6),
-    minWidth: scaleSize(36),
-    paddingHorizontal: scaleSize(6),
-    paddingVertical: scaleSize(4),
-    borderRadius: scaleSize(14),
+    left: scaleSize(4),
+    bottom: scaleSize(4),
+    minHeight: scaleSize(20),
+    minWidth: scaleSize(58),
+    flexDirection: 'row',
+    paddingHorizontal: scaleSize(5),
+    paddingVertical: scaleSize(2),
+    borderRadius: scaleSize(11),
     backgroundColor: 'rgba(0, 0, 0, 0.78)',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: scaleSize(4),
+  },
+  imdbLogo: {
+    width: scaleSize(28),
+    height: scaleSize(13),
   },
   ratingBadgeText: {
     ...typography.cardMeta,
     color: '#fff',
+    fontSize: scaleSize(10),
     fontWeight: '700',
+    lineHeight: scaleSize(12),
   },
   movieTitle: {
     ...typography.cardTitle,

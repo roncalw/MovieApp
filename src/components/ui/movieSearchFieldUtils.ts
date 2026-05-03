@@ -67,7 +67,8 @@ export const SORT_ITEMS: SortItem[] = [
   { id: '1', label: 'Popularity', value: '0' },
   { id: '2', label: 'User Rating (500+ Reviews)', value: '500' },
   { id: '3', label: 'User Rating (5,000+ Reviews)', value: '5000' },
-  { id: '4', label: 'User Rating (25,000+ Reviews)', value: '25000' },
+  { id: '4', label: 'User Rating (15,000+ Reviews)', value: '15000' },
+  { id: '5', label: 'User Rating (25,000+ Reviews)', value: '25000' },
 ];
 
 export function formatSelectedLabels(selectedValues: string[], items: LabelValueItem[]) {
