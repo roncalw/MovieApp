@@ -82,7 +82,9 @@ export function MovieSearchPopupChip({
         reversedSelectionAppearance && styles.popupChipReversed,
         selected && styles.popupChipSelected,
         selected && subtleBorder && styles.popupChipSubtleBorderSelected,
-        selected && reversedSelectionAppearance && styles.popupChipSelectedReversed,
+        selected &&
+          reversedSelectionAppearance &&
+          styles.popupChipSelectedReversed,
       ]}
     >
       <Text
@@ -147,15 +149,15 @@ export function MovieSearchBulkSelectionLinks({
 }: MovieSearchBulkSelectionLinksProps) {
   return (
     <View style={styles.bulkSelectionRow}>
-      <Pressable onPress={onClearAll} style={styles.bulkSelectionLink}>
-        <Text allowFontScaling={false} style={styles.bulkSelectionText}>
-          Clear All
-        </Text>
-      </Pressable>
-
       <Pressable onPress={onAddAll} style={styles.bulkSelectionLink}>
         <Text allowFontScaling={false} style={styles.bulkSelectionText}>
           Add All
+        </Text>
+      </Pressable>
+
+      <Pressable onPress={onClearAll} style={styles.bulkSelectionLink}>
+        <Text allowFontScaling={false} style={styles.bulkSelectionText}>
+          Clear All
         </Text>
       </Pressable>
     </View>
@@ -305,6 +307,8 @@ export const movieSearchFieldSharedStyles = StyleSheet.create({
   bulkSelectionText: {
     ...typography.visibilityToggle,
     color: colors.brandText,
+    fontSize: scaleSize(12.75),
+    lineHeight: scaleSize(16.5),
     textAlign: 'center',
   },
   modalActionsRow: {

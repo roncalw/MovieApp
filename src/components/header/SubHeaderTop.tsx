@@ -10,13 +10,15 @@ Purpose:
      header context.
 */
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Image, View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { scaleSize } from '../../theme/scale';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
+
+const cinemaMenuIcon = require('../../assets/images/cinema_menu.jpg');
 
 type SubHeaderTopProps = {
   title: string;
@@ -36,15 +38,24 @@ export function SubHeaderTop({ title }: SubHeaderTopProps) {
       Combine the real safe-area inset with a scaled extra top gap so the header
       clears the status area on all devices without using one fixed number.
     */
-    <View style={[styles.container, { paddingTop: insets.top + scaleSize(10) }]}>
+    <View
+      style={[styles.container, { paddingTop: insets.top + scaleSize(10) }]}
+    >
       <View style={styles.row}>
         <View style={styles.sideSlot}>
           {isDetailOpen ? (
-            <Pressable onPress={triggerDetailBack} style={styles.detailBackButton}>
+            <Pressable
+              onPress={triggerDetailBack}
+              style={styles.detailBackButton}
+            >
               <Ionicons name="chevron-back" size={42} color="#800000" />
             </Pressable>
           ) : (
-            <View style={styles.leftPlaceholder} />
+            <Image
+              source={cinemaMenuIcon}
+              style={styles.leftIcon}
+              resizeMode="contain"
+            />
           )}
         </View>
 
@@ -94,11 +105,9 @@ const styles = StyleSheet.create({
     minHeight: scaleSize(32),
     justifyContent: 'center',
   },
-  leftPlaceholder: {
-    width: scaleSize(42),
-    height: scaleSize(32),
-    borderRadius: scaleSize(12),
-    backgroundColor: colors.placeholderAccent,
+  leftIcon: {
+    width: scaleSize(48),
+    height: scaleSize(48),
   },
   detailBackButton: {
     width: '100%',

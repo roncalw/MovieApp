@@ -5,7 +5,6 @@ import { getSelectedSortLabel, SORT_ITEMS } from './movieSearchFieldUtils';
 import {
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
-  MovieSearchPopupChip,
   movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
 
@@ -36,7 +35,9 @@ export function SortField({ value, onChange }: SortFieldProps) {
   }
 
   function toggleDraftValue(nextValue: string) {
-    setDraftValue((currentValue) => (currentValue === nextValue ? '' : nextValue));
+    setDraftValue(currentValue =>
+      currentValue === nextValue ? '' : nextValue,
+    );
   }
 
   return (
@@ -57,26 +58,40 @@ export function SortField({ value, onChange }: SortFieldProps) {
           <Pressable style={sharedStyles.modalBackdrop} onPress={closeModal} />
 
           <View style={[sharedStyles.selectionModalCard, styles.sortModalCard]}>
-            <Text allowFontScaling={false} style={sharedStyles.selectionModalTitle}>
+            <Text
+              allowFontScaling={false}
+              style={sharedStyles.selectionModalTitle}
+            >
               Sort By Popularity or User Rating
             </Text>
 
-            <View style={styles.sortChipGroup}>
-              {SORT_ITEMS.map((item) => (
-                <MovieSearchPopupChip
+            <View style={styles.sortOptionGroup}>
+              {SORT_ITEMS.map(item => (
+                <Pressable
                   key={item.id}
-                  label={item.label}
-                  selected={draftValue === item.value}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: draftValue === item.value }}
                   onPress={() => toggleDraftValue(item.value)}
-                  fixedWidth
-                  reversedSelectionAppearance
-                  subtleBorder
-                />
+                  style={styles.sortOptionRow}
+                >
+                  <View style={styles.radioOuter}>
+                    {draftValue === item.value ? (
+                      <View style={styles.radioInner} />
+                    ) : null}
+                  </View>
+
+                  <Text allowFontScaling={false} style={styles.sortOptionText}>
+                    {item.label}
+                  </Text>
+                </Pressable>
               ))}
             </View>
           </View>
 
-          <MovieSearchModalActions onCancel={cancelModal} onClose={closeModal} />
+          <MovieSearchModalActions
+            onCancel={cancelModal}
+            onClose={closeModal}
+          />
         </View>
       </Modal>
     </>
@@ -91,9 +106,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaleSize(14),
     paddingBottom: scaleSize(14),
   },
-  sortChipGroup: {
+  sortOptionGroup: {
     width: '100%',
-    gap: scaleSize(8),
-    paddingTop: scaleSize(4),
+    maxWidth: scaleSize(340),
+    gap: scaleSize(10),
+    paddingTop: scaleSize(8),
+    paddingBottom: scaleSize(4),
+  },
+  sortOptionRow: {
+    minHeight: scaleSize(34),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: scaleSize(8),
+  },
+  radioOuter: {
+    width: scaleSize(28),
+    height: scaleSize(28),
+    borderRadius: scaleSize(14),
+    borderWidth: scaleSize(2),
+    borderColor: '#8FB7DF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: scaleSize(14),
+    backgroundColor: 'transparent',
+  },
+  radioInner: {
+    width: scaleSize(14),
+    height: scaleSize(14),
+    borderRadius: scaleSize(7),
+    backgroundColor: '#8FB7DF',
+  },
+  sortOptionText: {
+    flex: 1,
+    color: '#222222',
+    fontSize: scaleSize(16),
+    lineHeight: scaleSize(20),
   },
 });

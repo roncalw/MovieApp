@@ -43,9 +43,11 @@ export function MovieSearchScreen() {
   const queryClient = useQueryClient();
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
-  const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] = useState(false);
+  const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
+    useState(false);
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-  const [selectedMovieFromList, setSelectedMovieFromList] = useState<movieType | null>(null);
+  const [selectedMovieFromList, setSelectedMovieFromList] =
+    useState<movieType | null>(null);
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
     beginDate: defaultBeginDate,
@@ -55,7 +57,8 @@ export function MovieSearchScreen() {
     movieVoteCount: '',
     movieSortBy: '',
   });
-  const hasActiveSubmittedSearch = hasSubmittedSearch && !hasDisplayedFilterChanges;
+  const hasActiveSubmittedSearch =
+    hasSubmittedSearch && !hasDisplayedFilterChanges;
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
     setSelectedMovieId(null);
@@ -112,11 +115,15 @@ export function MovieSearchScreen() {
 
   const movies = useMemo(
     () =>
-      hasActiveSubmittedSearch ? data?.pages.flatMap((page) => page.movies) ?? [] : [],
-    [data, hasActiveSubmittedSearch]
+      hasActiveSubmittedSearch
+        ? data?.pages.flatMap(page => page.movies) ?? []
+        : [],
+    [data, hasActiveSubmittedSearch],
   );
   const loadedPages = hasActiveSubmittedSearch ? data?.pages.length ?? 0 : 0;
-  const totalPages = hasActiveSubmittedSearch ? data?.pages[0]?.totalPages ?? null : 0;
+  const totalPages = hasActiveSubmittedSearch
+    ? data?.pages[0]?.totalPages ?? null
+    : 0;
   const isDetailOpen = selectedMovieId !== null;
 
   /*
@@ -149,8 +156,7 @@ export function MovieSearchScreen() {
     - A failed search should show a clear error instead of failing silently
   */
   if (hasActiveSubmittedSearch && isError) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Unknown error';
 
     return (
       <View style={styles.centered}>
@@ -175,25 +181,39 @@ export function MovieSearchScreen() {
         onRequestDetailBack={handleCloseMovieDetail}
         onSubmitFilters={handleApplyFilters}
         onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
-      >
-        <MovieResults
-          movies={movies}
-          cardVariant="posterRating"
-          onMoviePress={handleOpenMovie}
-          onEndReached={fetchNextPage}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-        />
-      </HeaderMovieSearch>
+      />
 
-      {selectedMovieId !== null ? (
-        <View style={styles.detailContainer}>
-          <MovieDetail
-            movieId={selectedMovieId}
-            initialMovie={selectedMovieFromList}
+      <View style={styles.contentStack}>
+        <View
+          pointerEvents={isDetailOpen ? 'none' : 'auto'}
+          accessibilityElementsHidden={isDetailOpen}
+          importantForAccessibility={
+            isDetailOpen ? 'no-hide-descendants' : 'auto'
+          }
+          style={[
+            styles.searchContent,
+            isDetailOpen ? styles.searchContentHidden : null,
+          ]}
+        >
+          <MovieResults
+            movies={movies}
+            cardVariant="posterRating"
+            onMoviePress={handleOpenMovie}
+            onEndReached={fetchNextPage}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
           />
         </View>
-      ) : null}
+
+        {selectedMovieId !== null ? (
+          <View style={styles.detailOverlay}>
+            <MovieDetail
+              movieId={selectedMovieId}
+              initialMovie={selectedMovieFromList}
+            />
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -203,9 +223,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  detailContainer: {
+  contentStack: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  searchContent: {
+    flex: 1,
+  },
+  searchContentHidden: {
+    opacity: 0,
+  },
+  detailOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   centered: {
     /*

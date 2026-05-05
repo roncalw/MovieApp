@@ -11,8 +11,7 @@ Purpose:
      MovieSearchScreen own that sibling wiring.
 */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
 import {
   HeaderMovieSearchContext,
@@ -30,7 +29,6 @@ type HeaderMovieSearchProps = {
   onRequestDetailBack: () => void;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
-  children: ReactNode;
 };
 
 export function HeaderMovieSearch({
@@ -42,7 +40,6 @@ export function HeaderMovieSearch({
   onRequestDetailBack,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
-  children,
 }: HeaderMovieSearchProps) {
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
@@ -80,18 +77,21 @@ export function HeaderMovieSearch({
       registerSubmitHandler,
       submitDraftFilters,
       totalPages,
-    ]
+    ],
   );
 
   return (
     <HeaderMovieSearchContext.Provider value={contextValue}>
       <SubHeaderTop title={title} />
-      <View style={{ display: isDetailOpen ? 'none' : 'flex' }}>
+      <View style={isDetailOpen ? styles.filtersHidden : null}>
         <SubHeaderMovieSearchFields />
-      </View>
-      <View style={{ display: isDetailOpen ? 'none' : 'flex', flex: 1 }}>
-        {children}
       </View>
     </HeaderMovieSearchContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  filtersHidden: {
+    display: 'none',
+  },
+});

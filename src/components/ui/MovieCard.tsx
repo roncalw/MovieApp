@@ -23,7 +23,11 @@ type MovieCardProps = {
   variant?: 'summary' | 'posterRating';
 };
 
-export function MovieCard({ movie, onPress, variant = 'summary' }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  onPress,
+  variant = 'summary',
+}: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
 
   return (
@@ -116,22 +120,22 @@ const styles = StyleSheet.create({
   },
   ratingBadge: {
     position: 'absolute',
-    left: scaleSize(4),
-    bottom: scaleSize(4),
-    minHeight: scaleSize(20),
-    minWidth: scaleSize(58),
+    left: 0,
+    bottom: 0,
+    minHeight: scaleSize(16),
+    minWidth: scaleSize(44),
     flexDirection: 'row',
-    paddingHorizontal: scaleSize(5),
-    paddingVertical: scaleSize(2),
-    borderRadius: scaleSize(11),
+    paddingHorizontal: scaleSize(4),
+    paddingVertical: scaleSize(1),
+    borderRadius: scaleSize(8),
     backgroundColor: 'rgba(0, 0, 0, 0.78)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: scaleSize(4),
+    gap: scaleSize(3),
   },
   imdbLogo: {
-    width: scaleSize(28),
-    height: scaleSize(13),
+    width: scaleSize(21),
+    height: scaleSize(10),
   },
   ratingBadgeText: {
     ...typography.cardMeta,

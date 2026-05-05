@@ -11,7 +11,6 @@ Purpose:
 */
 import React from 'react';
 import {
-  View,
   Text,
   ActivityIndicator,
   StyleSheet,
@@ -31,10 +30,7 @@ type MovieDetailProps = {
   initialMovie?: movieType | null;
 };
 
-export function MovieDetail({
-  movieId,
-  initialMovie,
-}: MovieDetailProps) {
+export function MovieDetail({ movieId, initialMovie }: MovieDetailProps) {
   const {
     data: movieDetails,
     isLoading,
@@ -49,34 +45,53 @@ export function MovieDetail({
     initialMovie?.backdrop_path;
 
   const genreNames =
-    movieDetails?.genres?.map((genre) => genre.name).join(', ') ||
+    movieDetails?.genres?.map(genre => genre.name).join(', ') ||
     'Genres unavailable';
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <ScrollView contentContainerStyle={styles.detailContent}>
+        {detailImagePath ? (
+          <Image
+            source={{ uri: `${POSTER_BASE_URL}${detailImagePath}` }}
+            style={styles.detailPoster}
+            resizeMode="cover"
+          />
+        ) : null}
+
         <ActivityIndicator size="large" />
         <Text allowFontScaling={false} style={styles.message}>
           Loading movie details...
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
-  if (isError || !movieDetails) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error';
+  if (isError) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
 
     return (
-      <View style={styles.centered}>
+      <ScrollView contentContainerStyle={styles.detailContent}>
+        {detailImagePath ? (
+          <Image
+            source={{ uri: `${POSTER_BASE_URL}${detailImagePath}` }}
+            style={styles.detailPoster}
+            resizeMode="cover"
+          />
+        ) : null}
+
         <Text allowFontScaling={false} style={styles.errorText}>
           Error loading movie details
         </Text>
         <Text allowFontScaling={false} style={styles.message}>
           {message}
         </Text>
-      </View>
+      </ScrollView>
     );
+  }
+
+  if (!movieDetails) {
+    return null;
   }
 
   return (
