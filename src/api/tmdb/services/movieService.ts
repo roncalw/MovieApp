@@ -6,8 +6,8 @@ Imported by:
 Next step path:
    * /MovieApp/src/api/tmdb/client.ts
 Purpose:
-   * Builds the TMDB request URLs for movie search, popular movies, and movie details, then fetches and shapes the data for the 
-     query hooks.
+   * Builds the TMDB request URLs for movie search, Home rows, popular movies, and movie details, then fetches and shapes the
+     data for the query hooks.
 */
 import { tmdbClient } from '../client';
 import { CONFIG } from '../config';
@@ -39,6 +39,8 @@ const ALL_STREAMER_PROVIDER_IDS = [
   '526',
   '531',
 ];
+
+export type HomeMovieGenreId = 18 | 27 | 35 | 80 | 99 | 10402 | 10751;
 
 type CloudflareMovieSearchItem = {
   tmdb_id: number;
@@ -97,6 +99,40 @@ type CloudflareMovieSearchResults = movieSearchResults & {
 export async function fetchPopularMovies(): Promise<movieType[]> {
   const response = await tmdbClient.get<MovieListResponse>(
     `${ENDPOINTS.POPULAR_MOVIES}?${CONFIG.apiKey}`
+  );
+
+  return response.data.results.map(mapMovieToMovie);
+}
+
+/*
+======================================================== fetchUpcomingMovies ====================================================
+
+  WHAT THIS DOES:
+  - Requests TMDB's upcoming movie list for the Home page hero carousel.
+  - Returns the same app-level movieType[] shape as fetchPopularMovies so Home can
+    open the existing MovieDetail overlay from either the hero image or poster row.
+*/
+export async function fetchUpcomingMovies(): Promise<movieType[]> {
+  const response = await tmdbClient.get<MovieListResponse>(
+    `${ENDPOINTS.UPCOMING_MOVIES}?${CONFIG.apiKey}`
+  );
+
+  return response.data.results.map(mapMovieToMovie);
+}
+
+/*
+======================================================== fetchMoviesByGenre ====================================================
+
+  WHAT THIS DOES:
+  - Matches the legacy Home page genre rows.
+  - Calls TMDB Discover with only with_genres, which keeps TMDB's default
+    Discover ordering exactly like the legacy app did.
+*/
+export async function fetchMoviesByGenre(
+  genreId: HomeMovieGenreId
+): Promise<movieType[]> {
+  const response = await tmdbClient.get<MovieListResponse>(
+    `${ENDPOINTS.MOVIE_SEARCH}?${CONFIG.apiKey}&with_genres=${genreId}`
   );
 
   return response.data.results.map(mapMovieToMovie);

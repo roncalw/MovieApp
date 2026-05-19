@@ -13,8 +13,11 @@ Purpose:
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import {
   fetchPopularMovies,
+  fetchUpcomingMovies,
+  fetchMoviesByGenre,
   fetchMovieSearchResults,
   fetchMovie,
+  type HomeMovieGenreId,
 } from '../../api/tmdb/services/movieService';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
 
@@ -154,6 +157,41 @@ export function usePopularMoviesQuery() {
   return useQuery({
     queryKey: ['popularMovies'],
     queryFn: fetchPopularMovies,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/*
+======================================================== useUpcomingMoviesQuery ===================================================
+
+  WHAT THIS DOES:
+  - Gives HomeScreen the upcoming-movies list used by the top hero carousel.
+  - Keeps HomeScreen out of direct TMDB service calls, matching the existing
+    Advanced Search and Popular Movies query pattern.
+*/
+export function useUpcomingMoviesQuery() {
+  return useQuery({
+    queryKey: ['upcomingMovies'],
+    queryFn: fetchUpcomingMovies,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/*
+======================================================== useHomeGenreMoviesQuery ===================================================
+
+  WHAT THIS DOES:
+  - Requests one Home page genre row by TMDB genre id.
+  - The service keeps the request aligned to the legacy app's TMDB Discover
+    format, while the query key keeps each row cached separately.
+*/
+export function useHomeGenreMoviesQuery(
+  rowKey: string,
+  genreId: HomeMovieGenreId
+) {
+  return useQuery({
+    queryKey: ['homeGenreMovies', rowKey, genreId],
+    queryFn: () => fetchMoviesByGenre(genreId),
     staleTime: 1000 * 60 * 5,
   });
 }

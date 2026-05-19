@@ -10,15 +10,14 @@ Purpose:
      header context.
 */
 import React from 'react';
-import { Image, View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { scaleSize } from '../../theme/scale';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
-
-const cinemaMenuIcon = require('../../assets/images/cinema_menu.jpg');
+import { DrawerMenuButton } from '../navigation/DrawerMenuButton';
 
 type SubHeaderTopProps = {
   title: string;
@@ -55,18 +54,9 @@ export function SubHeaderTop({
               <Ionicons name="chevron-back" size={42} color="#800000" />
             </Pressable>
           ) : (
-            <Pressable
+            <DrawerMenuButton
               onPress={onRequestDrawerOpen}
-              style={styles.menuButton}
-              accessibilityRole="button"
-              accessibilityLabel="Open navigation menu"
-            >
-              <Image
-                source={cinemaMenuIcon}
-                style={styles.leftIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
+            />
           )}
         </View>
 
@@ -114,16 +104,6 @@ const styles = StyleSheet.create({
   sideSlot: {
     width: scaleSize(96),
     minHeight: scaleSize(32),
-    justifyContent: 'center',
-  },
-  leftIcon: {
-    width: scaleSize(48),
-    height: scaleSize(48),
-  },
-  menuButton: {
-    width: scaleSize(56),
-    minHeight: scaleSize(56),
-    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   detailBackButton: {

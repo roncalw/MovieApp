@@ -1,0 +1,189 @@
+/*
+Step: Home hero carousel
+   * /MovieApp/src/components/home/HomeHeroCarousel.tsx
+Imported by:
+   * /MovieApp/src/screens/HomeScreen.tsx
+Purpose:
+   * Renders the legacy-style top movie carousel from TMDB upcoming movies without adding the old image-slider package.
+*/
+import React, { useEffect, useMemo, useRef } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import type { movieType } from '../../types/MovieTypes';
+import { colors } from '../../theme/colors';
+import { scaleSize } from '../../theme/scale';
+import { typography } from '../../theme/typography';
+
+const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const AUTO_PLAY_INTERVAL_MS = 3000;
+
+type HomeHeroCarouselProps = {
+  movies: movieType[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  isAutoPlayPaused?: boolean;
+  onMoviePress: (movie: movieType) => void;
+};
+
+export function HomeHeroCarousel({
+  movies,
+  isLoading,
+  isError,
+  error,
+  isAutoPlayPaused = false,
+  onMoviePress,
+}: HomeHeroCarouselProps) {
+  const listRef = useRef<FlatList<movieType>>(null);
+  const currentIndexRef = useRef(0);
+  const { width, height } = useWindowDimensions();
+  // Keep the hero dominant, but leave just enough room for the next row title
+  // to peek onto the first screen so Home clearly continues below the fold.
+  const heroHeight = Math.round(height * 0.655);
+  const heroMovies = useMemo(
+    () => movies?.filter(movie => Boolean(movie.poster_path)) ?? [],
+    [movies]
+  );
+
+  useEffect(() => {
+    currentIndexRef.current = 0;
+  }, [heroMovies]);
+
+  useEffect(() => {
+    if (isAutoPlayPaused || heroMovies.length <= 1) {
+      return undefined;
+    }
+
+    const interval = setInterval(() => {
+      const nextIndex = (currentIndexRef.current + 1) % heroMovies.length;
+      currentIndexRef.current = nextIndex;
+      listRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    }, AUTO_PLAY_INTERVAL_MS);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [heroMovies.length, isAutoPlayPaused]);
+
+  function handleMomentumScrollEnd(
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) {
+    currentIndexRef.current = Math.round(
+      event.nativeEvent.contentOffset.x / width
+    );
+  }
+
+  function handleScrollToIndexFailed({ index }: { index: number }) {
+    const safeIndex = Math.min(index, Math.max(heroMovies.length - 1, 0));
+    currentIndexRef.current = safeIndex;
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({
+        offset: safeIndex * width,
+        animated: true,
+      });
+    });
+  }
+
+  if (isLoading) {
+    return (
+      <View style={[styles.statusHero, { height: heroHeight }]}>
+        <ActivityIndicator size="large" />
+        <Text allowFontScaling={false} style={styles.statusText}>
+          Loading featured movies...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    return (
+      <View style={[styles.statusHero, { height: heroHeight }]}>
+        <Text allowFontScaling={false} style={styles.errorTitle}>
+          Error loading featured movies
+        </Text>
+        <Text allowFontScaling={false} style={styles.statusText}>
+          {message}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.hero, { height: heroHeight }]}>
+      <FlatList
+        ref={listRef}
+        data={heroMovies}
+        keyExtractor={item => item.id.toString()}
+        horizontal
+        pagingEnabled
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => onMoviePress(item)}
+            style={[styles.slide, { width, height: heroHeight }]}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${item.title || item.original_title}`}
+          >
+            <Image
+              source={{ uri: `${POSTER_BASE_URL}${item.poster_path}` }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          </Pressable>
+        )}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: {
+    width: '100%',
+    backgroundColor: '#d9d9d9',
+  },
+  slide: {
+    backgroundColor: '#d9d9d9',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  statusHero: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: scaleSize(24),
+    backgroundColor: colors.surfaceMuted,
+  },
+  statusText: {
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorTitle: {
+    ...typography.feedbackTitle,
+    color: colors.brandText,
+    textAlign: 'center',
+  },
+});

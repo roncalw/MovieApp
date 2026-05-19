@@ -23,5 +23,6 @@ Purpose:
 export const ENDPOINTS = {
   MOVIE_DETAILS: '/movie',
   POPULAR_MOVIES: '/movie/popular',
+  UPCOMING_MOVIES: '/movie/upcoming',
   MOVIE_SEARCH: '/discover/movie',
 };
