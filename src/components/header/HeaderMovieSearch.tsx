@@ -27,6 +27,7 @@ type HeaderMovieSearchProps = {
   totalPages: number | null;
   isDetailOpen: boolean;
   onRequestDetailBack: () => void;
+  onRequestDrawerOpen: () => void;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
 };
@@ -38,6 +39,7 @@ export function HeaderMovieSearch({
   totalPages,
   isDetailOpen,
   onRequestDetailBack,
+  onRequestDrawerOpen,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
 }: HeaderMovieSearchProps) {
@@ -82,7 +84,10 @@ export function HeaderMovieSearch({
 
   return (
     <HeaderMovieSearchContext.Provider value={contextValue}>
-      <SubHeaderTop title={title} />
+      <SubHeaderTop
+        title={title}
+        onRequestDrawerOpen={onRequestDrawerOpen}
+      />
       <View style={isDetailOpen ? styles.filtersHidden : null}>
         <SubHeaderMovieSearchFields />
       </View>

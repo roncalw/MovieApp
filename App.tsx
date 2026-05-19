@@ -10,13 +10,13 @@ Purpose:
      screen.
 */
 import React from 'react';
+import { AppNavigator } from './src/navigation/AppNavigator';
 import { AppProvider } from './src/providers/AppProvider';
-import { MovieSearchScreen } from './src/screens/MovieSearchScreen';
 
 export default function App() {
   return (
     <AppProvider>
-      <MovieSearchScreen />
+      <AppNavigator />
     </AppProvider>
   );
 }

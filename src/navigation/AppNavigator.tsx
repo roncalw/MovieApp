@@ -1,0 +1,330 @@
+import React from 'react';
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+  type DrawerContentComponentProps,
+} from '@react-navigation/drawer';
+import Ionicons, {
+  type IoniconsIconName,
+} from '@react-native-vector-icons/ionicons/static';
+import { MovieSearchScreen } from '../screens/MovieSearchScreen';
+import { HomeScreen } from '../screens/HomeScreen';
+import { MovieFavoritesScreen } from '../screens/MovieFavoritesScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { TellAFriendScreen } from '../screens/TellAFriendScreen';
+import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
+import { colors } from '../theme/colors';
+import { scaleSize } from '../theme/scale';
+import type { AppDrawerParamList } from './types';
+
+const Drawer = createDrawerNavigator<AppDrawerParamList>();
+const cinemaMenuIcon = require('../assets/images/cinema_menu.jpg');
+const drawerActiveTintColor = '#007AFF';
+const drawerInactiveTintColor = '#6F6F6F';
+const drawerLegacyLabelFontFamily = Platform.select({
+  android: 'Roboto-Medium',
+});
+
+type SecondaryDrawerRoute = {
+  name: keyof Pick<AppDrawerParamList, 'TellAFriend' | 'PrivacyPolicy'>;
+  title: string;
+  iconName: IoniconsIconName;
+};
+
+const secondaryDrawerRoutes: SecondaryDrawerRoute[] = [
+  {
+    name: 'TellAFriend',
+    title: 'Tell a Friend',
+    iconName: 'share-social-outline',
+  },
+  {
+    name: 'PrivacyPolicy',
+    title: 'Privacy Policy',
+    iconName: 'shield-checkmark-outline',
+  },
+];
+
+type DrawerIconProps = {
+  color: string;
+  size: number;
+};
+
+type SecondaryDrawerLinkProps = {
+  route: SecondaryDrawerRoute;
+  focused: boolean;
+  onPress: () => void;
+};
+
+function getFocusedRouteName(props: DrawerContentComponentProps) {
+  return props.state.routeNames[props.state.index];
+}
+
+function HomeDrawerIcon({ color, size }: DrawerIconProps) {
+  return <Ionicons name="home" color={color} size={size} />;
+}
+
+function FavoritesDrawerIcon({ color, size }: DrawerIconProps) {
+  return <Ionicons name="heart" color={color} size={size} />;
+}
+
+function SearchDrawerIcon({ color, size }: DrawerIconProps) {
+  return <Ionicons name="search" color={color} size={size} />;
+}
+
+function SettingsDrawerIcon({ color, size }: DrawerIconProps) {
+  return <Ionicons name="settings" color={color} size={size} />;
+}
+
+function SecondaryDrawerLink({
+  route,
+  focused,
+  onPress,
+}: SecondaryDrawerLinkProps) {
+  const contentColor = focused
+    ? drawerActiveTintColor
+    : colors.textPrimary;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.secondaryDrawerLink,
+        focused ? styles.secondaryDrawerLinkFocused : null,
+        pressed ? styles.secondaryDrawerLinkPressed : null,
+      ]}
+    >
+      <Ionicons
+        name={route.iconName}
+        color={contentColor}
+        size={scaleSize(22)}
+      />
+      <Text
+        allowFontScaling={false}
+        style={[styles.secondaryDrawerLabel, { color: contentColor }]}
+      >
+        {route.title}
+      </Text>
+    </Pressable>
+  );
+}
+
+function AppDrawerContent(props: DrawerContentComponentProps) {
+  const focusedRouteName = getFocusedRouteName(props);
+
+  return (
+    <View style={styles.drawerRoot}>
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={styles.drawerScrollContent}
+      >
+        <View style={styles.drawerHeader}>
+          <Image
+            source={cinemaMenuIcon}
+            style={styles.drawerLogo}
+            resizeMode="contain"
+          />
+          <Text allowFontScaling={false} style={styles.drawerHeaderTitle}>
+            It's Movie Time
+          </Text>
+        </View>
+
+        <View style={styles.primaryDrawerItems}>
+          <DrawerItemList {...props} />
+        </View>
+      </DrawerContentScrollView>
+
+      <View style={styles.secondaryDrawerItems}>
+        {secondaryDrawerRoutes.map(route => (
+          <SecondaryDrawerLink
+            key={route.name}
+            route={route}
+            focused={focusedRouteName === route.name}
+            onPress={() => props.navigation.navigate(route.name)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function renderDrawerContent(props: DrawerContentComponentProps) {
+  return <AppDrawerContent {...props} />;
+}
+
+const homeDrawerOptions = {
+  title: 'Home',
+  drawerIcon: HomeDrawerIcon,
+};
+
+const movieFavoritesDrawerOptions = {
+  title: 'Movie Favorites',
+  drawerIcon: FavoritesDrawerIcon,
+};
+
+const advancedSearchDrawerOptions = {
+  title: 'Advanced Search',
+  drawerIcon: SearchDrawerIcon,
+};
+
+const settingsDrawerOptions = {
+  title: 'Settings',
+  drawerIcon: SettingsDrawerIcon,
+};
+
+function getTellAFriendDrawerOptions() {
+  return {
+    title: 'Tell a Friend',
+    drawerItemStyle: styles.hiddenDrawerItem,
+  };
+}
+
+function getPrivacyPolicyDrawerOptions() {
+  return {
+    title: 'Privacy Policy',
+    drawerItemStyle: styles.hiddenDrawerItem,
+  };
+}
+
+export function AppNavigator() {
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        drawerContent={renderDrawerContent}
+        screenOptions={{
+          headerShown: false,
+          drawerActiveBackgroundColor: '#EEEEEE',
+          drawerActiveTintColor,
+          drawerInactiveTintColor,
+          drawerLabelStyle: styles.drawerLabel,
+          drawerStyle: styles.drawer,
+          drawerItemStyle: styles.drawerItem,
+          sceneStyle: styles.scene,
+        }}
+      >
+        <Drawer.Screen
+          name="Home"
+          component={HomeScreen}
+          options={homeDrawerOptions}
+        />
+        <Drawer.Screen
+          name="MovieFavorites"
+          component={MovieFavoritesScreen}
+          options={movieFavoritesDrawerOptions}
+        />
+        <Drawer.Screen
+          name="AdvancedSearch"
+          component={MovieSearchScreen}
+          options={advancedSearchDrawerOptions}
+        />
+        <Drawer.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={settingsDrawerOptions}
+        />
+        <Drawer.Screen
+          name="TellAFriend"
+          component={TellAFriendScreen}
+          options={getTellAFriendDrawerOptions}
+        />
+        <Drawer.Screen
+          name="PrivacyPolicy"
+          component={PrivacyPolicyScreen}
+          options={getPrivacyPolicyDrawerOptions}
+        />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  scene: {
+    backgroundColor: colors.background,
+  },
+  drawer: {
+    width: '76%',
+    backgroundColor: colors.background,
+  },
+  drawerRoot: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  drawerScrollContent: {
+    paddingTop: 0,
+    paddingStart: 0,
+    paddingEnd: 0,
+    paddingBottom: 0,
+  },
+  drawerHeader: {
+    minHeight: scaleSize(154),
+    paddingHorizontal: scaleSize(20),
+    paddingTop: scaleSize(50),
+    paddingBottom: scaleSize(14),
+    justifyContent: 'flex-end',
+    backgroundColor: '#A6A6A6',
+  },
+  drawerLogo: {
+    width: scaleSize(80),
+    height: scaleSize(80),
+  },
+  drawerHeaderTitle: {
+    fontSize: scaleSize(15),
+    lineHeight: scaleSize(20),
+    letterSpacing: 0,
+    marginTop: scaleSize(2),
+    color: colors.textPrimary,
+  },
+  primaryDrawerItems: {
+    paddingTop: scaleSize(10),
+  },
+  secondaryDrawerItems: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderSubtle,
+    paddingHorizontal: scaleSize(20),
+    paddingVertical: scaleSize(20),
+  },
+  drawerItem: {
+    borderRadius: scaleSize(6),
+    marginHorizontal: scaleSize(10),
+    marginVertical: scaleSize(4),
+  },
+  drawerLabel: {
+    fontFamily: drawerLegacyLabelFontFamily,
+    fontSize: scaleSize(15),
+    lineHeight: scaleSize(25),
+    height: scaleSize(25),
+    letterSpacing: 0,
+  },
+  secondaryDrawerLink: {
+    paddingVertical: scaleSize(15),
+    paddingHorizontal: 0,
+    borderRadius: scaleSize(6),
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  secondaryDrawerLinkFocused: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  secondaryDrawerLinkPressed: {
+    opacity: 0.7,
+  },
+  secondaryDrawerLabel: {
+    fontFamily: drawerLegacyLabelFontFamily,
+    fontSize: scaleSize(15),
+    lineHeight: scaleSize(25),
+    letterSpacing: 0,
+    marginLeft: scaleSize(5),
+  },
+  hiddenDrawerItem: {
+    display: 'none',
+  },
+});

@@ -34,9 +34,10 @@ yarn android
 
 ### iOS
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+For iOS, CocoaPods is managed by the repo root `Gemfile` / `Gemfile.lock`.
+Do not run a global `pod install` for this project.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+The first time you clone the project, install the Bundler-managed Ruby gems:
 
 ```sh
 bundle install
@@ -45,7 +46,13 @@ bundle install
 Then, and every time you update your native dependencies, run:
 
 ```sh
-bundle exec pod install
+npm run pods
+```
+
+That script runs:
+
+```sh
+bundle exec pod install --project-directory=ios
 ```
 
 For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).

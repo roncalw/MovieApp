@@ -22,9 +22,13 @@ const cinemaMenuIcon = require('../../assets/images/cinema_menu.jpg');
 
 type SubHeaderTopProps = {
   title: string;
+  onRequestDrawerOpen: () => void;
 };
 
-export function SubHeaderTop({ title }: SubHeaderTopProps) {
+export function SubHeaderTop({
+  title,
+  onRequestDrawerOpen,
+}: SubHeaderTopProps) {
   const insets = useSafeAreaInsets();
   const {
     isDetailOpen,
@@ -51,11 +55,18 @@ export function SubHeaderTop({ title }: SubHeaderTopProps) {
               <Ionicons name="chevron-back" size={42} color="#800000" />
             </Pressable>
           ) : (
-            <Image
-              source={cinemaMenuIcon}
-              style={styles.leftIcon}
-              resizeMode="contain"
-            />
+            <Pressable
+              onPress={onRequestDrawerOpen}
+              style={styles.menuButton}
+              accessibilityRole="button"
+              accessibilityLabel="Open navigation menu"
+            >
+              <Image
+                source={cinemaMenuIcon}
+                style={styles.leftIcon}
+                resizeMode="contain"
+              />
+            </Pressable>
           )}
         </View>
 
@@ -108,6 +119,12 @@ const styles = StyleSheet.create({
   leftIcon: {
     width: scaleSize(48),
     height: scaleSize(48),
+  },
+  menuButton: {
+    width: scaleSize(56),
+    minHeight: scaleSize(56),
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   detailBackButton: {
     width: '100%',

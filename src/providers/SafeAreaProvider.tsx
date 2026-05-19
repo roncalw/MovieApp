@@ -10,6 +10,7 @@ Purpose:
      edges.
 */
 import React, { PropsWithChildren } from 'react';
+import { StyleSheet } from 'react-native';
 import {
   SafeAreaProvider as RNSafeAreaProvider,
   SafeAreaView,
@@ -61,9 +62,15 @@ export function SafeAreaProvider({ children }: PropsWithChildren) {
         - The app should now draw behind the top status area
         - Left and right safe-area protection still help avoid edge clipping
       */}
-      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right']}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
         {children}
       </SafeAreaView>
     </RNSafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

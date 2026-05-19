@@ -12,6 +12,7 @@ Purpose:
 */
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
@@ -41,6 +42,7 @@ export function MovieSearchScreen() {
   const defaultBeginDate = getDefaultBeginDate();
   const defaultEndDate = getDefaultEndDate();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
@@ -179,6 +181,7 @@ export function MovieSearchScreen() {
         totalPages={totalPages}
         isDetailOpen={isDetailOpen}
         onRequestDetailBack={handleCloseMovieDetail}
+        onRequestDrawerOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
         onSubmitFilters={handleApplyFilters}
         onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
       />
