@@ -36,6 +36,7 @@ const ANDROID_BROWSER_USER_AGENT =
 
   IMPORTANT:
   - This applies only to direct TMDB API calls.
+  - Direct TMDB calls must go through tmdbClient or tmdbDirectRequestConfig.
   - The Advanced Search page still uses the Cloudflare Worker path from movieService.ts.
 */
 export const tmdbDirectHeaders = {
@@ -52,33 +53,14 @@ export const tmdbDirectRequestConfig = {
 };
 
 /*
-  tmdbClient = truck
+  Shared Axios client for direct TMDB API calls.
 
-  WHAT THIS IS IN THIS PROJECT:
-  - A configured Axios instance for TMDB
-  - services/moviesService.ts will use this truck to make the trip
-
-  WHY axios.create(...) IS USED:
-  - So shared request settings are defined once
-  - services can reuse the same truck
-
-  IN THIS PROJECT, THOSE SETTINGS ARE:
-  - baseURL = TMDB root URL
-  - timeout = how long to wait before giving up
-
-  WHY WE ARE NOT PUTTING apiKey IN HEADERS HERE:
-  - Because the code pattern you gave uses query-string api_key
-  - So we keep that style and let the service build that exact URL
-
-  DEVIL'S-ADVOCATE NOTE:
-  - In many TMDB examples, people use bearer token auth in headers
-  - But you explicitly gave the api_key query-string style, so I am following your requested pattern
+  Keep direct TMDB request policy here instead of scattering headers across
+  screens or services. That gives the Home page one obvious path for TMDB calls,
+  while Advanced Search can continue using the Cloudflare Worker path separately.
 */
 export const tmdbClient = axios.create({
   baseURL: CONFIG.apiUrl,
   timeout: CONFIG.timeoutMs,
-  headers: {
-    ...tmdbDirectHeaders,
-    'Content-Type': 'application/json',
-  },
+  headers: tmdbDirectHeaders,
 });

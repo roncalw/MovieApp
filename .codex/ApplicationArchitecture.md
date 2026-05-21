@@ -5,7 +5,7 @@
 - [Why this note exists](#why-this-note-exists)
 - [Architecture diagram](#architecture-diagram)
 - [Current structure](#current-structure)
-- [Android Direct API Identity Fix](#android-direct-api-identity-fix)
+- [Android Direct TMDB Request Identity Fix](#android-direct-tmdb-request-identity-fix)
 - [File role summary](#file-role-summary)
 - [Final takeaway](#final-takeaway)
 
@@ -17,7 +17,7 @@ This note captures the discussion around:
 - why the two header siblings need a parent
 - why the shared header context exists
 - how this pattern could extend later if we add a footer
-- why Android needed a direct external API identity fix for Home-page TMDB calls
+- why Android direct TMDB calls use one shared Axios request identity for the Home page
 
 This is meant to be a plain-English explanation of the architecture, not just a file inventory.
 
@@ -110,11 +110,11 @@ These are reusable visual building blocks.
 
 The `ui` folder is for things that are more like shared visual widgets than page-structure containers.
 
-## Android Direct API Identity Fix
+## Android Direct TMDB Request Identity Fix
 
 ### Context
 
-The Home page intentionally gets its carousel rows directly from TMDB, matching the legacy app.
+The Home page intentionally gets its carousel rows directly from TMDB, matching the legacy app. The Advanced Search page is different: it intentionally uses the Cloudflare movie-search endpoint.
 
 That separation matters:
 
@@ -138,37 +138,39 @@ The app did not need to change for this to appear. The Home page depends on a li
 
 The most useful way to describe the failure is this:
 
-- React Native Android sends requests through OkHttp.
+- React Native Android sends JavaScript network requests through Android's native network layer.
 - React Native iOS sends requests through Apple's native networking stack.
-- A browser, iOS, Android OkHttp, and a backend server can all look different to an external API, even when they request the same URL.
+- A browser, iOS, Android, and a backend server can all look different to an external API, even when they request the same URL.
 - If an external API or its edge/security layer treats one client identity differently, Android can fail while iOS and browser tests still pass.
 
-We did not prove a public TMDB rule that says "OkHttp is blocked." The evidence was app-specific: Android direct TMDB calls failed, while iOS and Cloudflare-backed calls worked. The safest fix is therefore scoped to the proven Android direct external API path.
+We did not prove a public TMDB rule that says Android is blocked. The evidence was app-specific: Android direct TMDB calls failed, while iOS and Cloudflare-backed calls worked. The safest fix is therefore scoped to the direct TMDB request path we own.
 
 ### High-level fix
 
-The current fix is intentionally simpler than the first diagnostic version:
+The final fix is intentionally simple:
 
-- Android direct TMDB requests now use a normal mobile-browser-style `User-Agent`.
-- The fix is allowlisted to TMDB API hosts only.
+- Direct TMDB calls go through the shared Axios client in [client.ts](../src/api/tmdb/client.ts).
+- On Android, that Axios client sends a normal mobile-browser-style `User-Agent`.
+- The Home-page TMDB service in [movieService.ts](../src/api/tmdb/services/movieService.ts) uses that Axios client for featured, popular, and genre rows.
 - The code does **not** set `Accept-Encoding`.
 - The code does **not** manually unzip gzip responses.
+- There is **no** Android Kotlin network hook for this fix.
 
-In plain English: Android now introduces itself to TMDB more like a normal mobile browser, then lets the standard Android networking libraries handle compression the normal way.
+In plain English: Android now introduces the app's direct TMDB requests more like a normal mobile browser, and the app keeps compression handling on the normal React Native/Android path.
 
 ### The important gzip lesson
 
 This is the part that is easy to get backwards.
 
-OkHttp normally handles gzip automatically when the app does **not** provide `Accept-Encoding` itself. React Native's installed Android networking source has the same idea in its comments and code: automatic gzip handling depends on leaving that header alone.
+Android's network stack normally handles response compression for us when the app does **not** provide `Accept-Encoding` itself.
 
 This can feel backwards because many HTTP examples do set `Accept-Encoding`. That is normal when a program wants to choose a response encoding, for example asking for `gzip`, Brotli, or `identity` to avoid compression.
 
 The key distinction is responsibility:
 
-- If the app leaves `Accept-Encoding` absent, OkHttp owns the normal gzip path and returns decoded JSON to React Native.
+- If the app leaves `Accept-Encoding` absent, the normal Android/React Native network path owns compression and returns decoded JSON to JavaScript.
 - If the app sets `Accept-Encoding: identity`, there should be nothing to decompress **if the server honors it**.
-- If the app sets any `Accept-Encoding` value, OkHttp stops using its automatic gzip path. From that point forward, the app is responsible for making sure the response encoding and app decoding still match.
+- If the app sets any `Accept-Encoding` value, the app has taken responsibility for making sure the response encoding and app decoding still match.
 
 That responsibility is the fragile part. The final fix avoids it.
 
@@ -176,113 +178,68 @@ Why not force `Accept-Encoding: identity`?
 
 - It makes every TMDB response larger because it asks for uncompressed JSON.
 - It still depends on TMDB's server or CDN honoring that request every time.
-- It bypasses OkHttp's normal behavior, where OkHttp asks for an encoding it already knows how to decode.
+- It bypasses the normal Android network behavior that already knows how to handle common compressed responses.
 
-So we do not need to know every encoding TMDB might support. We let OkHttp choose the Android-safe encoding path and only fix the request identity problem.
+So we do not need to know every encoding TMDB might support. We leave compression alone and only fix the request identity problem.
 
 So the final rule is:
 
 - Do **not** set `Accept-Encoding: gzip` from JavaScript.
 - Do **not** set `Accept-Encoding: identity` as the permanent fix.
 - Do **not** manually unzip responses unless we have a separate, proven reason.
-- Let OkHttp and React Native Android own the normal gzip path.
+- Let React Native Android own the normal compression path.
 
 The earlier manual gzip-normalization experiment was useful because it taught us where the failure surface was, but it is not the final maintenance pattern. The final code removes that extra moving part.
 
-### Why the file is not named for TMDB
-
-The Android file is named for the failure pattern, not for one vendor:
-
-- [ExternalApiIdentityOkHttpConfigurator.kt](../android/app/src/main/java/com/movieapp/network/ExternalApiIdentityOkHttpConfigurator.kt)
-
-That name means:
-
-- this is about direct external API request identity on Android
-- it is not a general rewrite of every Android network request
-- it is not a TMDB business-rule module
-- today it only applies to TMDB because TMDB is the only host where this app proved the issue
-
-The allowlist currently contains:
-
-- `api.themoviedb.org`
-- `api.tmdb.org`
-
-If another direct external API later shows the same Android-only identity problem, add that host only after proving it with logs. Do not make this interceptor global by default.
-
 ### Files involved
 
-The fix is split across these files:
+The fix lives in the TypeScript API layer:
 
 - [client.ts](../src/api/tmdb/client.ts)
 - [movieService.ts](../src/api/tmdb/services/movieService.ts)
-- [ExternalApiIdentityOkHttpConfigurator.kt](../android/app/src/main/java/com/movieapp/network/ExternalApiIdentityOkHttpConfigurator.kt)
-- [MainApplication.kt](../android/app/src/main/java/com/movieapp/MainApplication.kt)
 
-The JavaScript side centralizes direct TMDB headers in `tmdbDirectHeaders`, then uses those headers for Home-page TMDB calls.
+[client.ts](../src/api/tmdb/client.ts) owns the shared direct-TMDB Axios configuration:
 
-The native Android side installs an OkHttp interceptor before React Native starts. That interceptor only changes allowlisted TMDB hosts. Every other request continues through React Native's normal Android networking path.
+- base TMDB URL
+- timeout
+- `Accept: application/json`
+- Android-only browser-like `User-Agent`
 
-### Why this lives in Android native code
+[movieService.ts](../src/api/tmdb/services/movieService.ts) uses that Axios client for Home-page TMDB rows.
 
-`MainApplication.kt` and `ExternalApiIdentityOkHttpConfigurator.kt` are Android native files.
+### Why this now lives in Axios instead of Android native code
 
-- `kt` means Kotlin.
-- Kotlin is the Android language used by this React Native project for Android startup code.
-- Kotlin and Java both run on the Android/JVM side of the app and can call the same Android and React Native APIs.
-- `MainApplication.kt` was already part of the Android app scaffold.
-- `ExternalApiIdentityOkHttpConfigurator.kt` is app-owned native code created for this Android networking policy.
+The native Kotlin hook was removed because the final fix does not need platform-level socket customization.
 
-"App-owned" means the file lives in this MovieApp repository under `android/app/src`. It is not patched into `node_modules`, and it is not hidden inside a generated dependency.
+That matters for maintenance:
 
-Installing or upgrading Java does not replace this file. A Java, Gradle, Kotlin, or React Native upgrade can still affect whether the Android project builds, so during upgrades verify that `MainApplication.kt` still calls `ExternalApiIdentityOkHttpConfigurator.install(applicationContext)` before `loadReactNative(this)`.
+- The proven app-owned direct TMDB calls already live in the TypeScript service layer.
+- Request identity is a request-header policy, not a reason by itself to alter React Native's Android network client.
+- Keeping it in Axios makes the rule visible where TMDB requests are built.
+- It avoids native Android code that future maintainers could reasonably miss during React Native, Gradle, Java, or Kotlin upgrades.
 
-### Why this is the right Android hook
+The tradeoff is deliberate:
 
-The placement came from this installed React Native version, not from guessing.
+- Any future direct TMDB call must use `tmdbClient`.
+- Do not add raw `fetch(...)` or standalone `axios.get(...)` calls to TMDB from screens or random helpers.
+- If a future failure proves that headers in Axios are not enough, then revisit a native network hook with fresh evidence.
 
-The source trail is:
+### Why this can be an Axios helper
 
-- React Native's Android networking layer uses OkHttp.
-- [OkHttpClientProvider.kt](../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/network/OkHttpClientProvider.kt) exposes `setOkHttpClientFactory(...)` and `createClientBuilder(context)`.
-- That provider is the app-level hook React Native gives us for customizing the OkHttp client used by JavaScript `fetch`.
-- [NetworkingModule.kt](../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/network/NetworkingModule.kt) documents the gzip behavior: OkHttp transparently handles gzip when `Accept-Encoding` is not supplied by the caller.
-- OkHttp interceptors are designed for this exact class of hook: inspect or adjust a request before it goes out, then let the normal client continue.
+The fix we need is:
 
-Relevant reference docs:
+- send a browser-like Android `User-Agent` for direct TMDB API requests
+- do not take over compression handling
 
-- [OkHttp calls documentation](https://square.github.io/okhttp/features/calls/)
-- [OkHttp interceptors documentation](https://square.github.io/okhttp/features/interceptors/)
-- [Android Kotlin style guide](https://developer.android.com/kotlin/style-guide)
-- [Kotlin on Android FAQ](https://developer.android.com/kotlin/faq)
+That is exactly what [client.ts](../src/api/tmdb/client.ts) can centralize.
 
-### Why this is not a node_modules patch
+The earlier native-hook idea was stronger than needed because it tried to guarantee behavior for any future direct TMDB request, even if someone bypassed the TypeScript API client. That kind of future-proofing is not enough reason to add native code.
 
-This project uses `patch-package`, and that is useful when a third-party package itself needs a package-level fix.
+The simpler maintenance rule is better:
 
-This issue is different. It is an app traffic policy:
-
-- direct TMDB Home-page traffic needs Android request identity help
-- Advanced Search must still use Cloudflare
-- non-allowlisted app traffic should not be rewritten
-
-Patching React Native's generic networking module in `node_modules` would be broader and more fragile:
-
-- it would affect every React Native network request, not just the hosts we proved
-- a React Native upgrade could rewrite the patched file
-- future maintainers would have to understand a hidden third-party patch before understanding the app's own traffic rule
-
-Keeping the code in `android/app/src/main/java/com/movieapp/network/ExternalApiIdentityOkHttpConfigurator.kt` makes the rule explicit and easy to find.
-
-### Why this cannot be only an Axios helper
-
-The `User-Agent` header is also centralized in TypeScript, and that is useful:
-
-- [client.ts](../src/api/tmdb/client.ts) defines `tmdbDirectHeaders`
-- [movieService.ts](../src/api/tmdb/services/movieService.ts) uses those headers for direct Home-page TMDB fetches
-
-But Axios and fetch in React Native do not open the Android socket themselves. They hand the request to React Native's native Android networking layer, and that layer uses OkHttp.
-
-So the TypeScript helper is the first line of consistency, while the Android OkHttp hook is the platform-level guarantee that direct TMDB requests use the same identity even if another direct TMDB call is added later.
+- direct TMDB API calls use `tmdbClient`
+- Advanced Search continues using Cloudflare
+- native Android networking remains unchanged
 
 ### What logcat showed
 
@@ -326,28 +283,26 @@ For React Native Android, that usually means:
 - Use logcat or another native network diagnostic to confirm whether the server responded.
 - If the server never responded, investigate URL, DNS, TLS, auth, firewall, or server availability.
 - If the server returned HTTP `200` but JavaScript still received `TypeError: Network request failed`, inspect the native Android networking handoff.
-- If headers are enough, keep the policy in JavaScript.
-- If the app needs a platform-level guarantee for all direct calls to a host, use React Native's OkHttp hook and scope it tightly.
+- If request headers are enough, keep the policy in JavaScript.
+- If the app later proves it needs a platform-level network hook, scope that hook tightly and document why the JavaScript client was not enough.
 
 For this app, the final proven maintenance pattern is:
 
-- direct TMDB Home-page calls keep a browser-like Android `User-Agent`
+- direct TMDB Home-page calls go through `tmdbClient`
+- Android direct TMDB requests keep a browser-like `User-Agent`
 - `Accept-Encoding` is not set by the app
-- gzip is left to OkHttp and React Native Android
-- the rule is allowlisted to TMDB hosts
+- compression is left to React Native Android
 
 ### What this would look like in Expo
 
-Expo developers are not automatically stuck, but the answer depends on which Expo runtime they use.
+Expo developers are not automatically stuck, because the final fix is TypeScript/Axios-based.
 
 - Expo Go only:
-  - You can try JavaScript-only headers or a backend proxy.
-  - You cannot install this OkHttp factory because Expo Go is a prebuilt app.
+  - This Axios header approach can work because it is JavaScript code.
+  - If a future issue required native network hooks, Expo Go would not be enough because Expo Go is a prebuilt app.
 
 - Expo development build:
-  - Create a development build that includes project-specific native code.
-  - Add this same kind of Android hook through a config plugin or custom native module.
-  - Build with EAS or local prebuild so the generated Android project contains the fix.
+  - A development build would only be needed if the app later required custom native Android network code.
 
 - Server/proxy fallback:
   - Put a small backend or Cloudflare Worker between the app and the external API.
@@ -368,9 +323,9 @@ The Home page does not.
 
 So this fix is intentionally narrow:
 
-- Home-page direct TMDB requests get the Android browser-like request identity.
+- Home-page direct TMDB requests get the Android browser-like request identity through `tmdbClient`.
 - Advanced Search continues using Cloudflare.
-- Other non-allowlisted Android requests are not rewritten by this interceptor.
+- Other app requests are not changed.
 
 ### Verification
 

@@ -9,7 +9,7 @@ Purpose:
    * Builds the TMDB request URLs for movie search, Home rows, popular movies, and movie details, then fetches and shapes the
      data for the query hooks.
 */
-import { tmdbClient, tmdbDirectHeaders } from '../client';
+import { tmdbClient } from '../client';
 import { CONFIG } from '../config';
 import { ENDPOINTS } from '../endpoints';
 import type { movieSearchResults, movieType } from '../../../types/MovieTypes';
@@ -42,61 +42,40 @@ const ALL_STREAMER_PROVIDER_IDS = [
 
 export type HomeMovieGenreId = 18 | 27 | 35 | 80 | 99 | 10402 | 10751;
 
-function buildLegacyTmdbUrl(endpoint: string, queryString = '') {
+function buildLegacyTmdbPath(endpoint: string, queryString = '') {
   const suffix = queryString.length > 0 ? `&${queryString}` : '';
 
-  return `${CONFIG.apiUrl}${endpoint}?${CONFIG.apiKey}${suffix}`;
+  return `${endpoint}?${CONFIG.apiKey}${suffix}`;
 }
 
 async function fetchHomeMovieList(
   label: string,
-  url: string
+  path: string
 ): Promise<MovieListResponse> {
   /*
-    WHY HOME USES fetch INSTEAD OF AXIOS:
+    WHY HOME USES tmdbClient:
     - The Advanced Search page intentionally uses the Cloudflare Worker.
     - The Home page intentionally talks directly to TMDB, matching the legacy app.
-    - On Android, these direct TMDB fetch calls also pass through the app's native
-      external API identity OkHttp interceptor, which gives TMDB a browser-like
-      User-Agent while leaving normal gzip handling to OkHttp and React Native.
+    - tmdbClient centralizes the direct TMDB request headers, including Android's
+      browser-like User-Agent. Do not bypass this helper with raw fetch calls for
+      Home-page TMDB rows.
   */
   let stage = 'start';
 
   try {
-    stage = 'fetch';
+    stage = 'axios-get';
+    const response = await tmdbClient.get<MovieListResponse>(path);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: tmdbDirectHeaders,
-    });
-
-    stage = 'read-body';
-    const responseText = await response.text();
-
-    if (!response.ok) {
-      throw new Error(
-        `TMDB Home request failed: ${response.status} ${response.statusText} ${responseText}`
-      );
-    }
-
-    stage = 'parse-json';
-
-    try {
-      return JSON.parse(responseText) as MovieListResponse;
-    } catch (error) {
-      throw new Error(
-        `TMDB Home response was not valid JSON for ${label}: ${String(error)}`
-      );
-    }
+    return response.data;
   } catch (error) {
-    logHomeTmdbError(label, url, error, stage);
+    logHomeTmdbError(label, path, error, stage);
     throw error;
   }
 }
 
 function logHomeTmdbError(
   label: string,
-  url: string,
+  path: string,
   error: unknown,
   stage: string
 ) {
@@ -116,7 +95,7 @@ function logHomeTmdbError(
   console.error('[Home TMDB request failed]', {
     label,
     stage,
-    url,
+    path,
     error,
   });
 }
@@ -176,8 +155,8 @@ type CloudflareMovieSearchResults = movieSearchResults & {
 */
 
 export async function fetchPopularMovies(): Promise<movieType[]> {
-  const url = buildLegacyTmdbUrl(ENDPOINTS.POPULAR_MOVIES);
-  const data = await fetchHomeMovieList('popular', url);
+  const path = buildLegacyTmdbPath(ENDPOINTS.POPULAR_MOVIES);
+  const data = await fetchHomeMovieList('popular', path);
 
   return data.results.map(mapMovieToMovie);
 }
@@ -191,8 +170,8 @@ export async function fetchPopularMovies(): Promise<movieType[]> {
     open the existing MovieDetail overlay from either the hero image or poster row.
 */
 export async function fetchUpcomingMovies(): Promise<movieType[]> {
-  const url = buildLegacyTmdbUrl(ENDPOINTS.UPCOMING_MOVIES);
-  const data = await fetchHomeMovieList('upcoming', url);
+  const path = buildLegacyTmdbPath(ENDPOINTS.UPCOMING_MOVIES);
+  const data = await fetchHomeMovieList('upcoming', path);
 
   return data.results.map(mapMovieToMovie);
 }
@@ -208,8 +187,11 @@ export async function fetchUpcomingMovies(): Promise<movieType[]> {
 export async function fetchMoviesByGenre(
   genreId: HomeMovieGenreId
 ): Promise<movieType[]> {
-  const url = buildLegacyTmdbUrl(ENDPOINTS.MOVIE_SEARCH, `with_genres=${genreId}`);
-  const data = await fetchHomeMovieList(`genre-${genreId}`, url);
+  const path = buildLegacyTmdbPath(
+    ENDPOINTS.MOVIE_SEARCH,
+    `with_genres=${genreId}`
+  );
+  const data = await fetchHomeMovieList(`genre-${genreId}`, path);
 
   return data.results.map(mapMovieToMovie);
 }

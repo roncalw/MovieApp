@@ -24,33 +24,6 @@
       "problemMatcher": []
     },
     {
-      // Native Android/Kotlin classpath check.
-      //
-      // Use this task when a .kt file shows red imports or when Android native code changes.
-      // VS Code extension diagnostics are useful while editing, but Gradle is the authority
-      // because it loads the real React Native Android project, Android plugin, Kotlin plugin,
-      // generated classes, and dependency classpath.
-      //
-      // Task Picker name:
-      //   ANDROID - Compile Kotlin Debug
-      //
-      // What it runs:
-      //   /Users/croncallo/repo/MovieApp/android/gradlew :app:compileDebugKotlin
-      //
-      // A successful run means the app's debug Android Kotlin source compiles against the
-      // same Gradle model that the real Android build uses. The `$gradle` problem matcher
-      // lets VS Code surface Gradle/Kotlin compiler errors in the Problems panel.
-      "label": "ANDROID - Compile Kotlin Debug",
-      "type": "shell",
-      "command": "/bin/zsh",
-      "args": [
-        "-lic",
-        "cd /Users/croncallo/repo/MovieApp/android && ./gradlew :app:compileDebugKotlin"
-      ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp/android" },
-      "problemMatcher": "$gradle"
-    },
-    {
       "label": "ANDROID - Note 4 - Device - Run App",
       "type": "shell",
       "command": "/bin/zsh",
