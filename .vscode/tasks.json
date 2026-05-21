@@ -1,0 +1,115 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ANDROID - List Devices",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run list-androids"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ANDROID - List Simulators",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run list-avds"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    },
+    {
+      // Native Android/Kotlin classpath check.
+      //
+      // Use this task when a .kt file shows red imports or when Android native code changes.
+      // VS Code extension diagnostics are useful while editing, but Gradle is the authority
+      // because it loads the real React Native Android project, Android plugin, Kotlin plugin,
+      // generated classes, and dependency classpath.
+      //
+      // Task Picker name:
+      //   ANDROID - Compile Kotlin Debug
+      //
+      // What it runs:
+      //   /Users/croncallo/repo/MovieApp/android/gradlew :app:compileDebugKotlin
+      //
+      // A successful run means the app's debug Android Kotlin source compiles against the
+      // same Gradle model that the real Android build uses. The `$gradle` problem matcher
+      // lets VS Code surface Gradle/Kotlin compiler errors in the Problems panel.
+      "label": "ANDROID - Compile Kotlin Debug",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp/android && ./gradlew :app:compileDebugKotlin"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp/android" },
+      "problemMatcher": "$gradle"
+    },
+    {
+      "label": "ANDROID - Note 4 - Device - Run App",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run note4"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ANDROID - Samsung Galaxy S22 - Simulator - Run App",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run galaxys22"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "IOS - iPhone 16 Pro Max - Device - Run App",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run iphone16promax"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    },
+    {
+      "label": "IOS - iPhone 17 Pro Max - Simulator - Run App",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run iphone17promax"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    },
+    {
+      "label": "METRO - Start with Reset Cache",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run start-reset"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -9,7 +9,7 @@ Purpose:
    * Builds the TMDB request URLs for movie search, Home rows, popular movies, and movie details, then fetches and shapes the
      data for the query hooks.
 */
-import { tmdbClient } from '../client';
+import { tmdbClient, tmdbDirectHeaders } from '../client';
 import { CONFIG } from '../config';
 import { ENDPOINTS } from '../endpoints';
 import type { movieSearchResults, movieType } from '../../../types/MovieTypes';
@@ -41,6 +41,85 @@ const ALL_STREAMER_PROVIDER_IDS = [
 ];
 
 export type HomeMovieGenreId = 18 | 27 | 35 | 80 | 99 | 10402 | 10751;
+
+function buildLegacyTmdbUrl(endpoint: string, queryString = '') {
+  const suffix = queryString.length > 0 ? `&${queryString}` : '';
+
+  return `${CONFIG.apiUrl}${endpoint}?${CONFIG.apiKey}${suffix}`;
+}
+
+async function fetchHomeMovieList(
+  label: string,
+  url: string
+): Promise<MovieListResponse> {
+  /*
+    WHY HOME USES fetch INSTEAD OF AXIOS:
+    - The Advanced Search page intentionally uses the Cloudflare Worker.
+    - The Home page intentionally talks directly to TMDB, matching the legacy app.
+    - On Android, these direct TMDB fetch calls also pass through the app's native
+      external API identity OkHttp interceptor, which gives TMDB a browser-like
+      User-Agent while leaving normal gzip handling to OkHttp and React Native.
+  */
+  let stage = 'start';
+
+  try {
+    stage = 'fetch';
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: tmdbDirectHeaders,
+    });
+
+    stage = 'read-body';
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      throw new Error(
+        `TMDB Home request failed: ${response.status} ${response.statusText} ${responseText}`
+      );
+    }
+
+    stage = 'parse-json';
+
+    try {
+      return JSON.parse(responseText) as MovieListResponse;
+    } catch (error) {
+      throw new Error(
+        `TMDB Home response was not valid JSON for ${label}: ${String(error)}`
+      );
+    }
+  } catch (error) {
+    logHomeTmdbError(label, url, error, stage);
+    throw error;
+  }
+}
+
+function logHomeTmdbError(
+  label: string,
+  url: string,
+  error: unknown,
+  stage: string
+) {
+  /*
+    DEVELOPMENT DIAGNOSTIC:
+    - The Home page talks directly to TMDB.
+    - Android can report several different network failures as the same generic
+      "Network Error" in the UI.
+    - This logs the supplier URL and Axios details only in development builds so
+      we can tell whether the real issue is HTTP status, timeout, TLS, DNS, or
+      an Android networking failure.
+  */
+  if (!__DEV__) {
+    return;
+  }
+
+  console.error('[Home TMDB request failed]', {
+    label,
+    stage,
+    url,
+    error,
+  });
+}
 
 type CloudflareMovieSearchItem = {
   tmdb_id: number;
@@ -97,11 +176,10 @@ type CloudflareMovieSearchResults = movieSearchResults & {
 */
 
 export async function fetchPopularMovies(): Promise<movieType[]> {
-  const response = await tmdbClient.get<MovieListResponse>(
-    `${ENDPOINTS.POPULAR_MOVIES}?${CONFIG.apiKey}`
-  );
+  const url = buildLegacyTmdbUrl(ENDPOINTS.POPULAR_MOVIES);
+  const data = await fetchHomeMovieList('popular', url);
 
-  return response.data.results.map(mapMovieToMovie);
+  return data.results.map(mapMovieToMovie);
 }
 
 /*
@@ -113,11 +191,10 @@ export async function fetchPopularMovies(): Promise<movieType[]> {
     open the existing MovieDetail overlay from either the hero image or poster row.
 */
 export async function fetchUpcomingMovies(): Promise<movieType[]> {
-  const response = await tmdbClient.get<MovieListResponse>(
-    `${ENDPOINTS.UPCOMING_MOVIES}?${CONFIG.apiKey}`
-  );
+  const url = buildLegacyTmdbUrl(ENDPOINTS.UPCOMING_MOVIES);
+  const data = await fetchHomeMovieList('upcoming', url);
 
-  return response.data.results.map(mapMovieToMovie);
+  return data.results.map(mapMovieToMovie);
 }
 
 /*
@@ -131,11 +208,10 @@ export async function fetchUpcomingMovies(): Promise<movieType[]> {
 export async function fetchMoviesByGenre(
   genreId: HomeMovieGenreId
 ): Promise<movieType[]> {
-  const response = await tmdbClient.get<MovieListResponse>(
-    `${ENDPOINTS.MOVIE_SEARCH}?${CONFIG.apiKey}&with_genres=${genreId}`
-  );
+  const url = buildLegacyTmdbUrl(ENDPOINTS.MOVIE_SEARCH, `with_genres=${genreId}`);
+  const data = await fetchHomeMovieList(`genre-${genreId}`, url);
 
-  return response.data.results.map(mapMovieToMovie);
+  return data.results.map(mapMovieToMovie);
 }
 
 /*

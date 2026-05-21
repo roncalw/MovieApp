@@ -8,8 +8,39 @@
 
   // Treat package.json as plain text in this workspace so VS Code does not apply the built-in package.json schema validation.
   "files.associations": {
-    "package.json": "plaintext"
+    "package.json": "plaintext",
+
+    // Kotlin Android source files must not fall back to plaintext.
+    // Plaintext files are intentionally colored green below for some of our note/config files,
+    // so .kt files need an explicit Kotlin language association to stay readable.
+    "*.kt": "kotlin",
+    "*.kts": "kotlin"
   },
+
+  // Keep Kotlin language features enabled so VS Code can report real Kotlin issues
+  // instead of treating Android source as plain text. The Android project is Gradle-backed,
+  // so the Java/Gradle settings below point VS Code at the same wrapper/JDK used by
+  // `android/gradlew`.
+  "kotlin.languageServer.enabled": true,
+  "kotlin.diagnostics.enabled": true,
+  "kotlin.java.home": "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home",
+
+  // Java/Gradle tooling for Android source. These settings give VS Code a real
+  // Gradle model instead of asking the Kotlin extension to guess Android classes.
+  // For the authoritative compiler-backed check, use the VS Code task in
+  // `.vscode/tasks.json` named `ANDROID - Compile Kotlin Debug`.
+  "java.import.gradle.enabled": true,
+  "java.import.gradle.wrapper.enabled": true,
+  "java.import.gradle.java.home": "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.gradle.buildServer.enabled": "on",
+  "java.gradle.buildServer.openBuildOutput": "openOnBuildFailure",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
+    }
+  ],
 
   // Highlight extension rules that color plain text files in this workspace.
   "highlight.regexes": {

@@ -11,7 +11,7 @@
     "note4": "react-native run-android  --device R3CMC035PHN",
     "=====GALAXYS22================================================================": "GALAXY S22 (galaxys22) - THIS WILL RUN 2 COMMANDS TO LOAD AVD & RUN APP",
     "list-avds": "emulator -list-avds",
-    "galaxys22": "npm run loadgalaxys22 && npm run appgalaxys22",
+    "galaxys22": "zsh scripts/run-galaxy-s22.sh",
     "loadgalaxys22": "emulator -avd Galaxy_S22_API_34 -port 5554 -no-snapshot-load &",
     "appgalaxys22": "adb -s emulator-5554 wait-for-device && npx react-native run-android --device emulator-5554",
     "======ANY=======================================================================": "PIXEL 8 AVD (android) - PICKS 1ST AVAILABLE",
