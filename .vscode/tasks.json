@@ -7,9 +7,15 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run list-androids"
+        "cd /Users/croncallo/repo/MovieApp && npm run list-androids; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     },
     {
@@ -18,9 +24,15 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run list-avds"
+        "cd /Users/croncallo/repo/MovieApp && npm run list-avds; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     },
     {
@@ -29,9 +41,15 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run note4"
+        "cd /Users/croncallo/repo/MovieApp && npm run note4; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     },
     {
@@ -40,7 +58,7 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run galaxys22"
+        "cd /Users/croncallo/repo/MovieApp && npm run galaxys22; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
       "presentation": {
@@ -57,9 +75,15 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run iphone16promax"
+        "cd /Users/croncallo/repo/MovieApp && npm run iphone16promax; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     },
     {
@@ -68,9 +92,15 @@
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "cd /Users/croncallo/repo/MovieApp && npm run iphone17promax"
+        "cd /Users/croncallo/repo/MovieApp && npm run iphone17promax; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     },
     {
@@ -82,6 +112,12 @@
         "cd /Users/croncallo/repo/MovieApp && npm run start-reset"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
       "problemMatcher": []
     }
   ]

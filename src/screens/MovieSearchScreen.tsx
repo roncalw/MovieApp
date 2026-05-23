@@ -174,17 +174,21 @@ export function MovieSearchScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderMovieSearch
-        title="Movie Search"
-        appliedParams={submittedParams}
-        loadedPages={loadedPages}
-        totalPages={totalPages}
-        isDetailOpen={isDetailOpen}
-        onRequestDetailBack={handleCloseMovieDetail}
-        onRequestDrawerOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
-        onSubmitFilters={handleApplyFilters}
-        onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
-      />
+      {isDetailOpen ? null : (
+        <HeaderMovieSearch
+          title="Movie Search"
+          appliedParams={submittedParams}
+          loadedPages={loadedPages}
+          totalPages={totalPages}
+          isDetailOpen={false}
+          onRequestDetailBack={handleCloseMovieDetail}
+          onRequestDrawerOpen={() =>
+            navigation.dispatch(DrawerActions.openDrawer())
+          }
+          onSubmitFilters={handleApplyFilters}
+          onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
+        />
+      )}
 
       <View style={styles.contentStack}>
         <View
@@ -213,6 +217,7 @@ export function MovieSearchScreen() {
             <MovieDetail
               movieId={selectedMovieId}
               initialMovie={selectedMovieFromList}
+              onBackPress={handleCloseMovieDetail}
             />
           </View>
         ) : null}

@@ -383,10 +383,10 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
     - this function resolves later to one full movie detail object
     - unlike the search and popular functions, this returns one movie instead of a movie array
 
-  - `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates`
+  - `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers`
     - `${id}` inserts the selected movie id into the path
-    - `append_to_response=credits,release_dates` tells TMDB to include those extra detail sections in the same response
-    - this lets the app get the movie details, credits, and release dates in one request
+    - `append_to_response=credits,release_dates,watch/providers` tells TMDB to include those extra detail sections in the same response
+    - this lets the app get the movie details, credits, release dates, and US streaming provider data in one request
 
   - return response.data
     - TMDB returns one full JSON object for this endpoint
@@ -394,7 +394,7 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
 */
 export async function fetchMovie(id: number): Promise<MovieDetailsResponse> {
   const response = await tmdbClient.get<MovieDetailsResponse>(
-    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates`
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers`
   );
 
   return response.data;

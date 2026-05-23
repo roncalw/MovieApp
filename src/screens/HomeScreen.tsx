@@ -11,10 +11,9 @@ Purpose:
      local movie-detail overlay behavior used by Advanced Search.
 */
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Pressable, Text } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from '@react-native-vector-icons/ionicons/static';
 import {
   useHomeGenreMoviesQuery,
   usePopularMoviesQuery,
@@ -26,7 +25,6 @@ import { DrawerMenuButton } from '../components/navigation/DrawerMenuButton';
 import { MovieDetail } from './MovieDetail';
 import type { movieType } from '../types/MovieTypes';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
 import { scaleSize } from '../theme/scale';
 
 export function HomeScreen() {
@@ -125,35 +123,10 @@ export function HomeScreen() {
 
         {selectedMovieId !== null ? (
           <View style={styles.detailOverlay}>
-            <View
-              style={[
-                styles.detailHeader,
-                { paddingTop: insets.top + scaleSize(10) },
-              ]}
-            >
-              <View style={styles.detailHeaderRow}>
-                <View style={styles.detailSideSlot}>
-                  <Pressable
-                    onPress={handleCloseMovieDetail}
-                    style={styles.detailBackButton}
-                    accessibilityRole="button"
-                    accessibilityLabel="Back to Home"
-                  >
-                    <Ionicons name="chevron-back" size={42} color="#800000" />
-                  </Pressable>
-                </View>
-
-                <Text allowFontScaling={false} style={styles.detailTitle}>
-                  Movie Details
-                </Text>
-
-                <View style={styles.detailSideSlot} />
-              </View>
-            </View>
-
             <MovieDetail
               movieId={selectedMovieId}
               initialMovie={selectedMovieFromList}
+              onBackPress={handleCloseMovieDetail}
             />
           </View>
         ) : null}
@@ -199,33 +172,5 @@ const styles = StyleSheet.create({
   detailOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.background,
-  },
-  detailHeader: {
-    paddingHorizontal: scaleSize(16),
-    paddingBottom: scaleSize(14),
-    backgroundColor: colors.background,
-  },
-  detailHeaderRow: {
-    minHeight: scaleSize(44),
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailSideSlot: {
-    width: scaleSize(96),
-    minHeight: scaleSize(32),
-    justifyContent: 'center',
-  },
-  detailBackButton: {
-    width: '100%',
-    minHeight: scaleSize(48),
-    marginLeft: scaleSize(10),
-    justifyContent: 'center',
-  },
-  detailTitle: {
-    flex: 1,
-    marginHorizontal: scaleSize(12),
-    ...typography.pageTitle,
-    color: colors.brandText,
-    textAlign: 'center',
   },
 });

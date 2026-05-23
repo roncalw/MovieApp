@@ -82,27 +82,22 @@ export type release_date_results = {
 };
 
 export type movieWatchProviderType = {
-  logo_path: string;
+  logo_path: string | null;
   provider_id: number;
   provider_name: string;
 };
 
 export type streamTypes = {
-  ads: movieWatchProviderType[];
-  flatrate: movieWatchProviderType[];
-  rent: movieWatchProviderType[];
-};
-
-export type US = {
-  US: streamTypes;
-};
-
-export type rent = {
-  rent: movieWatchProviderType[];
+  ads?: movieWatchProviderType[];
+  flatrate?: movieWatchProviderType[];
+  rent?: movieWatchProviderType[];
 };
 
 export type movieWatchProvidersType = {
-  results: US;
+  results: {
+    US?: streamTypes;
+    [countryCode: string]: streamTypes | undefined;
+  };
 };
 
 export type movieExternalIDs = {
@@ -155,6 +150,7 @@ export type movieType = {
   runtime: number;
   credits: credits;
   release_dates: release_date_results;
+  'watch/providers'?: movieWatchProvidersType;
   production_companies: production_company[];
   production_countries: production_country[];
 };
