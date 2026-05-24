@@ -36,7 +36,7 @@
       "problemMatcher": []
     },
     {
-      "label": "ANDROID - Note 4 - Device - Run App",
+      "label": "ANDROID - Note 4 - Device - RUN APP",
       "type": "shell",
       "command": "/bin/zsh",
       "args": [
@@ -53,12 +53,63 @@
       "problemMatcher": []
     },
     {
-      "label": "ANDROID - Samsung Galaxy S22 - Simulator - Run App",
+      "label": "ANDROID - Note 4 - Device - RELOAD",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run reload-device-note4; exec /bin/zsh -l"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ANDROID - Samsung Galaxy S22 - Simulator - RUN APP",
       "type": "shell",
       "command": "/bin/zsh",
       "args": [
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run galaxys22; exec /bin/zsh -l"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ANDROID - Samsung Galaxy S22 - Simulator - RELOAD",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run reload-emulator-5554; exec /bin/zsh -l"
+      ],
+      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "IOS - List Devices",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run list-iphones; exec /bin/zsh -l"
       ],
       "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
       "presentation": {

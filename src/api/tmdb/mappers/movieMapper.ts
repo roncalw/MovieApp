@@ -53,6 +53,8 @@ export function mapMovieToMovie(movie: movieType): movieType {
     runtime: movie.runtime ?? 0,
     credits: movie.credits ?? { cast: [], crew: [] },
     release_dates: movie.release_dates ?? { results: [] },
+    videos: movie.videos ?? { results: [] },
+    external_ids: movie.external_ids,
     production_companies: movie.production_companies ?? [],
     production_countries: movie.production_countries ?? [],
   };

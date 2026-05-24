@@ -8,31 +8,39 @@ Next step path:
    * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
 Purpose:
    * Shows the selected movie detail view inside the existing Home/Search overlay, using the legacy Movie Detail layout as the
-     visual reference while keeping unfinished actions such as favorites, trailers, IMDb refresh, and star-rating math inactive.
+     visual reference while keeping unfinished actions such as favorites inactive.
 */
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
+  Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   StatusBar,
   Text,
+  useWindowDimensions,
   View,
   type ImageSourcePropType,
   type ListRenderItem,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
+import YoutubePlayer from 'react-native-youtube-iframe';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMovieDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
+import {
+  useMovieDetailsQuery,
+  useMovieListImdbRatingQuery,
+} from '../hooks/queries/useMovieSearchQuery';
 import type {
   movieCastProfile,
   movieCrewProfile,
   movieGenres,
+  movieTrailerVideo,
   movieWatchProviderType,
   movieType,
   production_company,
@@ -68,6 +76,11 @@ type DetailInfoRowProps = {
   value: string;
 };
 
+type TrailerModalProps = {
+  trailerKey: string | null;
+  onClose: () => void;
+};
+
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   currency: 'USD',
   maximumFractionDigits: 0,
@@ -80,6 +93,7 @@ export function MovieDetail({
   onBackPress,
 }: MovieDetailProps) {
   const insets = useSafeAreaInsets();
+  const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
   const {
     data: movieDetails,
@@ -87,8 +101,25 @@ export function MovieDetail({
     isError,
     error,
   } = useMovieDetailsQuery(movieId);
+  const {
+    data: movieListImdbRating,
+    refetch: refetchMovieListImdbRating,
+  } = useMovieListImdbRatingQuery(movieId);
 
   const displayMovie = movieDetails ?? initialMovie ?? null;
+  const imdbRating = movieListImdbRating?.imdb_rating ?? null;
+  const preferredTrailer = useMemo(
+    () => getPreferredYouTubeTrailer(movieDetails?.videos?.results ?? []),
+    [movieDetails?.videos?.results]
+  );
+  const handleOpenTrailer = useCallback(() => {
+    if (preferredTrailer) {
+      setActiveTrailerKey(preferredTrailer.key);
+    }
+  }, [preferredTrailer]);
+  const handleCloseTrailer = useCallback(() => {
+    setActiveTrailerKey(null);
+  }, []);
 
   return (
     <View style={styles.screen}>
@@ -98,23 +129,46 @@ export function MovieDetail({
         style={styles.detailScroll}
         contentContainerStyle={styles.detailContent}
       >
-        <MovieHero movie={displayMovie} onBackPress={onBackPress} />
+        <MovieHero
+          movie={displayMovie}
+          imdbRating={imdbRating}
+          onBackPress={onBackPress}
+          onRetryImdbRating={refetchMovieListImdbRating}
+        />
 
         {isLoading ? (
           <LoadingState />
         ) : isError ? (
           <ErrorState error={error} />
         ) : movieDetails ? (
-          <LoadedMovieDetail movie={movieDetails} />
+          <LoadedMovieDetail
+            movie={movieDetails}
+            imdbRating={imdbRating}
+            trailer={preferredTrailer}
+            onTrailerPress={handleOpenTrailer}
+          />
         ) : null}
       </ScrollView>
+
+      <TrailerModal trailerKey={activeTrailerKey} onClose={handleCloseTrailer} />
     </View>
   );
 }
 
-function LoadedMovieDetail({ movie }: { movie: movieType }) {
+function LoadedMovieDetail({
+  movie,
+  imdbRating,
+  trailer,
+  onTrailerPress,
+}: {
+  movie: movieType;
+  imdbRating: number | null;
+  trailer: movieTrailerVideo | null;
+  onTrailerPress: () => void;
+}) {
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
+  const imdbReviewsUrl = getImdbReviewsUrl(movie.external_ids?.imdb_id);
   const cast = movie.credits?.cast ?? [];
   const crew = movie.credits?.crew ?? [];
   const productionCompanies = movie.production_companies ?? [];
@@ -129,13 +183,20 @@ function LoadedMovieDetail({ movie }: { movie: movieType }) {
             <Ionicons name="heart-outline" size={scaleSize(48)} color="red" />
           </View>
 
-          <View style={styles.staticPlayButton}>
-            <Ionicons
-              name="caret-forward-outline"
-              size={scaleSize(30)}
-              color={colors.actionOnPrimary}
-            />
-          </View>
+          {trailer ? (
+            <Pressable
+              onPress={onTrailerPress}
+              style={styles.trailerPlayButton}
+              accessibilityRole="button"
+              accessibilityLabel={`Play trailer: ${trailer.name}`}
+            >
+              <Ionicons
+                name="caret-forward-outline"
+                size={scaleSize(30)}
+                color={colors.actionOnPrimary}
+              />
+            </Pressable>
+          ) : null}
         </View>
 
         <Text
@@ -148,7 +209,7 @@ function LoadedMovieDetail({ movie }: { movie: movieType }) {
         </Text>
 
         <GenreList genres={movie.genres ?? []} />
-        <StaticStarRating />
+        <MovieStarRating imdbRating={imdbRating} />
 
         <Text
           allowFontScaling={false}
@@ -167,6 +228,8 @@ function LoadedMovieDetail({ movie }: { movie: movieType }) {
         <Text allowFontScaling={false} style={styles.boldMetaText}>
           Release Date: {releaseDate}
         </Text>
+
+        {imdbReviewsUrl ? <ReviewsLink url={imdbReviewsUrl} /> : null}
       </View>
 
       <CreditRail title="Cast" people={cast} />
@@ -213,14 +276,105 @@ function LoadedMovieDetail({ movie }: { movie: movieType }) {
   );
 }
 
+function ReviewsLink({ url }: { url: string }) {
+  const handlePress = useCallback(() => {
+    Linking.openURL(url).catch(error => {
+      console.error('Error opening IMDb reviews:', error);
+    });
+  }, [url]);
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={styles.reviewsLinkButton}
+      accessibilityRole="link"
+      accessibilityLabel="Open IMDb reviews"
+    >
+      <Text allowFontScaling={false} style={styles.reviewsLinkText}>
+        Reviews
+      </Text>
+    </Pressable>
+  );
+}
+
+function TrailerModal({ trailerKey, onClose }: TrailerModalProps) {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isVisible = trailerKey !== null;
+  const isLandscape = width > height;
+  const playerHeight = isLandscape ? height : Math.min(height * 0.62, width * 0.64);
+  const backButtonTopOffset =
+    Platform.OS === 'ios'
+      ? Math.max(insets.top, scaleSize(50))
+      : Math.max(insets.top, scaleSize(32));
+
+  return (
+    <Modal
+      animationType="slide"
+      supportedOrientations={['portrait', 'landscape']}
+      visible={isVisible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.trailerModal}>
+        <Pressable
+          onPress={onClose}
+          style={[
+            styles.trailerModalBackButton,
+            { marginTop: backButtonTopOffset },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Close trailer"
+        >
+          <Ionicons
+            name="chevron-back"
+            size={scaleSize(40)}
+            color={colors.textPrimary}
+          />
+        </Pressable>
+
+        <View
+          style={[
+            styles.trailerPlayerFrame,
+            isLandscape ? styles.trailerPlayerFrameLandscape : null,
+          ]}
+        >
+          {trailerKey ? (
+            <YoutubePlayer
+              height={playerHeight}
+              width={width}
+              play
+              videoId={trailerKey}
+              onChangeState={(state: string) => {
+                if (state === 'ended') {
+                  onClose();
+                }
+              }}
+              initialPlayerParams={{
+                controls: true,
+                modestbranding: false,
+                color: 'black',
+              }}
+            />
+          ) : null}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function MovieHero({
   movie,
+  imdbRating,
   onBackPress,
+  onRetryImdbRating,
 }: {
   movie: movieType | null;
+  imdbRating: number | null;
   onBackPress?: () => void;
+  onRetryImdbRating: () => void;
 }) {
   const posterSource = getPosterSource(movie);
+  const hasImdbRating = imdbRating !== null;
 
   return (
     <ImageBackground
@@ -247,7 +401,15 @@ function MovieHero({
           resizeMode="cover"
         />
 
-        <View style={styles.imdbBadge}>
+        <Pressable
+          onPress={hasImdbRating ? undefined : onRetryImdbRating}
+          disabled={hasImdbRating}
+          style={styles.imdbBadge}
+          accessibilityRole="button"
+          accessibilityLabel={
+            hasImdbRating ? `IMDb rating ${imdbRating}` : 'Retry IMDb rating'
+          }
+        >
           <Image
             source={IMAGE_IMDB}
             style={styles.imdbLogo}
@@ -255,12 +417,14 @@ function MovieHero({
             accessibilityLabel="IMDb"
           />
           <Text allowFontScaling={false} style={styles.imdbRatingText}>
-            No Data
+            {hasImdbRating ? formatImdbRating(imdbRating) : 'No Data'}
           </Text>
-          <Text allowFontScaling={false} style={styles.imdbVotesText}>
-            Tap to Refresh
-          </Text>
-        </View>
+          {!hasImdbRating ? (
+            <Text allowFontScaling={false} style={styles.imdbVotesText}>
+              Tap to Refresh
+            </Text>
+          ) : null}
+        </Pressable>
       </View>
     </ImageBackground>
   );
@@ -370,24 +534,33 @@ function GenreList({ genres }: { genres: movieGenres[] }) {
   );
 }
 
-function StaticStarRating() {
-  // Static visual placeholder only. The rating formula will be wired after the detail layout is complete.
+function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
+  const starRating = imdbRating === null ? 0 : Math.max(0, Math.min(5, imdbRating / 2));
+
   return (
-    <View style={styles.starRow} accessibilityLabel="Movie rating placeholder">
-      {[0, 1, 2, 3].map(starIndex => (
-        <Ionicons
-          key={starIndex}
-          name="star"
-          size={scaleSize(28)}
-          color="gold"
-        />
-      ))}
-      <Ionicons
-        name="star"
-        size={scaleSize(28)}
-        color="#FFFFFF"
-        style={styles.emptyStar}
-      />
+    <View
+      style={styles.starRow}
+      accessibilityLabel={`Movie rating ${starRating.toFixed(1)} out of 5 stars`}
+    >
+      {[0, 1, 2, 3, 4].map(starIndex => {
+        const fillAmount = starRating - starIndex;
+        const iconName =
+          fillAmount >= 0.75
+            ? 'star'
+            : fillAmount >= 0.25
+              ? 'star-half'
+              : 'star-outline';
+
+        return (
+          <Ionicons
+            key={starIndex}
+            name={iconName}
+            size={scaleSize(28)}
+            color={iconName === 'star-outline' ? '#8C8C8C' : 'gold'}
+            style={iconName === 'star-outline' ? styles.emptyStar : null}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -403,7 +576,7 @@ function CreditRail({ title, people }: CreditRailProps) {
 
   return (
     <>
-      <Text allowFontScaling={false} style={styles.sectionLabel}>
+      <Text allowFontScaling={false} style={styles.creditSectionLabel}>
         {title}
       </Text>
       <FlatList
@@ -600,6 +773,23 @@ function formatRuntime(runtime: number | undefined) {
   return runtime && runtime > 0 ? `${runtime} minutes` : 'Data not available.';
 }
 
+function formatImdbRating(imdbRating: number) {
+  return imdbRating.toFixed(1);
+}
+
+function getImdbReviewsUrl(imdbId: string | undefined) {
+  return imdbId ? `https://www.imdb.com/title/${imdbId}/reviews/` : null;
+}
+
+function getPreferredYouTubeTrailer(videos: movieTrailerVideo[]) {
+  const youtubeTrailers = videos.filter(
+    video => video.site === 'YouTube' && video.type === 'Trailer' && video.key
+  );
+  const officialTrailer = youtubeTrailers.find(video => video.official);
+
+  return officialTrailer ?? youtubeTrailers[0] ?? null;
+}
+
 /*
   Movie Detail intentionally owns its top native spacer.
 
@@ -698,15 +888,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
+    paddingBottom: scaleSize(2),
   },
   actionIconRow: {
-    position: 'absolute',
-    top: scaleSize(-25),
-    left: 0,
-    right: 0,
+    position: 'relative',
     zIndex: 2,
+    width: '100%',
+    height: scaleSize(50),
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: scaleSize(-25),
+    marginBottom: scaleSize(-25),
     paddingLeft: scaleSize(20),
     paddingRight: scaleSize(25),
   },
@@ -716,7 +908,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  staticPlayButton: {
+  trailerPlayButton: {
     width: scaleSize(50),
     height: scaleSize(50),
     alignItems: 'center',
@@ -731,7 +923,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0,
     marginTop: scaleSize(23),
-    marginBottom: scaleSize(10),
+    marginBottom: scaleSize(8),
     paddingHorizontal: scaleSize(16),
     textAlign: 'center',
   },
@@ -740,7 +932,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginTop: scaleSize(2),
-    marginBottom: scaleSize(18),
+    marginBottom: scaleSize(14),
     paddingHorizontal: scaleSize(16),
   },
   genre: {
@@ -753,20 +945,22 @@ const styles = StyleSheet.create({
     marginBottom: scaleSize(4),
   },
   starRow: {
-    minHeight: scaleSize(34),
+    minHeight: scaleSize(36),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyStar: {
-    textShadowColor: '#BDBDBD',
+    textShadowColor: '#4F4F4F',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 1,
+    textShadowRadius: 0.5,
   },
   overview: {
     ...typography.detailBody,
     color: colors.textPrimary,
-    padding: scaleSize(15),
+    paddingHorizontal: scaleSize(15),
+    paddingTop: scaleSize(13),
+    paddingBottom: scaleSize(12),
     textAlign: 'left',
   },
   boldMetaText: {
@@ -777,13 +971,38 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     marginBottom: scaleSize(4),
   },
+  reviewsLinkButton: {
+    alignSelf: 'center',
+    marginTop: scaleSize(8),
+    marginBottom: scaleSize(22),
+    paddingHorizontal: scaleSize(12),
+    paddingVertical: scaleSize(6),
+  },
+  reviewsLinkText: {
+    color: colors.textPrimary,
+    fontSize: scaleSize(15),
+    lineHeight: scaleSize(20),
+    fontWeight: '700',
+    letterSpacing: 0,
+    textDecorationLine: 'underline',
+  },
   sectionLabel: {
     color: colors.textPrimary,
     fontSize: scaleSize(15),
     lineHeight: scaleSize(20),
     fontWeight: '700',
     letterSpacing: 0,
-    marginTop: scaleSize(20),
+    marginTop: scaleSize(18),
+    marginBottom: scaleSize(10),
+    marginLeft: scaleSize(5),
+  },
+  creditSectionLabel: {
+    color: colors.textPrimary,
+    fontSize: scaleSize(15),
+    lineHeight: scaleSize(20),
+    fontWeight: '700',
+    letterSpacing: 0,
+    marginTop: scaleSize(3.375),
     marginBottom: scaleSize(10),
     marginLeft: scaleSize(5),
   },
@@ -909,6 +1128,7 @@ const styles = StyleSheet.create({
     marginRight: scaleSize(5),
     paddingVertical: scaleSize(7),
     paddingRight: scaleSize(10),
+    borderRadius: scaleSize(10),
     backgroundColor: '#eeeeee',
   },
   productionCountry: {
@@ -959,6 +1179,25 @@ const styles = StyleSheet.create({
     width: scaleSize(70),
     height: scaleSize(35),
     marginTop: scaleSize(10),
+  },
+  trailerModal: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  trailerModalBackButton: {
+    height: scaleSize(58),
+    width: scaleSize(58),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trailerPlayerFrame: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  trailerPlayerFrameLandscape: {
+    backgroundColor: '#000000',
   },
   feedbackPanel: {
     alignItems: 'center',

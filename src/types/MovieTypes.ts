@@ -100,6 +100,44 @@ export type movieWatchProvidersType = {
   };
 };
 
+export type movieTrailerVideo = {
+  id: string;
+  /*
+    TMDB calls this field "key".
+    For YouTube videos, this is the video id that the player needs.
+    Example: https://www.youtube.com/watch?v=dQw4w9WgXcQ uses key dQw4w9WgXcQ.
+  */
+  key: string;
+  /*
+    TMDB calls the hosting platform "site".
+    The trailer player in this app supports YouTube, so MovieDetail filters for
+    site === "YouTube" before it shows the play button.
+  */
+  site: string;
+  /*
+    TMDB calls the video category "type".
+    Common values include Trailer, Teaser, Clip, and Featurette.
+    MovieDetail prefers type === "Trailer" so the main play button does not open
+    a teaser or behind-the-scenes clip when a real trailer is available.
+  */
+  type: string;
+  /*
+    TMDB marks studio/channel uploads with official === true.
+    MovieDetail prefers official trailers, then falls back to the first usable
+    YouTube trailer if no official trailer exists.
+  */
+  official: boolean;
+  /*
+    Human-readable title from TMDB, such as "Official Trailer".
+    This is useful for accessibility labels and future trailer lists.
+  */
+  name: string;
+};
+
+export type movieVideos = {
+  results: movieTrailerVideo[];
+};
+
 export type movieExternalIDs = {
   id: number;
   imdb_id: string;
@@ -151,6 +189,8 @@ export type movieType = {
   credits: credits;
   release_dates: release_date_results;
   'watch/providers'?: movieWatchProvidersType;
+  videos?: movieVideos;
+  external_ids?: movieExternalIDs;
   production_companies: production_company[];
   production_countries: production_country[];
 };

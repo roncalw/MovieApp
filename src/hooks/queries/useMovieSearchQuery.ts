@@ -17,6 +17,7 @@ import {
   fetchMoviesByGenre,
   fetchMovieSearchResults,
   fetchMovie,
+  fetchMovieListImdbRating,
   type HomeMovieGenreId,
 } from '../../api/tmdb/services/movieService';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
@@ -132,6 +133,15 @@ export function useMovieDetailsQuery(movieId: number | null) {
   return useQuery({
     queryKey: ['movieDetails', movieId],
     queryFn: () => fetchMovie(movieId as number),
+    staleTime: 1000 * 60 * 5,
+    enabled: movieId !== null,
+  });
+}
+
+export function useMovieListImdbRatingQuery(movieId: number | null) {
+  return useQuery({
+    queryKey: ['movieListImdbRating', movieId],
+    queryFn: () => fetchMovieListImdbRating(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
   });

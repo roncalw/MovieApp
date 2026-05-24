@@ -26,6 +26,8 @@ import {
 
 const CLOUDFLARE_MOVIE_SEARCH_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
+const CLOUDFLARE_MOVIE_LIST_BASE_URL =
+  'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies';
 
 const ALL_STREAMER_PROVIDER_IDS = [
   '8',
@@ -113,6 +115,11 @@ type CloudflareMovieSearchResponse = {
   sort: string;
   beginDate: string;
   endDate: string;
+};
+
+export type CloudflareMovieListImdbRating = {
+  tmdb_id: number;
+  imdb_rating: number | null;
 };
 
 type CloudflareMovieSearchResults = movieSearchResults & {
@@ -225,6 +232,20 @@ export async function fetchMovieSearchResults(
   cursor: string | null
 ): Promise<CloudflareMovieSearchResults> {
   return fetchCloudflareMovieSearchResults(params, cursor);
+}
+
+export async function fetchMovieListImdbRating(
+  movieId: number
+): Promise<CloudflareMovieListImdbRating> {
+  const response = await fetch(
+    `${CLOUDFLARE_MOVIE_LIST_BASE_URL}/${movieId}/imdb-rating`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare IMDb rating lookup failed: ${response.status}`);
+  }
+
+  return (await response.json()) as CloudflareMovieListImdbRating;
 }
 
 /*
@@ -365,6 +386,10 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
     release_dates: {
       results: [],
     },
+    videos: {
+      results: [],
+    },
+    external_ids: undefined,
     production_companies: [],
     production_countries: [],
   };
@@ -383,10 +408,10 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
     - this function resolves later to one full movie detail object
     - unlike the search and popular functions, this returns one movie instead of a movie array
 
-  - `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers`
+  - `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers,videos,external_ids`
     - `${id}` inserts the selected movie id into the path
-    - `append_to_response=credits,release_dates,watch/providers` tells TMDB to include those extra detail sections in the same response
-    - this lets the app get the movie details, credits, release dates, and US streaming provider data in one request
+    - `append_to_response=credits,release_dates,watch/providers,videos,external_ids` tells TMDB to include those extra detail sections in the same response
+    - this lets the app get the movie details, credits, release dates, US streaming provider data, trailer video metadata, and IMDb id in one request
 
   - return response.data
     - TMDB returns one full JSON object for this endpoint
@@ -394,7 +419,7 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
 */
 export async function fetchMovie(id: number): Promise<MovieDetailsResponse> {
   const response = await tmdbClient.get<MovieDetailsResponse>(
-    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers`
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers,videos,external_ids`
   );
 
   return response.data;
