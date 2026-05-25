@@ -1,0 +1,539 @@
+import React, { useMemo } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { mapPersonMovieCreditToMovie } from '../api/tmdb/services/movieService';
+import { usePersonDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
+import { colors } from '../theme/colors';
+import { scaleSize } from '../theme/scale';
+import { typography } from '../theme/typography';
+import type {
+  movieType,
+  personDetailType,
+  personMovieCastCredit,
+  personMovieCrewCredit,
+} from '../types/MovieTypes';
+
+const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
+const IMAGE_NOT_FOUND = require('../assets/images/PicNotFoundV6.png');
+
+type PersonDetailProps = {
+  personId: number;
+  initialPersonName?: string;
+  stackDepth: number;
+  onBackPress: () => void;
+  onCloseAllPress: () => void;
+  onBackToOriginalMoviePress: () => void;
+  onMoviePress: (movie: movieType) => void;
+};
+
+type FilmographyItem = {
+  key: string;
+  movie: movieType;
+  title: string;
+  year: string;
+  roleLabel: string;
+  releaseDate: string;
+  popularity: number;
+};
+
+type StackActionFooterProps = {
+  stackDepth: number;
+  onBackPress: () => void;
+  onBackToOriginalMoviePress: () => void;
+  onCloseAllPress: () => void;
+};
+
+export function PersonDetail({
+  personId,
+  initialPersonName,
+  stackDepth,
+  onBackPress,
+  onCloseAllPress,
+  onBackToOriginalMoviePress,
+  onMoviePress,
+}: PersonDetailProps) {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { data: person, isLoading, isError, error } =
+    usePersonDetailsQuery(personId);
+  const filmography = useMemo(
+    () => buildFilmography(person),
+    [person]
+  );
+  const carouselItems = useMemo(
+    () => filmography.filter(item => item.movie.poster_path).slice(0, 24),
+    [filmography]
+  );
+  const carouselCardWidth = Math.min(width - scaleSize(40), scaleSize(360));
+  const title = person?.name ?? initialPersonName ?? 'Person Detail';
+
+  return (
+    <View style={styles.screen}>
+      <View style={[styles.topSpacer, { height: insets.top }]} />
+      <View style={styles.header}>
+        <Pressable
+          onPress={onBackPress}
+          style={styles.headerIconButton}
+          accessibilityRole="button"
+          accessibilityLabel="Back one page"
+        >
+          <Ionicons name="chevron-back" size={scaleSize(34)} color={colors.textPrimary} />
+        </Pressable>
+        <View style={styles.headerTitleBlock}>
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.headerTitle}>
+            {title}
+          </Text>
+          <Text allowFontScaling={false} style={styles.stackDepthText}>
+            {stackDepth} deep
+          </Text>
+        </View>
+        <Pressable
+          onPress={onCloseAllPress}
+          style={styles.headerIconButton}
+          accessibilityRole="button"
+          accessibilityLabel="Close all detail pages"
+        >
+          <Ionicons name="close" size={scaleSize(30)} color={colors.textPrimary} />
+        </Pressable>
+      </View>
+
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+          <Text allowFontScaling={false} style={styles.message}>
+            Loading person...
+          </Text>
+        </View>
+      ) : isError ? (
+        <View style={styles.centered}>
+          <Text allowFontScaling={false} style={styles.errorTitle}>
+            Error loading person
+          </Text>
+          <Text allowFontScaling={false} style={styles.message}>
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </Text>
+        </View>
+      ) : person ? (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.profilePanel}>
+            <Image
+              source={getProfileSource(person.profile_path)}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+            <View style={styles.profileTextBlock}>
+              <Text allowFontScaling={false} style={styles.personName}>
+                {person.name}
+              </Text>
+              <DetailLine label="Known For" value={person.known_for_department} />
+              <DetailLine label="Born" value={formatDateText(person.birthday)} />
+              {person.deathday ? (
+                <DetailLine label="Died" value={formatDateText(person.deathday)} />
+              ) : null}
+              <DetailLine label="Birthplace" value={person.place_of_birth} />
+            </View>
+          </View>
+
+          {person.biography ? (
+            <Text allowFontScaling={false} numberOfLines={8} style={styles.biography}>
+              {person.biography}
+            </Text>
+          ) : null}
+
+          {carouselItems.length > 0 ? (
+            <>
+              <Text allowFontScaling={false} style={styles.sectionTitle}>
+                Movie History
+              </Text>
+              <FlatList
+                horizontal
+                pagingEnabled
+                data={carouselItems}
+                keyExtractor={item => `carousel-${item.key}`}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carouselContent}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => onMoviePress(item.movie)}
+                    style={[styles.carouselCard, { width: carouselCardWidth }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${item.title}`}
+                  >
+                    <Image
+                      source={getPosterSource(item.movie.poster_path)}
+                      style={styles.carouselPoster}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.carouselTextBlock}>
+                      <Text allowFontScaling={false} numberOfLines={1} style={styles.carouselTitle}>
+                        {item.title}
+                      </Text>
+                      <Text allowFontScaling={false} numberOfLines={2} style={styles.carouselRole}>
+                        {item.roleLabel}
+                      </Text>
+                    </View>
+                  </Pressable>
+                )}
+              />
+            </>
+          ) : null}
+
+          <Text allowFontScaling={false} style={styles.sectionTitle}>
+            Filmography
+          </Text>
+          {filmography.map(item => (
+            <Pressable
+              key={item.key}
+              onPress={() => onMoviePress(item.movie)}
+              style={styles.filmographyRow}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${item.title}`}
+            >
+              <Image
+                source={getPosterSource(item.movie.poster_path)}
+                style={styles.filmographyPoster}
+                resizeMode="cover"
+              />
+              <View style={styles.filmographyTextBlock}>
+                <Text allowFontScaling={false} numberOfLines={2} style={styles.filmographyTitle}>
+                  {item.title}
+                </Text>
+                <Text allowFontScaling={false} style={styles.filmographyMeta}>
+                  {item.year}
+                </Text>
+                <Text allowFontScaling={false} numberOfLines={2} style={styles.filmographyRole}>
+                  {item.roleLabel}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={scaleSize(22)} color={colors.textSecondary} />
+            </Pressable>
+          ))}
+
+          <StackActionFooter
+            stackDepth={stackDepth}
+            onBackPress={onBackPress}
+            onBackToOriginalMoviePress={onBackToOriginalMoviePress}
+            onCloseAllPress={onCloseAllPress}
+          />
+        </ScrollView>
+      ) : null}
+    </View>
+  );
+}
+
+function DetailLine({ label, value }: { label: string; value?: string | null }) {
+  if (!value) {
+    return null;
+  }
+
+  return (
+    <Text allowFontScaling={false} style={styles.detailLine}>
+      <Text style={styles.detailLineLabel}>{label}: </Text>
+      {value}
+    </Text>
+  );
+}
+
+function StackActionFooter({
+  stackDepth,
+  onBackPress,
+  onBackToOriginalMoviePress,
+  onCloseAllPress,
+}: StackActionFooterProps) {
+  return (
+    <View style={styles.stackFooter}>
+      <Pressable onPress={onBackPress} style={styles.stackFooterButton}>
+        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+          Back One
+        </Text>
+      </Pressable>
+      {stackDepth > 1 ? (
+        <Pressable
+          onPress={onBackToOriginalMoviePress}
+          style={styles.stackFooterButton}
+        >
+          <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+            Original Movie
+          </Text>
+        </Pressable>
+      ) : null}
+      <Pressable onPress={onCloseAllPress} style={styles.stackFooterButton}>
+        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+          Close All
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function buildFilmography(person: personDetailType | undefined): FilmographyItem[] {
+  if (!person?.movie_credits) {
+    return [];
+  }
+
+  const castItems = person.movie_credits.cast.map(credit =>
+    buildFilmographyItem(credit, credit.character || 'Character not listed')
+  );
+  const crewItems = person.movie_credits.crew.map(credit =>
+    buildFilmographyItem(credit, `${credit.job || 'Crew'} (${credit.department || 'Department not listed'})`)
+  );
+
+  return [...castItems, ...crewItems].sort((left, right) => {
+    if (right.releaseDate !== left.releaseDate) {
+      return right.releaseDate.localeCompare(left.releaseDate);
+    }
+
+    return right.popularity - left.popularity;
+  });
+}
+
+function buildFilmographyItem(
+  credit: personMovieCastCredit | personMovieCrewCredit,
+  roleLabel: string
+): FilmographyItem {
+  const movie = mapPersonMovieCreditToMovie(credit);
+
+  return {
+    key: `${credit.credit_id}-${credit.id}`,
+    movie,
+    title: credit.title || credit.original_title || 'Untitled',
+    year: getYear(credit.release_date),
+    roleLabel,
+    releaseDate: credit.release_date || '',
+    popularity: credit.popularity,
+  };
+}
+
+function getProfileSource(profilePath: string | null | undefined): ImageSourcePropType {
+  return profilePath
+    ? { uri: `${TMDB_IMAGE_BASE_URL}/w500${profilePath}` }
+    : IMAGE_NOT_FOUND;
+}
+
+function getPosterSource(posterPath: string | null | undefined): ImageSourcePropType {
+  return posterPath
+    ? { uri: `${TMDB_IMAGE_BASE_URL}/w500${posterPath}` }
+    : IMAGE_NOT_FOUND;
+}
+
+function getYear(releaseDate: string) {
+  return releaseDate ? releaseDate.slice(0, 4) : 'Year not listed';
+}
+
+function formatDateText(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${value}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  topSpacer: {
+    backgroundColor: colors.background,
+  },
+  header: {
+    minHeight: scaleSize(64),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: scaleSize(12),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderSubtle,
+    backgroundColor: colors.background,
+  },
+  headerIconButton: {
+    width: scaleSize(48),
+    height: scaleSize(48),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleBlock: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    ...typography.pageTitle,
+    color: colors.brandText,
+  },
+  stackDepthText: {
+    ...typography.summaryBody,
+    color: colors.textSecondary,
+    fontSize: scaleSize(11),
+    lineHeight: scaleSize(14),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: scaleSize(28),
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: scaleSize(24),
+  },
+  message: {
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorTitle: {
+    ...typography.feedbackTitle,
+    color: colors.brandText,
+  },
+  profilePanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleSize(14),
+    paddingHorizontal: scaleSize(18),
+    paddingTop: scaleSize(18),
+  },
+  profileImage: {
+    width: scaleSize(124),
+    height: scaleSize(180),
+    borderRadius: scaleSize(8),
+    backgroundColor: colors.surfaceMuted,
+  },
+  profileTextBlock: {
+    flex: 1,
+  },
+  personName: {
+    ...typography.detailTitle,
+    color: colors.textPrimary,
+    marginBottom: scaleSize(8),
+  },
+  detailLine: {
+    ...typography.summaryBody,
+    color: colors.textPrimary,
+    marginBottom: scaleSize(5),
+  },
+  detailLineLabel: {
+    fontWeight: '700',
+  },
+  biography: {
+    ...typography.detailBody,
+    color: colors.textPrimary,
+    paddingHorizontal: scaleSize(18),
+    paddingTop: scaleSize(16),
+  },
+  sectionTitle: {
+    ...typography.sectionLabel,
+    color: colors.textPrimary,
+    marginTop: scaleSize(20),
+    marginBottom: scaleSize(10),
+    marginLeft: scaleSize(18),
+  },
+  carouselContent: {
+    paddingLeft: scaleSize(18),
+    paddingRight: scaleSize(18),
+  },
+  carouselCard: {
+    marginRight: scaleSize(12),
+    borderRadius: scaleSize(8),
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceMuted,
+  },
+  carouselPoster: {
+    width: '100%',
+    height: scaleSize(430),
+    backgroundColor: colors.surfaceMuted,
+  },
+  carouselTextBlock: {
+    paddingHorizontal: scaleSize(12),
+    paddingVertical: scaleSize(10),
+    backgroundColor: colors.textPrimary,
+  },
+  carouselTitle: {
+    ...typography.summaryTitle,
+    color: colors.actionOnPrimary,
+  },
+  carouselRole: {
+    ...typography.summaryBody,
+    color: colors.actionOnPrimary,
+    marginTop: scaleSize(2),
+  },
+  filmographyRow: {
+    minHeight: scaleSize(104),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scaleSize(12),
+    paddingHorizontal: scaleSize(18),
+    paddingVertical: scaleSize(8),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderSubtle,
+  },
+  filmographyPoster: {
+    width: scaleSize(58),
+    height: scaleSize(86),
+    borderRadius: scaleSize(5),
+    backgroundColor: colors.surfaceMuted,
+  },
+  filmographyTextBlock: {
+    flex: 1,
+  },
+  filmographyTitle: {
+    ...typography.summaryTitle,
+    color: colors.textPrimary,
+  },
+  filmographyMeta: {
+    ...typography.summaryBody,
+    color: colors.textSecondary,
+    marginTop: scaleSize(2),
+  },
+  filmographyRole: {
+    ...typography.summaryBody,
+    color: colors.textPrimary,
+    marginTop: scaleSize(2),
+  },
+  stackFooter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: scaleSize(10),
+    paddingHorizontal: scaleSize(18),
+    paddingTop: scaleSize(22),
+    paddingBottom: scaleSize(10),
+  },
+  stackFooterButton: {
+    minHeight: scaleSize(42),
+    justifyContent: 'center',
+    paddingHorizontal: scaleSize(14),
+    borderRadius: scaleSize(6),
+    backgroundColor: colors.textPrimary,
+  },
+  stackFooterButtonText: {
+    ...typography.buttonLabel,
+    color: colors.actionOnPrimary,
+  },
+});

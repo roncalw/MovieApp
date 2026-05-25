@@ -10,7 +10,7 @@ Purpose:
    * Recreates the legacy Home entry point with an upcoming-movie hero carousel, TMDB poster rows, and the same
      local movie-detail overlay behavior used by Advanced Search.
 */
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,8 +22,8 @@ import {
 import { HomeHeroCarousel } from '../components/home/HomeHeroCarousel';
 import { HomeMoviePosterRow } from '../components/home/HomeMoviePosterRow';
 import { DrawerMenuButton } from '../components/navigation/DrawerMenuButton';
-import { MovieDetail } from './MovieDetail';
-import type { movieType } from '../types/MovieTypes';
+import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
+import { useDetailStack } from '../hooks/useDetailStack';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 
@@ -42,10 +42,15 @@ export function HomeScreen() {
     'documentaryMovies',
     99
   );
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-  const [selectedMovieFromList, setSelectedMovieFromList] =
-    useState<movieType | null>(null);
-  const isDetailOpen = selectedMovieId !== null;
+  const {
+    detailStack,
+    isDetailStackOpen,
+    pushMovie,
+    pushPerson,
+    popDetail,
+    closeAllDetails,
+    backToOriginalMovie,
+  } = useDetailStack();
   const moviePosterRows = [
     { title: 'Popular Movies', query: popularMoviesQuery },
     { title: 'Family Movies', query: familyMoviesQuery },
@@ -57,16 +62,6 @@ export function HomeScreen() {
     { title: 'Documentary Movies', query: documentaryMoviesQuery },
   ];
 
-  function handleOpenMovie(nextMovie: movieType) {
-    setSelectedMovieId(nextMovie.id);
-    setSelectedMovieFromList(nextMovie);
-  }
-
-  function handleCloseMovieDetail() {
-    setSelectedMovieId(null);
-    setSelectedMovieFromList(null);
-  }
-
   function handleOpenDrawer() {
     navigation.dispatch(DrawerActions.openDrawer());
   }
@@ -75,14 +70,14 @@ export function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.contentStack}>
         <View
-          pointerEvents={isDetailOpen ? 'none' : 'auto'}
-          accessibilityElementsHidden={isDetailOpen}
+          pointerEvents={isDetailStackOpen ? 'none' : 'auto'}
+          accessibilityElementsHidden={isDetailStackOpen}
           importantForAccessibility={
-            isDetailOpen ? 'no-hide-descendants' : 'auto'
+            isDetailStackOpen ? 'no-hide-descendants' : 'auto'
           }
           style={[
             styles.homeContent,
-            isDetailOpen ? styles.homeContentHidden : null,
+            isDetailStackOpen ? styles.homeContentHidden : null,
           ]}
         >
           <ScrollView
@@ -95,8 +90,8 @@ export function HomeScreen() {
                 isLoading={upcomingMoviesQuery.isLoading}
                 isError={upcomingMoviesQuery.isError}
                 error={upcomingMoviesQuery.error}
-                isAutoPlayPaused={isDetailOpen}
-                onMoviePress={handleOpenMovie}
+                isAutoPlayPaused={isDetailStackOpen}
+                onMoviePress={pushMovie}
               />
               <DrawerMenuButton
                 onPress={handleOpenDrawer}
@@ -115,21 +110,20 @@ export function HomeScreen() {
                 movies={row.query.data}
                 isLoading={row.query.isLoading}
                 isError={row.query.isError}
-                onMoviePress={handleOpenMovie}
+                onMoviePress={pushMovie}
               />
             ))}
           </ScrollView>
         </View>
 
-        {selectedMovieId !== null ? (
-          <View style={styles.detailOverlay}>
-            <MovieDetail
-              movieId={selectedMovieId}
-              initialMovie={selectedMovieFromList}
-              onBackPress={handleCloseMovieDetail}
-            />
-          </View>
-        ) : null}
+        <DetailStackOverlay
+          detailStack={detailStack}
+          onPopDetail={popDetail}
+          onCloseAllDetails={closeAllDetails}
+          onBackToOriginalMovie={backToOriginalMovie}
+          onPushMovie={pushMovie}
+          onPushPerson={pushPerson}
+        />
       </View>
     </View>
   );
@@ -168,9 +162,5 @@ const styles = StyleSheet.create({
   heroMenuImage: {
     width: scaleSize(48),
     height: scaleSize(48),
-  },
-  detailOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.background,
   },
 });

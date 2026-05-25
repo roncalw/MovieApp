@@ -2,8 +2,9 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MovieResults } from '../components/body/MovieResults';
+import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
 import { DrawerMenuButton } from '../components/navigation/DrawerMenuButton';
-import { MovieDetail } from './MovieDetail';
+import { useDetailStack } from '../hooks/useDetailStack';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
@@ -29,10 +30,16 @@ export function StoredMovieListScreen({
   const navigation = useNavigation();
   const [movies, setMovies] = useState<movieType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-  const [selectedMovieFromList, setSelectedMovieFromList] =
-    useState<movieType | null>(null);
-  const isDetailOpen = selectedMovieId !== null;
+  const {
+    detailStack,
+    isDetailStackOpen,
+    pushMovie,
+    pushPerson,
+    popDetail,
+    closeAllDetails,
+    backToOriginalMovie,
+  } = useDetailStack();
+  const isDetailOpen = isDetailStackOpen;
 
   const loadMovies = useCallback(async () => {
     setIsLoading(true);
@@ -54,20 +61,18 @@ export function StoredMovieListScreen({
 
   useFocusEffect(
     useCallback(() => {
-      setSelectedMovieId(null);
-      setSelectedMovieFromList(null);
+      closeAllDetails();
       loadMovies();
-    }, [loadMovies])
+    }, [closeAllDetails, loadMovies])
   );
 
-  function handleOpenMovie(movie: movieType) {
-    setSelectedMovieId(movie.id);
-    setSelectedMovieFromList(movie);
+  function handlePopDetail() {
+    popDetail();
+    loadMovies();
   }
 
-  function handleCloseMovieDetail() {
-    setSelectedMovieId(null);
-    setSelectedMovieFromList(null);
+  function handleCloseAllDetails() {
+    closeAllDetails();
     loadMovies();
   }
 
@@ -108,7 +113,7 @@ export function StoredMovieListScreen({
             <MovieResults
               movies={movies}
               cardVariant="posterRating"
-              onMoviePress={handleOpenMovie}
+              onMoviePress={pushMovie}
             />
           ) : (
             <View style={styles.centered}>
@@ -119,15 +124,14 @@ export function StoredMovieListScreen({
           )}
         </View>
 
-        {selectedMovieId !== null ? (
-          <View style={styles.detailOverlay}>
-            <MovieDetail
-              movieId={selectedMovieId}
-              initialMovie={selectedMovieFromList}
-              onBackPress={handleCloseMovieDetail}
-            />
-          </View>
-        ) : null}
+        <DetailStackOverlay
+          detailStack={detailStack}
+          onPopDetail={handlePopDetail}
+          onCloseAllDetails={handleCloseAllDetails}
+          onBackToOriginalMovie={backToOriginalMovie}
+          onPushMovie={pushMovie}
+          onPushPerson={pushPerson}
+        />
       </View>
     </View>
   );
@@ -175,10 +179,5 @@ const styles = StyleSheet.create({
     marginTop: scaleSize(12),
     color: colors.textPrimary,
     textAlign: 'center',
-  },
-  detailOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 2,
-    backgroundColor: colors.background,
   },
 });

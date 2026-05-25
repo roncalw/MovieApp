@@ -12,7 +12,13 @@ Purpose:
 import { tmdbClient } from '../client';
 import { CONFIG } from '../config';
 import { ENDPOINTS } from '../endpoints';
-import type { movieSearchResults, movieType } from '../../../types/MovieTypes';
+import type {
+  movieSearchResults,
+  movieType,
+  personDetailType,
+  personMovieCastCredit,
+  personMovieCrewCredit,
+} from '../../../types/MovieTypes';
 import type { MovieSearchParams } from '../../../types/movieSearchParams';
 import type {
   MovieListResponse,
@@ -423,4 +429,52 @@ export async function fetchMovie(id: number): Promise<MovieDetailsResponse> {
   );
 
   return response.data;
+}
+
+export async function fetchPerson(
+  personId: number
+): Promise<personDetailType> {
+  const response = await tmdbClient.get<personDetailType>(
+    `${ENDPOINTS.PERSON_DETAILS}/${personId}?${CONFIG.apiKey}&append_to_response=movie_credits,images,external_ids`
+  );
+
+  return response.data;
+}
+
+export function mapPersonMovieCreditToMovie(
+  credit: personMovieCastCredit | personMovieCrewCredit
+): movieType {
+  return {
+    id: credit.id,
+    adult: credit.adult,
+    backdrop_path: credit.backdrop_path ?? '',
+    genres: [],
+    original_language: credit.original_language,
+    original_title: credit.original_title,
+    overview: credit.overview,
+    popularity: credit.popularity,
+    poster_path: credit.poster_path ?? '',
+    release_date: credit.release_date,
+    title: credit.title,
+    video: credit.video,
+    vote_average: credit.vote_average,
+    vote_count: credit.vote_count,
+    genreIds: credit.genre_ids ?? [],
+    budget: 0,
+    revenue: 0,
+    runtime: 0,
+    credits: {
+      cast: [],
+      crew: [],
+    },
+    release_dates: {
+      results: [],
+    },
+    videos: {
+      results: [],
+    },
+    external_ids: undefined,
+    production_companies: [],
+    production_countries: [],
+  };
 }

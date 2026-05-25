@@ -147,6 +147,101 @@ export type movieExternalIDs = {
   twitter_id: string;
 };
 
+export type personProfileImage = {
+  aspect_ratio: number;
+  height: number;
+  iso_639_1: string | null;
+  file_path: string;
+  vote_average: number;
+  vote_count: number;
+  width: number;
+};
+
+export type personImages = {
+  id: number;
+  profiles: personProfileImage[];
+};
+
+export type personExternalIDs = {
+  id: number;
+  freebase_mid: string | null;
+  freebase_id: string | null;
+  imdb_id: string | null;
+  tvrage_id: number | null;
+  wikidata_id: string | null;
+  facebook_id: string | null;
+  instagram_id: string | null;
+  tiktok_id: string | null;
+  twitter_id: string | null;
+  youtube_id: string | null;
+};
+
+export type personMovieCastCredit = {
+  adult: boolean;
+  backdrop_path?: string | null;
+  genre_ids: number[];
+  id: number;
+  original_language: string;
+  original_title: string;
+  overview: string;
+  popularity: number;
+  poster_path?: string | null;
+  release_date: string;
+  title: string;
+  video: boolean;
+  vote_average: number;
+  vote_count: number;
+  character: string;
+  credit_id: string;
+  order: number;
+};
+
+export type personMovieCrewCredit = {
+  adult: boolean;
+  backdrop_path?: string | null;
+  genre_ids: number[];
+  id: number;
+  original_language: string;
+  original_title: string;
+  overview: string;
+  popularity: number;
+  poster_path?: string | null;
+  release_date: string;
+  title: string;
+  video: boolean;
+  vote_average: number;
+  vote_count: number;
+  credit_id: string;
+  department: string;
+  job: string;
+};
+
+export type personMovieCredits = {
+  cast: personMovieCastCredit[];
+  crew: personMovieCrewCredit[];
+  id: number;
+};
+
+export type personDetailType = {
+  adult: boolean;
+  also_known_as: string[];
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  gender: number;
+  homepage: string | null;
+  id: number;
+  imdb_id: string | null;
+  known_for_department: string;
+  name: string;
+  place_of_birth: string | null;
+  popularity: number;
+  profile_path: string | null;
+  movie_credits?: personMovieCredits;
+  images?: personImages;
+  external_ids?: personExternalIDs;
+};
+
 export type movieRatingType = {
   Source: string;
   Value: string;

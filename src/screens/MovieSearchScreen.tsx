@@ -21,12 +21,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
 import { MovieResults } from '../components/body/MovieResults';
+import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
 import type { MovieSearchParams } from '../types/movieSearchParams';
-import type { movieType } from '../types/MovieTypes';
-import { MovieDetail } from './MovieDetail';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
+import { useDetailStack } from '../hooks/useDetailStack';
 import {
   getDefaultBeginDate,
   getDefaultEndDate,
@@ -57,9 +57,15 @@ export function MovieSearchScreen() {
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
     useState(false);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-  const [selectedMovieFromList, setSelectedMovieFromList] =
-    useState<movieType | null>(null);
+  const {
+    detailStack,
+    isDetailStackOpen,
+    pushMovie,
+    pushPerson,
+    popDetail,
+    closeAllDetails,
+    backToOriginalMovie,
+  } = useDetailStack();
   const [excludeSeenMovies, setExcludeSeenMovies] = useState(false);
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
@@ -75,21 +81,10 @@ export function MovieSearchScreen() {
     hasSubmittedSearch && !hasDisplayedFilterChanges;
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
-    setSelectedMovieId(null);
-    setSelectedMovieFromList(null);
+    closeAllDetails();
     setHasDisplayedFilterChanges(false);
     setSubmittedParams(nextParams);
     setHasSubmittedSearch(true);
-  }
-
-  function handleOpenMovie(nextMovie: movieType) {
-    setSelectedMovieId(nextMovie.id);
-    setSelectedMovieFromList(nextMovie);
-  }
-
-  function handleCloseMovieDetail() {
-    setSelectedMovieId(null);
-    setSelectedMovieFromList(null);
   }
 
   function handleToggleExcludeSeenMovies() {
@@ -164,7 +159,7 @@ export function MovieSearchScreen() {
   const totalPages = hasActiveSubmittedSearch
     ? data?.pages[0]?.totalPages ?? null
     : 0;
-  const isDetailOpen = selectedMovieId !== null;
+  const isDetailOpen = isDetailStackOpen;
 
   useEffect(() => {
     const shouldFetchMoreFilteredResults =
@@ -242,7 +237,7 @@ export function MovieSearchScreen() {
           totalPages={totalPages}
           excludeSeenMovies={excludeSeenMovies}
           isDetailOpen={false}
-          onRequestDetailBack={handleCloseMovieDetail}
+          onRequestDetailBack={popDetail}
           onRequestDrawerOpen={() =>
             navigation.dispatch(DrawerActions.openDrawer())
           }
@@ -267,22 +262,21 @@ export function MovieSearchScreen() {
           <MovieResults
             movies={visibleMovies}
             cardVariant="posterRating"
-            onMoviePress={handleOpenMovie}
+            onMoviePress={pushMovie}
             onEndReached={fetchNextPage}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
           />
         </View>
 
-        {selectedMovieId !== null ? (
-          <View style={styles.detailOverlay}>
-            <MovieDetail
-              movieId={selectedMovieId}
-              initialMovie={selectedMovieFromList}
-              onBackPress={handleCloseMovieDetail}
-            />
-          </View>
-        ) : null}
+        <DetailStackOverlay
+          detailStack={detailStack}
+          onPopDetail={popDetail}
+          onCloseAllDetails={closeAllDetails}
+          onBackToOriginalMovie={backToOriginalMovie}
+          onPushMovie={pushMovie}
+          onPushPerson={pushPerson}
+        />
       </View>
     </View>
   );
@@ -301,9 +295,6 @@ const styles = StyleSheet.create({
   },
   searchContentHidden: {
     opacity: 0,
-  },
-  detailOverlay: {
-    ...StyleSheet.absoluteFillObject,
   },
   centered: {
     /*

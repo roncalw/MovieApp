@@ -69,7 +69,11 @@ const IMAGE_JUSTWATCH_LOGO = require('../assets/images/JustWatch_Logo.png');
 type MovieDetailProps = {
   movieId: number;
   initialMovie?: movieType | null;
+  stackDepth?: number;
   onBackPress?: () => void;
+  onCloseAllPress?: () => void;
+  onBackToOriginalMoviePress?: () => void;
+  onPersonPress?: (personId: number, initialPersonName?: string) => void;
 };
 
 type CreditPerson = movieCastProfile | movieCrewProfile;
@@ -77,6 +81,7 @@ type CreditPerson = movieCastProfile | movieCrewProfile;
 type CreditRailProps = {
   title: string;
   people: CreditPerson[];
+  onPersonPress?: (personId: number, initialPersonName?: string) => void;
 };
 
 type DetailInfoRowProps = {
@@ -98,7 +103,11 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 export function MovieDetail({
   movieId,
   initialMovie,
+  stackDepth = 1,
   onBackPress,
+  onCloseAllPress,
+  onBackToOriginalMoviePress,
+  onPersonPress,
 }: MovieDetailProps) {
   const insets = useSafeAreaInsets();
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
@@ -153,7 +162,12 @@ export function MovieDetail({
             movie={movieDetails}
             imdbRating={imdbRating}
             trailer={preferredTrailer}
+            stackDepth={stackDepth}
             onTrailerPress={handleOpenTrailer}
+            onBackPress={onBackPress}
+            onCloseAllPress={onCloseAllPress}
+            onBackToOriginalMoviePress={onBackToOriginalMoviePress}
+            onPersonPress={onPersonPress}
           />
         ) : null}
       </ScrollView>
@@ -167,12 +181,22 @@ function LoadedMovieDetail({
   movie,
   imdbRating,
   trailer,
+  stackDepth,
   onTrailerPress,
+  onBackPress,
+  onCloseAllPress,
+  onBackToOriginalMoviePress,
+  onPersonPress,
 }: {
   movie: movieType;
   imdbRating: number | null;
   trailer: movieTrailerVideo | null;
+  stackDepth: number;
   onTrailerPress: () => void;
+  onBackPress?: () => void;
+  onCloseAllPress?: () => void;
+  onBackToOriginalMoviePress?: () => void;
+  onPersonPress?: (personId: number, initialPersonName?: string) => void;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isSeen, setIsSeen] = useState(false);
@@ -317,8 +341,8 @@ function LoadedMovieDetail({
         {imdbReviewsUrl ? <ReviewsLink url={imdbReviewsUrl} /> : null}
       </View>
 
-      <CreditRail title="Cast" people={cast} />
-      <CreditRail title="Crew" people={crew} />
+      <CreditRail title="Cast" people={cast} onPersonPress={onPersonPress} />
+      <CreditRail title="Crew" people={crew} onPersonPress={onPersonPress} />
 
       <Text allowFontScaling={false} style={styles.sectionLabel}>
         Details
@@ -354,6 +378,15 @@ function LoadedMovieDetail({
           </Text>
           <ProductionCountries countries={productionCountries} />
         </>
+      ) : null}
+
+      {onBackPress && onCloseAllPress ? (
+        <DetailStackActionFooter
+          stackDepth={stackDepth}
+          onBackPress={onBackPress}
+          onCloseAllPress={onCloseAllPress}
+          onBackToOriginalMoviePress={onBackToOriginalMoviePress}
+        />
       ) : null}
 
       <LegacyFooter />
@@ -650,13 +683,13 @@ function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
   );
 }
 
-function CreditRail({ title, people }: CreditRailProps) {
+function CreditRail({ title, people, onPersonPress }: CreditRailProps) {
   if (people.length === 0) {
     return null;
   }
 
   const renderItem: ListRenderItem<CreditPerson> = ({ item }) => (
-    <CreditCard person={item} />
+    <CreditCard person={item} onPersonPress={onPersonPress} />
   );
 
   return (
@@ -676,11 +709,22 @@ function CreditRail({ title, people }: CreditRailProps) {
   );
 }
 
-function CreditCard({ person }: { person: CreditPerson }) {
+function CreditCard({
+  person,
+  onPersonPress,
+}: {
+  person: CreditPerson;
+  onPersonPress?: (personId: number, initialPersonName?: string) => void;
+}) {
   const subtitle = getCreditSubtitle(person);
 
   return (
-    <View style={styles.creditCard}>
+    <Pressable
+      onPress={() => onPersonPress?.(person.id, person.name)}
+      style={styles.creditCard}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${person.name}`}
+    >
       <Image
         source={getProfileSource(person.profile_path)}
         style={styles.profileImage}
@@ -704,6 +748,43 @@ function CreditCard({ person }: { person: CreditPerson }) {
           {subtitle}
         </Text>
       </View>
+    </Pressable>
+  );
+}
+
+function DetailStackActionFooter({
+  stackDepth,
+  onBackPress,
+  onCloseAllPress,
+  onBackToOriginalMoviePress,
+}: {
+  stackDepth: number;
+  onBackPress: () => void;
+  onCloseAllPress: () => void;
+  onBackToOriginalMoviePress?: () => void;
+}) {
+  return (
+    <View style={styles.stackFooter}>
+      <Pressable onPress={onBackPress} style={styles.stackFooterButton}>
+        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+          Back One
+        </Text>
+      </Pressable>
+      {stackDepth > 1 && onBackToOriginalMoviePress ? (
+        <Pressable
+          onPress={onBackToOriginalMoviePress}
+          style={styles.stackFooterButton}
+        >
+          <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+            Original Movie
+          </Text>
+        </Pressable>
+      ) : null}
+      <Pressable onPress={onCloseAllPress} style={styles.stackFooterButton}>
+        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
+          Close All
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -1141,6 +1222,26 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: 0,
     textAlign: 'center',
+  },
+  stackFooter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: scaleSize(10),
+    paddingHorizontal: scaleSize(18),
+    paddingTop: scaleSize(22),
+    paddingBottom: scaleSize(8),
+  },
+  stackFooterButton: {
+    minHeight: scaleSize(42),
+    justifyContent: 'center',
+    paddingHorizontal: scaleSize(14),
+    borderRadius: scaleSize(6),
+    backgroundColor: colors.textPrimary,
+  },
+  stackFooterButtonText: {
+    ...typography.buttonLabel,
+    color: colors.actionOnPrimary,
   },
   infoPanel: {
     marginLeft: scaleSize(5),
