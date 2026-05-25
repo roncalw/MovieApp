@@ -44,6 +44,8 @@ export function SubHeaderMovieSearchFields() {
     onDisplayedFiltersDirtyChange,
     onValidityChange,
     registerSubmitHandler,
+    excludeSeenMovies,
+    onToggleExcludeSeenMovies,
   } = useHeaderMovieSearchContext();
 
   const [beginYear, setBeginYear] = useState(() =>
@@ -192,6 +194,23 @@ export function SubHeaderMovieSearchFields() {
         </View>
       </Pressable>
 
+      <Pressable
+        onPress={onToggleExcludeSeenMovies}
+        style={styles.excludeSeenToggle}
+        accessibilityRole="button"
+        accessibilityState={{ selected: excludeSeenMovies }}
+      >
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.excludeSeenToggleText,
+            excludeSeenMovies ? styles.excludeSeenToggleTextActive : null,
+          ]}
+        >
+          Exclude Movies I Have Seen
+        </Text>
+      </Pressable>
+
       {!isFiltersVisible ? null : (
         <>
           <View style={styles.yearFieldsRow}>
@@ -278,6 +297,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: scaleSize(6),
+  },
+  excludeSeenToggle: {
+    alignSelf: 'center',
+    paddingHorizontal: scaleSize(12),
+    paddingBottom: scaleSize(8),
+  },
+  excludeSeenToggleText: {
+    fontSize: scaleSize(10),
+    lineHeight: scaleSize(13),
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  excludeSeenToggleTextActive: {
+    color: colors.brandText,
+    fontWeight: '700',
   },
   yearFieldsRow: {
     flexDirection: 'row',

@@ -10,9 +10,13 @@ Purpose:
    * Renders the movie search page, lets the parent header coordinate its two subheaders, and owns the screen-level switch
      between search results mode and movie-detail mode.
 */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import {
+  DrawerActions,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
@@ -27,6 +31,12 @@ import {
   getDefaultBeginDate,
   getDefaultEndDate,
 } from '../utils/movieSearchDates';
+import {
+  getStoredMovieIds,
+  MOVIE_SEEN_STORAGE_KEY,
+} from '../storage/movieUserListsStorage';
+
+const MIN_VISIBLE_FILTERED_RESULTS = 20;
 
 /*
   WHAT THIS SCREEN DOES:
@@ -50,6 +60,8 @@ export function MovieSearchScreen() {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [selectedMovieFromList, setSelectedMovieFromList] =
     useState<movieType | null>(null);
+  const [excludeSeenMovies, setExcludeSeenMovies] = useState(false);
+  const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
     beginDate: defaultBeginDate,
@@ -79,6 +91,25 @@ export function MovieSearchScreen() {
     setSelectedMovieId(null);
     setSelectedMovieFromList(null);
   }
+
+  function handleToggleExcludeSeenMovies() {
+    setExcludeSeenMovies(currentValue => !currentValue);
+  }
+
+  const refreshSeenMovieIds = useCallback(async () => {
+    try {
+      setSeenMovieIds(await getStoredMovieIds(MOVIE_SEEN_STORAGE_KEY));
+    } catch (error) {
+      console.error('Error loading seen movie ids:', error);
+      setSeenMovieIds(new Set());
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshSeenMovieIds();
+    }, [refreshSeenMovieIds])
+  );
 
   useEffect(() => {
     if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
@@ -122,11 +153,40 @@ export function MovieSearchScreen() {
         : [],
     [data, hasActiveSubmittedSearch],
   );
+  const visibleMovies = useMemo(() => {
+    if (!excludeSeenMovies) {
+      return movies;
+    }
+
+    return movies.filter(movie => !seenMovieIds.has(movie.id));
+  }, [excludeSeenMovies, movies, seenMovieIds]);
   const loadedPages = hasActiveSubmittedSearch ? data?.pages.length ?? 0 : 0;
   const totalPages = hasActiveSubmittedSearch
     ? data?.pages[0]?.totalPages ?? null
     : 0;
   const isDetailOpen = selectedMovieId !== null;
+
+  useEffect(() => {
+    const shouldFetchMoreFilteredResults =
+      hasActiveSubmittedSearch &&
+      excludeSeenMovies &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      movies.length > 0 &&
+      visibleMovies.length < MIN_VISIBLE_FILTERED_RESULTS;
+
+    if (shouldFetchMoreFilteredResults) {
+      fetchNextPage();
+    }
+  }, [
+    excludeSeenMovies,
+    fetchNextPage,
+    hasActiveSubmittedSearch,
+    hasNextPage,
+    isFetchingNextPage,
+    movies.length,
+    visibleMovies.length,
+  ]);
 
   /*
     WHAT THIS DOES:
@@ -180,11 +240,13 @@ export function MovieSearchScreen() {
           appliedParams={submittedParams}
           loadedPages={loadedPages}
           totalPages={totalPages}
+          excludeSeenMovies={excludeSeenMovies}
           isDetailOpen={false}
           onRequestDetailBack={handleCloseMovieDetail}
           onRequestDrawerOpen={() =>
             navigation.dispatch(DrawerActions.openDrawer())
           }
+          onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
           onSubmitFilters={handleApplyFilters}
           onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
         />
@@ -203,7 +265,7 @@ export function MovieSearchScreen() {
           ]}
         >
           <MovieResults
-            movies={movies}
+            movies={visibleMovies}
             cardVariant="posterRating"
             onMoviePress={handleOpenMovie}
             onEndReached={fetchNextPage}

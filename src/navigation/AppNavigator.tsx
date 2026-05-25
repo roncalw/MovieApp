@@ -20,6 +20,7 @@ import Ionicons, {
 import { MovieSearchScreen } from '../screens/MovieSearchScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MovieFavoritesScreen } from '../screens/MovieFavoritesScreen';
+import { MovieSeenScreen } from '../screens/MovieSeenScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { TellAFriendScreen } from '../screens/TellAFriendScreen';
 import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
@@ -75,6 +76,10 @@ function HomeDrawerIcon({ color, size }: DrawerIconProps) {
 
 function FavoritesDrawerIcon({ color, size }: DrawerIconProps) {
   return <Ionicons name="heart" color={color} size={size} />;
+}
+
+function SeenDrawerIcon({ color, size }: DrawerIconProps) {
+  return <Ionicons name="checkmark-circle" color={color} size={size} />;
 }
 
 function SearchDrawerIcon({ color, size }: DrawerIconProps) {
@@ -171,6 +176,11 @@ const movieFavoritesDrawerOptions = {
   drawerIcon: FavoritesDrawerIcon,
 };
 
+const movieSeenDrawerOptions = {
+  title: 'I Have Seen',
+  drawerIcon: SeenDrawerIcon,
+};
+
 const advancedSearchDrawerOptions = {
   title: 'Advanced Search',
   drawerIcon: SearchDrawerIcon,
@@ -220,6 +230,11 @@ export function AppNavigator() {
           name="MovieFavorites"
           component={MovieFavoritesScreen}
           options={movieFavoritesDrawerOptions}
+        />
+        <Drawer.Screen
+          name="IHaveSeen"
+          component={MovieSeenScreen}
+          options={movieSeenDrawerOptions}
         />
         <Drawer.Screen
           name="AdvancedSearch"

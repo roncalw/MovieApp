@@ -25,9 +25,11 @@ type HeaderMovieSearchProps = {
   appliedParams: MovieSearchParams;
   loadedPages: number;
   totalPages: number | null;
+  excludeSeenMovies: boolean;
   isDetailOpen: boolean;
   onRequestDetailBack: () => void;
   onRequestDrawerOpen: () => void;
+  onToggleExcludeSeenMovies: () => void;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
 };
@@ -37,9 +39,11 @@ export function HeaderMovieSearch({
   appliedParams,
   loadedPages,
   totalPages,
+  excludeSeenMovies,
   isDetailOpen,
   onRequestDetailBack,
   onRequestDrawerOpen,
+  onToggleExcludeSeenMovies,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
 }: HeaderMovieSearchProps) {
@@ -61,6 +65,8 @@ export function HeaderMovieSearch({
       totalPages,
       onSubmitFilters,
       onDisplayedFiltersDirtyChange,
+      excludeSeenMovies,
+      onToggleExcludeSeenMovies,
       isSubmitDisabled,
       isDetailOpen,
       onValidityChange: setIsSubmitDisabled,
@@ -70,11 +76,13 @@ export function HeaderMovieSearch({
     }),
     [
       appliedParams,
+      excludeSeenMovies,
       isDetailOpen,
       isSubmitDisabled,
       loadedPages,
       onDisplayedFiltersDirtyChange,
       onRequestDetailBack,
+      onToggleExcludeSeenMovies,
       onSubmitFilters,
       registerSubmitHandler,
       submitDraftFilters,

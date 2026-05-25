@@ -10,7 +10,7 @@ Purpose:
    * Shows the selected movie detail view inside the existing Home/Search overlay, using the legacy Movie Detail layout as the
      visual reference while keeping unfinished actions such as favorites inactive.
 */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -50,6 +50,14 @@ import type {
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
+import {
+  isMovieInStoredList,
+  MOVIE_FAVORITES_STORAGE_KEY,
+  MOVIE_SEEN_STORAGE_KEY,
+  removeMovieFromStoredList,
+  saveMovieToStoredList,
+  toStoredMovieListItem,
+} from '../storage/movieUserListsStorage';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const CINEMA_MENU_BACKGROUND = require('../assets/images/cinema_menu.jpg');
@@ -166,6 +174,8 @@ function LoadedMovieDetail({
   trailer: movieTrailerVideo | null;
   onTrailerPress: () => void;
 }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isSeen, setIsSeen] = useState(false);
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
   const imdbReviewsUrl = getImdbReviewsUrl(movie.external_ids?.imdb_id);
@@ -174,14 +184,89 @@ function LoadedMovieDetail({
   const productionCompanies = movie.production_companies ?? [];
   const productionCountries = movie.production_countries ?? [];
   const usWatchProviders = movie['watch/providers']?.results?.US;
+  const refreshStoredState = useCallback(async () => {
+    const [favoriteState, seenState] = await Promise.all([
+      isMovieInStoredList(MOVIE_FAVORITES_STORAGE_KEY, movie.id),
+      isMovieInStoredList(MOVIE_SEEN_STORAGE_KEY, movie.id),
+    ]);
+
+    setIsFavorite(favoriteState);
+    setIsSeen(seenState);
+  }, [movie.id]);
+  const handleFavoritePress = useCallback(async () => {
+    try {
+      if (isFavorite) {
+        await removeMovieFromStoredList(MOVIE_FAVORITES_STORAGE_KEY, movie.id);
+        setIsFavorite(false);
+        return;
+      }
+
+      await saveMovieToStoredList(
+        MOVIE_FAVORITES_STORAGE_KEY,
+        toStoredMovieListItem(movie)
+      );
+      setIsFavorite(true);
+    } catch (error) {
+      console.warn('Unable to update movie favorite state:', error);
+    }
+  }, [isFavorite, movie]);
+  const handleSeenPress = useCallback(async () => {
+    try {
+      if (isSeen) {
+        await removeMovieFromStoredList(MOVIE_SEEN_STORAGE_KEY, movie.id);
+        setIsSeen(false);
+        return;
+      }
+
+      await saveMovieToStoredList(
+        MOVIE_SEEN_STORAGE_KEY,
+        toStoredMovieListItem(movie)
+      );
+      setIsSeen(true);
+    } catch (error) {
+      console.warn('Unable to update movie seen state:', error);
+    }
+  }, [isSeen, movie]);
+
+  useEffect(() => {
+    refreshStoredState().catch(error => {
+      console.warn('Unable to read movie user list state:', error);
+    });
+  }, [refreshStoredState]);
 
   return (
     <>
       <View style={styles.summaryCard}>
         <View style={styles.actionIconRow}>
-          <View style={styles.staticHeartIcon}>
-            <Ionicons name="heart-outline" size={scaleSize(48)} color="red" />
-          </View>
+          <Pressable
+            onPress={handleFavoritePress}
+            style={styles.heartButton}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorite ? 'Remove favorite' : 'Save favorite'}
+          >
+            <Ionicons
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={scaleSize(48)}
+              color="red"
+            />
+          </Pressable>
+
+          <Pressable
+            onPress={handleSeenPress}
+            style={styles.seenButton}
+            accessibilityRole="button"
+            accessibilityLabel={isSeen ? 'Remove from seen movies' : 'Mark as seen'}
+          >
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.seenButtonText,
+                isSeen ? styles.seenButtonTextActive : null,
+              ]}
+            >
+              Seen
+            </Text>
+          </Pressable>
 
           {trailer ? (
             <Pressable
@@ -902,11 +987,27 @@ const styles = StyleSheet.create({
     paddingLeft: scaleSize(20),
     paddingRight: scaleSize(25),
   },
-  staticHeartIcon: {
+  heartButton: {
     width: scaleSize(50),
     height: scaleSize(50),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  seenButton: {
+    minWidth: scaleSize(72),
+    height: scaleSize(50),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seenButtonText: {
+    color: '#8C8C8C',
+    fontSize: scaleSize(16),
+    lineHeight: scaleSize(20),
+    fontWeight: '700',
+    letterSpacing: 0,
+  },
+  seenButtonTextActive: {
+    color: colors.textPrimary,
   },
   trailerPlayButton: {
     width: scaleSize(50),
