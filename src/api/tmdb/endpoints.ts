@@ -24,6 +24,7 @@ export const ENDPOINTS = {
   MOVIE_DETAILS: '/movie',
   PERSON_DETAILS: '/person',
   POPULAR_MOVIES: '/movie/popular',
+  SEARCH_MOVIES_BY_TITLE: '/search/movie',
   UPCOMING_MOVIES: '/movie/upcoming',
   MOVIE_SEARCH: '/discover/movie',
 };

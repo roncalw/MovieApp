@@ -22,11 +22,15 @@ import { DrawerMenuButton } from '../navigation/DrawerMenuButton';
 type SubHeaderTopProps = {
   title: string;
   onRequestDrawerOpen: () => void;
+  searchModeLinkLabel?: string;
+  onSearchModeLinkPress?: () => void;
 };
 
 export function SubHeaderTop({
   title,
   onRequestDrawerOpen,
+  searchModeLinkLabel,
+  onSearchModeLinkPress,
 }: SubHeaderTopProps) {
   const insets = useSafeAreaInsets();
   const {
@@ -60,9 +64,28 @@ export function SubHeaderTop({
           )}
         </View>
 
-        <Text allowFontScaling={false} style={styles.title}>
-          {isDetailOpen ? 'Movie Details' : title}
-        </Text>
+        <View style={styles.titleBlock}>
+          <Text allowFontScaling={false} style={styles.title}>
+            {isDetailOpen ? 'Movie Details' : title}
+          </Text>
+          {!isDetailOpen && searchModeLinkLabel && onSearchModeLinkPress ? (
+            <Pressable
+              onPress={onSearchModeLinkPress}
+              style={styles.searchModeLink}
+              accessibilityRole="button"
+              accessibilityLabel={searchModeLinkLabel}
+            >
+              <Text allowFontScaling={false} style={styles.searchModeLinkText}>
+                {searchModeLinkLabel}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={scaleSize(15)}
+                color={colors.brandText}
+              />
+            </Pressable>
+          ) : null}
+        </View>
 
         <View style={styles.sideSlot}>
           {isDetailOpen ? null : (
@@ -113,11 +136,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    flex: 1,
-    marginHorizontal: scaleSize(12),
     ...typography.pageTitle,
     color: colors.brandText,
     textAlign: 'center',
+  },
+  titleBlock: {
+    flex: 1,
+    marginHorizontal: scaleSize(12),
+    alignItems: 'center',
+  },
+  searchModeLink: {
+    marginTop: scaleSize(8),
+    minHeight: scaleSize(30),
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchModeLinkText: {
+    ...typography.summaryBody,
+    color: colors.brandText,
   },
   rightAction: {
     minHeight: scaleSize(36),

@@ -16,17 +16,20 @@ import { typography } from '../../theme/typography';
 
 const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const imageIMDB = require('../../assets/images/imdb.png');
+const imageNotFound = require('../../assets/images/PicNotFoundV6.png');
 
 type MovieCardProps = {
   movie: movieType;
   onPress: () => void;
   variant?: 'summary' | 'posterRating';
+  showRatingBadge?: boolean;
 };
 
 export function MovieCard({
   movie,
   onPress,
   variant = 'summary',
+  showRatingBadge = true,
 }: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
 
@@ -35,16 +38,20 @@ export function MovieCard({
       style={[styles.card, isPosterRating ? styles.posterRatingCard : null]}
       onPress={onPress}
     >
-      {movie.poster_path ? (
-        <View>
-          <Image
-            source={{ uri: `${POSTER_BASE_URL}${movie.poster_path}` }}
-            style={[
-              styles.poster,
-              isPosterRating ? styles.posterRatingImage : null,
-            ]}
-            resizeMode={isPosterRating ? 'contain' : 'cover'}
-          />
+      <View>
+        <Image
+          source={
+            movie.poster_path
+              ? { uri: `${POSTER_BASE_URL}${movie.poster_path}` }
+              : imageNotFound
+          }
+          style={[
+            styles.poster,
+            isPosterRating ? styles.posterRatingImage : null,
+          ]}
+          resizeMode={isPosterRating ? 'contain' : 'cover'}
+        />
+        {isPosterRating && showRatingBadge ? (
           <View style={styles.ratingBadge}>
             <Image
               source={imageIMDB}
@@ -56,8 +63,8 @@ export function MovieCard({
               {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}
             </Text>
           </View>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
 
       {!isPosterRating ? (
         <>

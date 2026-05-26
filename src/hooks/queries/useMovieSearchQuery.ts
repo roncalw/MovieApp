@@ -19,6 +19,7 @@ import {
   fetchMovie,
   fetchPerson,
   fetchMovieListImdbRating,
+  fetchMoviesByTitle,
   type HomeMovieGenreId,
 } from '../../api/tmdb/services/movieService';
 import type { MovieSearchParams } from '../../types/movieSearchParams';
@@ -154,6 +155,20 @@ export function usePersonDetailsQuery(personId: number | null) {
     queryFn: () => fetchPerson(personId as number),
     staleTime: 1000 * 60 * 5,
     enabled: personId !== null,
+  });
+}
+
+export function useMovieTitleSearchQuery(title: string, enabled = true) {
+  const normalizedTitle = title.trim();
+
+  return useInfiniteQuery({
+    queryKey: ['movieTitleSearch', title.trim()],
+    queryFn: ({ pageParam }) => fetchMoviesByTitle(normalizedTitle, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    staleTime: 1000 * 60 * 5,
+    enabled: enabled && normalizedTitle.length > 0,
   });
 }
 

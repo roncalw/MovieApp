@@ -21,6 +21,7 @@ import { MovieSearchScreen } from '../screens/MovieSearchScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MovieFavoritesScreen } from '../screens/MovieFavoritesScreen';
 import { MovieSeenScreen } from '../screens/MovieSeenScreen';
+import { SearchByMovieTitleScreen } from '../screens/SearchByMovieTitleScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { TellAFriendScreen } from '../screens/TellAFriendScreen';
 import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
@@ -172,12 +173,12 @@ const homeDrawerOptions = {
 };
 
 const movieFavoritesDrawerOptions = {
-  title: 'Movie Favorites',
+  title: 'My Movie Favorites',
   drawerIcon: FavoritesDrawerIcon,
 };
 
 const movieSeenDrawerOptions = {
-  title: 'I Have Seen',
+  title: 'Movies I Have Seen',
   drawerIcon: SeenDrawerIcon,
 };
 
@@ -201,6 +202,13 @@ function getTellAFriendDrawerOptions() {
 function getPrivacyPolicyDrawerOptions() {
   return {
     title: 'Privacy Policy',
+    drawerItemStyle: styles.hiddenDrawerItem,
+  };
+}
+
+function getSearchByMovieTitleDrawerOptions() {
+  return {
+    title: 'Search by Movie Title',
     drawerItemStyle: styles.hiddenDrawerItem,
   };
 }
@@ -240,6 +248,11 @@ export function AppNavigator() {
           name="AdvancedSearch"
           component={MovieSearchScreen}
           options={advancedSearchDrawerOptions}
+        />
+        <Drawer.Screen
+          name="SearchByMovieTitle"
+          component={SearchByMovieTitleScreen}
+          options={getSearchByMovieTitleDrawerOptions}
         />
         <Drawer.Screen
           name="Settings"

@@ -17,6 +17,7 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { HeaderMovieSearch } from '../components/header/HeaderMovieSearch';
@@ -35,6 +36,7 @@ import {
   getStoredMovieIds,
   MOVIE_SEEN_STORAGE_KEY,
 } from '../storage/movieUserListsStorage';
+import type { AppDrawerParamList } from '../navigation/types';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 
@@ -52,7 +54,7 @@ export function MovieSearchScreen() {
   const defaultBeginDate = getDefaultBeginDate();
   const defaultEndDate = getDefaultEndDate();
   const queryClient = useQueryClient();
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
@@ -82,6 +84,7 @@ export function MovieSearchScreen() {
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
     closeAllDetails();
+    refreshSeenMovieIds();
     setHasDisplayedFilterChanges(false);
     setSubmittedParams(nextParams);
     setHasSubmittedSearch(true);
@@ -89,6 +92,7 @@ export function MovieSearchScreen() {
 
   function handleToggleExcludeSeenMovies() {
     setExcludeSeenMovies(currentValue => !currentValue);
+    setHasDisplayedFilterChanges(true);
   }
 
   const refreshSeenMovieIds = useCallback(async () => {
@@ -105,6 +109,16 @@ export function MovieSearchScreen() {
       refreshSeenMovieIds();
     }, [refreshSeenMovieIds])
   );
+
+  const handlePopDetail = useCallback(() => {
+    popDetail();
+    refreshSeenMovieIds();
+  }, [popDetail, refreshSeenMovieIds]);
+
+  const handleCloseAllDetails = useCallback(() => {
+    closeAllDetails();
+    refreshSeenMovieIds();
+  }, [closeAllDetails, refreshSeenMovieIds]);
 
   useEffect(() => {
     if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
@@ -237,9 +251,14 @@ export function MovieSearchScreen() {
           totalPages={totalPages}
           excludeSeenMovies={excludeSeenMovies}
           isDetailOpen={false}
-          onRequestDetailBack={popDetail}
+          onRequestDetailBack={handlePopDetail}
           onRequestDrawerOpen={() =>
             navigation.dispatch(DrawerActions.openDrawer())
+          }
+          onRequestTitleSearch={() =>
+            navigation.navigate('SearchByMovieTitle', {
+              returnTo: 'AdvancedSearch',
+            })
           }
           onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
           onSubmitFilters={handleApplyFilters}
@@ -271,8 +290,8 @@ export function MovieSearchScreen() {
 
         <DetailStackOverlay
           detailStack={detailStack}
-          onPopDetail={popDetail}
-          onCloseAllDetails={closeAllDetails}
+          onPopDetail={handlePopDetail}
+          onCloseAllDetails={handleCloseAllDetails}
           onBackToOriginalMovie={backToOriginalMovie}
           onPushMovie={pushMovie}
           onPushPerson={pushPerson}

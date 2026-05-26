@@ -5,7 +5,7 @@ import { MOVIE_SEEN_STORAGE_KEY } from '../storage/movieUserListsStorage';
 export function MovieSeenScreen() {
   return (
     <StoredMovieListScreen
-      title="I Have Seen"
+      title="Movies I Have Seen"
       emptyMessage="No seen movies yet."
       storageKey={MOVIE_SEEN_STORAGE_KEY}
     />

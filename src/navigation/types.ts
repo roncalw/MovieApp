@@ -3,6 +3,11 @@ export type AppDrawerParamList = {
   MovieFavorites: undefined;
   IHaveSeen: undefined;
   AdvancedSearch: undefined;
+  SearchByMovieTitle:
+    | {
+        returnTo?: 'Home' | 'AdvancedSearch' | 'MovieFavorites' | 'IHaveSeen';
+      }
+    | undefined;
   Settings: undefined;
   TellAFriend: undefined;
   PrivacyPolicy: undefined;

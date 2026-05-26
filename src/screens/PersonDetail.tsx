@@ -48,6 +48,10 @@ type FilmographyItem = {
   popularity: number;
 };
 
+type FilmographyGroup = Omit<FilmographyItem, 'roleLabel'> & {
+  roles: string[];
+};
+
 type StackActionFooterProps = {
   stackDepth: number;
   onBackPress: () => void;
@@ -286,14 +290,24 @@ function buildFilmography(person: personDetailType | undefined): FilmographyItem
     return [];
   }
 
-  const castItems = person.movie_credits.cast.map(credit =>
-    buildFilmographyItem(credit, credit.character || 'Character not listed')
-  );
-  const crewItems = person.movie_credits.crew.map(credit =>
-    buildFilmographyItem(credit, `${credit.job || 'Crew'} (${credit.department || 'Department not listed'})`)
-  );
+  const groupedItems = new Map<number, FilmographyGroup>();
 
-  return [...castItems, ...crewItems].sort((left, right) => {
+  person.movie_credits.cast.forEach(credit => {
+    addCreditToFilmographyGroup(
+      groupedItems,
+      credit,
+      credit.character || 'Character not listed'
+    );
+  });
+
+  person.movie_credits.crew.forEach(credit => {
+    addCreditToFilmographyGroup(groupedItems, credit, credit.job || 'Crew');
+  });
+
+  return Array.from(groupedItems.values()).map(group => ({
+    ...group,
+    roleLabel: group.roles.join(', '),
+  })).sort((left, right) => {
     if (right.releaseDate !== left.releaseDate) {
       return right.releaseDate.localeCompare(left.releaseDate);
     }
@@ -302,21 +316,37 @@ function buildFilmography(person: personDetailType | undefined): FilmographyItem
   });
 }
 
-function buildFilmographyItem(
+function addCreditToFilmographyGroup(
+  groupedItems: Map<number, FilmographyGroup>,
   credit: personMovieCastCredit | personMovieCrewCredit,
   roleLabel: string
-): FilmographyItem {
-  const movie = mapPersonMovieCreditToMovie(credit);
+): void {
+  const existingGroup = groupedItems.get(credit.id);
 
-  return {
-    key: `${credit.credit_id}-${credit.id}`,
+  if (existingGroup) {
+    addRoleLabel(existingGroup.roles, roleLabel);
+    return;
+  }
+
+  const movie = mapPersonMovieCreditToMovie(credit);
+  const roles: string[] = [];
+  addRoleLabel(roles, roleLabel);
+
+  groupedItems.set(credit.id, {
+    key: `movie-${credit.id}`,
     movie,
     title: credit.title || credit.original_title || 'Untitled',
     year: getYear(credit.release_date),
-    roleLabel,
     releaseDate: credit.release_date || '',
     popularity: credit.popularity,
-  };
+    roles,
+  });
+}
+
+function addRoleLabel(roles: string[], roleLabel: string) {
+  if (!roles.includes(roleLabel)) {
+    roles.push(roleLabel);
+  }
 }
 
 function getProfileSource(profilePath: string | null | undefined): ImageSourcePropType {

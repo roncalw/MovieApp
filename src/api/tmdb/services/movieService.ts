@@ -132,6 +132,13 @@ type CloudflareMovieSearchResults = movieSearchResults & {
   nextCursor: string | null;
 };
 
+export type MovieTitleSearchResults = {
+  movies: movieType[];
+  page: number;
+  totalPages: number;
+  totalResults: number;
+};
+
 /*
 ======================================================== fetchPopularMovies ====================================================
 
@@ -252,6 +259,40 @@ export async function fetchMovieListImdbRating(
   }
 
   return (await response.json()) as CloudflareMovieListImdbRating;
+}
+
+export async function fetchMoviesByTitle(
+  title: string,
+  page: number
+): Promise<MovieTitleSearchResults> {
+  const normalizedTitle = title.trim();
+
+  if (!normalizedTitle) {
+    return {
+      movies: [],
+      page: 1,
+      totalPages: 0,
+      totalResults: 0,
+    };
+  }
+
+  const queryString = new URLSearchParams({
+    query: normalizedTitle,
+    page: page.toString(),
+    include_adult: 'false',
+  });
+  const path = buildLegacyTmdbPath(
+    ENDPOINTS.SEARCH_MOVIES_BY_TITLE,
+    queryString.toString()
+  );
+  const data = await fetchHomeMovieList('title-search', path);
+
+  return {
+    movies: data.results.map(mapMovieToMovie),
+    page: data.page,
+    totalPages: data.total_pages,
+    totalResults: data.total_results,
+  };
 }
 
 /*

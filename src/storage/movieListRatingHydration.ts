@@ -2,7 +2,8 @@ import { fetchMovieListImdbRating } from '../api/tmdb/services/movieService';
 import type { movieType } from '../types/MovieTypes';
 
 export async function hydrateMoviesWithCurrentImdbRatings(
-  movies: movieType[]
+  movies: movieType[],
+  sortByRating = true
 ): Promise<movieType[]> {
   const moviesWithRatings = await Promise.all(
     movies.map(async movie => {
@@ -22,19 +23,21 @@ export async function hydrateMoviesWithCurrentImdbRatings(
     })
   );
 
-  return moviesWithRatings
-    .sort((left, right) => {
-      const leftRating = left.imdbRating ?? -1;
-      const rightRating = right.imdbRating ?? -1;
+  const orderedMoviesWithRatings = sortByRating
+    ? [...moviesWithRatings].sort((left, right) => {
+        const leftRating = left.imdbRating ?? -1;
+        const rightRating = right.imdbRating ?? -1;
 
-      if (rightRating !== leftRating) {
-        return rightRating - leftRating;
-      }
+        if (rightRating !== leftRating) {
+          return rightRating - leftRating;
+        }
 
-      return left.movie.title.localeCompare(right.movie.title);
-    })
-    .map(({ movie, imdbRating }) => ({
-      ...movie,
-      vote_average: imdbRating ?? 0,
-    }));
+        return left.movie.title.localeCompare(right.movie.title);
+      })
+    : moviesWithRatings;
+
+  return orderedMoviesWithRatings.map(({ movie, imdbRating }) => ({
+    ...movie,
+    vote_average: imdbRating ?? 0,
+  }));
 }

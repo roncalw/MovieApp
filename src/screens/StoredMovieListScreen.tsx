@@ -1,6 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MovieResults } from '../components/body/MovieResults';
 import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
 import { DrawerMenuButton } from '../components/navigation/DrawerMenuButton';
@@ -15,6 +18,7 @@ import {
   type MovieUserListStorageKey,
 } from '../storage/movieUserListsStorage';
 import type { movieType } from '../types/MovieTypes';
+import type { AppDrawerParamList } from '../navigation/types';
 
 type StoredMovieListScreenProps = {
   title: string;
@@ -27,7 +31,8 @@ export function StoredMovieListScreen({
   emptyMessage,
   storageKey,
 }: StoredMovieListScreenProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  const insets = useSafeAreaInsets();
   const [movies, setMovies] = useState<movieType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const {
@@ -76,17 +81,48 @@ export function StoredMovieListScreen({
     loadMovies();
   }
 
+  function handleOpenTitleSearch() {
+    navigation.navigate('SearchByMovieTitle', {
+      returnTo:
+        storageKey === 'movieFavoritesData' ? 'MovieFavorites' : 'IHaveSeen',
+    });
+  }
+
   return (
     <View style={styles.screen}>
       {isDetailOpen ? null : (
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + scaleSize(10) }]}>
           <DrawerMenuButton
             onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            buttonStyle={[
+              styles.headerMenuButton,
+              { top: insets.top + scaleSize(20) },
+            ]}
+            imageStyle={styles.headerMenuImage}
           />
-          <Text allowFontScaling={false} style={styles.title}>
-            {title}
-          </Text>
-          <View style={styles.headerSpacer} />
+          <View style={[styles.headerRow, { top: insets.top + scaleSize(20) }]}>
+            <View style={styles.headerSideSlot} />
+            <Text
+              allowFontScaling={false}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={styles.title}
+            >
+              {title}
+            </Text>
+            <Pressable
+              onPress={handleOpenTitleSearch}
+              style={styles.headerSearchButton}
+              accessibilityRole="button"
+              accessibilityLabel="Search by movie title"
+            >
+              <Ionicons
+                name="search-outline"
+                size={scaleSize(30)}
+                color={colors.textPrimary}
+              />
+            </Pressable>
+          </View>
         </View>
       )}
 
@@ -143,21 +179,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    minHeight: scaleSize(104),
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: scaleSize(16),
-    paddingBottom: scaleSize(14),
+    minHeight: scaleSize(142),
     backgroundColor: colors.background,
+  },
+  headerRow: {
+    position: 'absolute',
+    left: scaleSize(36),
+    right: scaleSize(36),
+    minHeight: scaleSize(48),
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerSideSlot: {
+    width: scaleSize(48),
+  },
+  headerMenuButton: {
+    position: 'absolute',
+    left: scaleSize(36),
+    zIndex: 2,
+  },
+  headerMenuImage: {
+    width: scaleSize(48),
+    height: scaleSize(48),
   },
   title: {
     flex: 1,
-    ...typography.pageTitle,
+    fontSize: scaleSize(22),
+    lineHeight: scaleSize(28),
+    fontWeight: '400',
+    letterSpacing: 0,
     color: colors.brandText,
     textAlign: 'center',
   },
-  headerSpacer: {
-    width: scaleSize(80),
+  headerSearchButton: {
+    width: scaleSize(48),
+    height: scaleSize(48),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   contentStack: {
     flex: 1,

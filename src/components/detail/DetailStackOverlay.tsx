@@ -23,37 +23,59 @@ export function DetailStackOverlay({
   onPushMovie,
   onPushPerson,
 }: DetailStackOverlayProps) {
-  const activeEntry = detailStack[detailStack.length - 1];
-
-  if (!activeEntry) {
+  if (detailStack.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.overlay}>
-      {activeEntry.type === 'movie' ? (
-        <MovieDetail
-          movieId={activeEntry.movieId}
-          initialMovie={activeEntry.initialMovie}
-          stackDepth={detailStack.length}
-          onBackPress={onPopDetail}
-          onCloseAllPress={onCloseAllDetails}
-          onBackToOriginalMoviePress={onBackToOriginalMovie}
-          onPersonPress={onPushPerson}
-        />
-      ) : (
-        <PersonDetail
-          personId={activeEntry.personId}
-          initialPersonName={activeEntry.initialPersonName}
-          stackDepth={detailStack.length}
-          onBackPress={onPopDetail}
-          onCloseAllPress={onCloseAllDetails}
-          onBackToOriginalMoviePress={onBackToOriginalMovie}
-          onMoviePress={onPushMovie}
-        />
-      )}
+      {detailStack.map((entry, index) => {
+        const isTopEntry = index === detailStack.length - 1;
+        const layerStyle = [
+          styles.layer,
+          isTopEntry ? null : styles.hiddenLayer,
+        ];
+
+        return (
+          <View
+            key={getDetailStackEntryKey(entry, index)}
+            style={layerStyle}
+            pointerEvents={isTopEntry ? 'auto' : 'none'}
+            accessibilityElementsHidden={!isTopEntry}
+            importantForAccessibility={isTopEntry ? 'auto' : 'no-hide-descendants'}
+          >
+            {entry.type === 'movie' ? (
+              <MovieDetail
+                movieId={entry.movieId}
+                initialMovie={entry.initialMovie}
+                stackDepth={index + 1}
+                onBackPress={onPopDetail}
+                onCloseAllPress={onCloseAllDetails}
+                onBackToOriginalMoviePress={onBackToOriginalMovie}
+                onPersonPress={onPushPerson}
+              />
+            ) : (
+              <PersonDetail
+                personId={entry.personId}
+                initialPersonName={entry.initialPersonName}
+                stackDepth={index + 1}
+                onBackPress={onPopDetail}
+                onCloseAllPress={onCloseAllDetails}
+                onBackToOriginalMoviePress={onBackToOriginalMovie}
+                onMoviePress={onPushMovie}
+              />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
+}
+
+function getDetailStackEntryKey(entry: DetailStackEntry, index: number) {
+  return entry.type === 'movie'
+    ? `movie-${entry.movieId}-${index}`
+    : `person-${entry.personId}-${index}`;
 }
 
 const styles = StyleSheet.create({
@@ -61,5 +83,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 2,
     backgroundColor: colors.background,
+  },
+  layer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+  },
+  hiddenLayer: {
+    opacity: 0,
   },
 });

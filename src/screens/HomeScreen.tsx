@@ -11,8 +11,10 @@ Purpose:
      local movie-detail overlay behavior used by Advanced Search.
 */
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useHomeGenreMoviesQuery,
@@ -26,9 +28,10 @@ import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
 import { useDetailStack } from '../hooks/useDetailStack';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
+import type { AppDrawerParamList } from '../navigation/types';
 
 export function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const insets = useSafeAreaInsets();
   const upcomingMoviesQuery = useUpcomingMoviesQuery();
   const popularMoviesQuery = usePopularMoviesQuery();
@@ -66,6 +69,10 @@ export function HomeScreen() {
     navigation.dispatch(DrawerActions.openDrawer());
   }
 
+  function handleOpenTitleSearch() {
+    navigation.navigate('SearchByMovieTitle', { returnTo: 'Home' });
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.contentStack}>
@@ -101,6 +108,21 @@ export function HomeScreen() {
                 ]}
                 imageStyle={styles.heroMenuImage}
               />
+              <Pressable
+                onPress={handleOpenTitleSearch}
+                style={[
+                  styles.heroSearchButton,
+                  { top: insets.top + scaleSize(20) },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Search by movie title"
+              >
+                <Ionicons
+                  name="search-outline"
+                  size={scaleSize(30)}
+                  color={colors.actionOnPrimary}
+                />
+              </Pressable>
             </View>
 
             {moviePosterRows.map(row => (
@@ -162,5 +184,14 @@ const styles = StyleSheet.create({
   heroMenuImage: {
     width: scaleSize(48),
     height: scaleSize(48),
+  },
+  heroSearchButton: {
+    position: 'absolute',
+    right: scaleSize(36),
+    width: scaleSize(48),
+    height: scaleSize(48),
+    zIndex: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

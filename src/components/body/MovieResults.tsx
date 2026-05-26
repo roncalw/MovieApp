@@ -25,6 +25,7 @@ type MovieResultsProps = {
   movies: movieType[] | undefined;
   ListHeaderComponent?: React.ReactElement | null;
   cardVariant?: 'summary' | 'posterRating';
+  showRatingBadge?: boolean;
   onMoviePress?: (movie: movieType) => void;
   onEndReached?: () => void;
   hasNextPage?: boolean;
@@ -35,6 +36,7 @@ export function MovieResults({
   movies,
   ListHeaderComponent,
   cardVariant = 'summary',
+  showRatingBadge = true,
   onMoviePress,
   onEndReached,
   hasNextPage = false,
@@ -76,6 +78,7 @@ export function MovieResults({
             <MovieCard
               movie={item}
               variant={cardVariant}
+              showRatingBadge={showRatingBadge}
               onPress={() => onMoviePress?.(item)}
             />
           );
@@ -102,7 +105,8 @@ const styles = StyleSheet.create({
   },
   posterGridContent: {
     paddingHorizontal: scaleSize(20),
-    paddingTop: scaleSize(16),
+    paddingTop: scaleSize(24),
+    paddingBottom: scaleSize(24),
   },
   posterGridRow: {
     columnGap: scaleSize(10),
@@ -110,7 +114,7 @@ const styles = StyleSheet.create({
   posterGridItem: {
     flex: 1,
     maxWidth: '31.8%',
-    marginBottom: scaleSize(10),
+    marginBottom: scaleSize(18),
   },
   footer: {
     paddingVertical: 16,

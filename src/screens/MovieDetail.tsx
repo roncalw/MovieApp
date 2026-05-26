@@ -78,6 +78,13 @@ type MovieDetailProps = {
 
 type CreditPerson = movieCastProfile | movieCrewProfile;
 
+type GroupedCreditPerson = {
+  id: number;
+  name: string;
+  profile_path: string | null | undefined;
+  roleLabels: string[];
+};
+
 type CreditRailProps = {
   title: string;
   people: CreditPerson[];
@@ -684,11 +691,13 @@ function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
 }
 
 function CreditRail({ title, people, onPersonPress }: CreditRailProps) {
-  if (people.length === 0) {
+  const groupedPeople = useMemo(() => groupCreditPeople(people), [people]);
+
+  if (groupedPeople.length === 0) {
     return null;
   }
 
-  const renderItem: ListRenderItem<CreditPerson> = ({ item }) => (
+  const renderItem: ListRenderItem<GroupedCreditPerson> = ({ item }) => (
     <CreditCard person={item} onPersonPress={onPersonPress} />
   );
 
@@ -698,9 +707,9 @@ function CreditRail({ title, people, onPersonPress }: CreditRailProps) {
         {title}
       </Text>
       <FlatList
-        data={people}
+        data={groupedPeople}
         horizontal
-        keyExtractor={(item, index) => `${title}-${item.id}-${index}`}
+        keyExtractor={item => `${title}-${item.id}`}
         renderItem={renderItem}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.creditListContent}
@@ -713,10 +722,10 @@ function CreditCard({
   person,
   onPersonPress,
 }: {
-  person: CreditPerson;
+  person: GroupedCreditPerson;
   onPersonPress?: (personId: number, initialPersonName?: string) => void;
 }) {
-  const subtitle = getCreditSubtitle(person);
+  const subtitle = getCreditSubtitleText(person.roleLabels);
 
   return (
     <Pressable
@@ -899,6 +908,44 @@ function getCreditSubtitle(person: CreditPerson) {
   }
 
   return person.job || 'Crew';
+}
+
+function groupCreditPeople(people: CreditPerson[]) {
+  const groupedPeople = new Map<number, GroupedCreditPerson>();
+
+  people.forEach(person => {
+    const roleLabel = getCreditSubtitle(person);
+    const existingPerson = groupedPeople.get(person.id);
+
+    if (existingPerson) {
+      addCreditRoleLabel(existingPerson.roleLabels, roleLabel);
+      return;
+    }
+
+    const roleLabels: string[] = [];
+    addCreditRoleLabel(roleLabels, roleLabel);
+    groupedPeople.set(person.id, {
+      id: person.id,
+      name: person.name,
+      profile_path: person.profile_path,
+      roleLabels,
+    });
+  });
+
+  return Array.from(groupedPeople.values());
+}
+
+function addCreditRoleLabel(roleLabels: string[], roleLabel: string) {
+  if (!roleLabels.includes(roleLabel)) {
+    roleLabels.push(roleLabel);
+  }
+}
+
+function getCreditSubtitleText(roleLabels: string[]) {
+  const visibleRoles = roleLabels.slice(0, 2);
+  const suffix = roleLabels.length > 2 ? ' ...' : '';
+
+  return `${visibleRoles.join(', ')}${suffix}`;
 }
 
 function getUsCertification(movie: movieType) {

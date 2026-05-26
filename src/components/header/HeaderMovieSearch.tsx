@@ -29,6 +29,7 @@ type HeaderMovieSearchProps = {
   isDetailOpen: boolean;
   onRequestDetailBack: () => void;
   onRequestDrawerOpen: () => void;
+  onRequestTitleSearch?: () => void;
   onToggleExcludeSeenMovies: () => void;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
@@ -43,6 +44,7 @@ export function HeaderMovieSearch({
   isDetailOpen,
   onRequestDetailBack,
   onRequestDrawerOpen,
+  onRequestTitleSearch,
   onToggleExcludeSeenMovies,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
@@ -95,6 +97,8 @@ export function HeaderMovieSearch({
       <SubHeaderTop
         title={title}
         onRequestDrawerOpen={onRequestDrawerOpen}
+        searchModeLinkLabel={onRequestTitleSearch ? 'Search by Title' : undefined}
+        onSearchModeLinkPress={onRequestTitleSearch}
       />
       <View style={isDetailOpen ? styles.filtersHidden : null}>
         <SubHeaderMovieSearchFields />
