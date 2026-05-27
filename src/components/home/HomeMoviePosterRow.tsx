@@ -21,8 +21,7 @@ import type { movieType } from '../../types/MovieTypes';
 import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
-
-const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+import { getMovieImagePath, getMovieImageUri } from '../../utils/movieImages';
 
 type HomeMoviePosterRowProps = {
   title: string;
@@ -39,7 +38,7 @@ export function HomeMoviePosterRow({
   isError,
   onMoviePress,
 }: HomeMoviePosterRowProps) {
-  const posterMovies = movies?.filter(movie => Boolean(movie.poster_path)) ?? [];
+  const posterMovies = movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [];
 
   return (
     <View style={styles.rowSection}>
@@ -66,20 +65,26 @@ export function HomeMoviePosterRow({
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.posterListContent}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => onMoviePress(item)}
-              style={styles.posterCard}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${item.title || item.original_title}`}
-            >
-              <Image
-                source={{ uri: `${POSTER_BASE_URL}${item.poster_path}` }}
-                style={styles.posterImage}
-                resizeMode="cover"
-              />
-            </Pressable>
-          )}
+          renderItem={({ item }) => {
+            const movieImageUri = getMovieImageUri(item);
+
+            return (
+              <Pressable
+                onPress={() => onMoviePress(item)}
+                style={styles.posterCard}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${item.title || item.original_title}`}
+              >
+                {movieImageUri ? (
+                  <Image
+                    source={{ uri: movieImageUri }}
+                    style={styles.posterImage}
+                    resizeMode="cover"
+                  />
+                ) : null}
+              </Pressable>
+            );
+          }}
         />
       ) : null}
     </View>

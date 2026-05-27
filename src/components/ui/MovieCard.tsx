@@ -13,8 +13,8 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { movieType } from '../../types/MovieTypes';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
+import { getMovieImageUri } from '../../utils/movieImages';
 
-const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const imageIMDB = require('../../assets/images/imdb.png');
 const imageNotFound = require('../../assets/images/PicNotFoundV6.png');
 
@@ -32,6 +32,7 @@ export function MovieCard({
   showRatingBadge = true,
 }: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
+  const movieImageUri = getMovieImageUri(movie);
 
   return (
     <Pressable
@@ -41,8 +42,8 @@ export function MovieCard({
       <View>
         <Image
           source={
-            movie.poster_path
-              ? { uri: `${POSTER_BASE_URL}${movie.poster_path}` }
+            movieImageUri
+              ? { uri: movieImageUri }
               : imageNotFound
           }
           style={[

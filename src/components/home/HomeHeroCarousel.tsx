@@ -23,8 +23,8 @@ import type { movieType } from '../../types/MovieTypes';
 import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
+import { getMovieImagePath, getMovieImageUri } from '../../utils/movieImages';
 
-const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const AUTO_PLAY_INTERVAL_MS = 3000;
 
 type HomeHeroCarouselProps = {
@@ -51,7 +51,7 @@ export function HomeHeroCarousel({
   // to peek onto the first screen so Home clearly continues below the fold.
   const heroHeight = Math.round(height * 0.655);
   const heroMovies = useMemo(
-    () => movies?.filter(movie => Boolean(movie.poster_path)) ?? [],
+    () => movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [],
     [movies]
   );
 
@@ -137,20 +137,26 @@ export function HomeHeroCarousel({
         onMomentumScrollEnd={handleMomentumScrollEnd}
         onScrollToIndexFailed={handleScrollToIndexFailed}
         showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => onMoviePress(item)}
-            style={[styles.slide, { width, height: heroHeight }]}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${item.title || item.original_title}`}
-          >
-            <Image
-              source={{ uri: `${POSTER_BASE_URL}${item.poster_path}` }}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const movieImageUri = getMovieImageUri(item);
+
+          return (
+            <Pressable
+              onPress={() => onMoviePress(item)}
+              style={[styles.slide, { width, height: heroHeight }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${item.title || item.original_title}`}
+            >
+              {movieImageUri ? (
+                <Image
+                  source={{ uri: movieImageUri }}
+                  style={styles.heroImage}
+                  resizeMode="cover"
+                />
+              ) : null}
+            </Pressable>
+          );
+        }}
       />
     </View>
   );

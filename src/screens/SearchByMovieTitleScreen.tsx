@@ -20,6 +20,9 @@ import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MovieResults } from '../components/body/MovieResults';
 import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
+import { HeaderActionRow } from '../components/navigation/HeaderActionRow';
+import { HeaderNavButton } from '../components/navigation/HeaderNavButton';
+import { getHeaderNavSecondaryTop } from '../components/navigation/headerNavMetrics';
 import { useMovieTitleSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { useDetailStack } from '../hooks/useDetailStack';
 import { hydrateMoviesWithCurrentImdbRatings } from '../storage/movieListRatingHydration';
@@ -149,25 +152,21 @@ export function SearchByMovieTitleScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.screen}>
         {isDetailOpen ? null : (
-          <View style={[styles.header, { paddingTop: insets.top + scaleSize(10) }]}>
-            <Pressable
-              onPress={handleBackPress}
-              style={[
-                styles.headerBackButton,
-                { top: insets.top + scaleSize(20) },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Ionicons
-                name="chevron-back"
-                size={scaleSize(40)}
-                color={colors.textPrimary}
-              />
-            </Pressable>
-            <View style={styles.headerRow}>
-              <View style={styles.sideSlot} />
-              <View style={styles.titleBlock}>
+          <View
+            style={[
+              styles.header,
+              { paddingTop: insets.top + scaleSize(122) },
+            ]}
+          >
+            <HeaderActionRow
+              left={
+                <HeaderNavButton
+                  variant="back"
+                  anchored={false}
+                  onPress={handleBackPress}
+                />
+              }
+              center={
                 <Text
                   allowFontScaling={false}
                   adjustsFontSizeToFit
@@ -176,27 +175,26 @@ export function SearchByMovieTitleScreen() {
                 >
                   Search by Movie Title
                 </Text>
-                <Pressable
-                  onPress={handleOpenAdvancedSearch}
-                  style={styles.searchModeLink}
-                  accessibilityRole="button"
-                  accessibilityLabel="Open Advanced Search"
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.searchModeLinkText}
-                  >
-                    Advanced Search
-                  </Text>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={scaleSize(15)}
-                    color={colors.brandText}
-                  />
-                </Pressable>
-              </View>
-              <View style={styles.sideSlot} />
-            </View>
+              }
+            />
+            <Pressable
+              onPress={handleOpenAdvancedSearch}
+              style={[
+                styles.searchModeLink,
+                { top: getHeaderNavSecondaryTop(insets.top) },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Open Advanced Search"
+            >
+              <Text allowFontScaling={false} style={styles.searchModeLinkText}>
+                Advanced Search
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={scaleSize(15)}
+                color={colors.brandText}
+              />
+            </Pressable>
 
             <View style={styles.searchRow}>
               <View style={styles.searchInputFrame}>
@@ -307,29 +305,6 @@ const styles = StyleSheet.create({
     paddingBottom: scaleSize(18),
     backgroundColor: colors.background,
   },
-  headerRow: {
-    minHeight: scaleSize(102),
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerBackButton: {
-    position: 'absolute',
-    left: scaleSize(36),
-    width: scaleSize(48),
-    height: scaleSize(48),
-    zIndex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sideSlot: {
-    width: scaleSize(86),
-    minHeight: scaleSize(44),
-    justifyContent: 'center',
-  },
-  titleBlock: {
-    flex: 1,
-    alignItems: 'center',
-  },
   title: {
     ...typography.pageTitle,
     width: '100%',
@@ -337,7 +312,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   searchModeLink: {
-    marginTop: scaleSize(12),
+    position: 'absolute',
+    alignSelf: 'center',
     minHeight: scaleSize(34),
     flexDirection: 'row',
     alignItems: 'center',

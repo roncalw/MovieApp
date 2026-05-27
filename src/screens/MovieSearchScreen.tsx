@@ -282,9 +282,11 @@ export function MovieSearchScreen() {
             movies={visibleMovies}
             cardVariant="posterRating"
             onMoviePress={pushMovie}
-            onEndReached={fetchNextPage}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
+            onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
+            hasNextPage={hasActiveSubmittedSearch && hasNextPage}
+            isFetchingNextPage={
+              hasActiveSubmittedSearch && isFetchingNextPage
+            }
           />
         </View>
 

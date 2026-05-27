@@ -58,6 +58,7 @@ import {
   saveMovieToStoredList,
   toStoredMovieListItem,
 } from '../storage/movieUserListsStorage';
+import { getMovieImageUri } from '../utils/movieImages';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const CINEMA_MENU_BACKGROUND = require('../assets/images/cinema_menu.jpg');
@@ -883,9 +884,9 @@ function LegacyFooter() {
 }
 
 function getPosterSource(movie: movieType | null): ImageSourcePropType {
-  const imagePath = movie?.poster_path ?? movie?.backdrop_path;
+  const imageUri = getMovieImageUri(movie);
 
-  return imagePath ? { uri: buildImageUrl('w500', imagePath) } : IMAGE_NOT_FOUND;
+  return imageUri ? { uri: imageUri } : IMAGE_NOT_FOUND;
 }
 
 function getProfileSource(profilePath: string | null | undefined) {

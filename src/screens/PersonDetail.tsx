@@ -18,6 +18,7 @@ import { usePersonDetailsQuery } from '../hooks/queries/useMovieSearchQuery';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
+import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 import type {
   movieType,
   personDetailType,
@@ -77,10 +78,12 @@ export function PersonDetail({
     [person]
   );
   const carouselItems = useMemo(
-    () => filmography.filter(item => item.movie.poster_path).slice(0, 24),
+    () => filmography.filter(item => getMovieImagePath(item.movie)).slice(0, 24),
     [filmography]
   );
   const carouselCardWidth = Math.min(width - scaleSize(40), scaleSize(360));
+  const carouselCardGap = scaleSize(12);
+  const carouselSnapInterval = carouselCardWidth + carouselCardGap;
   const title = person?.name ?? initialPersonName ?? 'Person Detail';
 
   return (
@@ -166,20 +169,34 @@ export function PersonDetail({
               </Text>
               <FlatList
                 horizontal
-                pagingEnabled
                 data={carouselItems}
                 keyExtractor={item => `carousel-${item.key}`}
                 showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToAlignment="start"
+                snapToInterval={carouselSnapInterval}
+                disableIntervalMomentum
                 contentContainerStyle={styles.carouselContent}
+                getItemLayout={(_, index) => ({
+                  length: carouselSnapInterval,
+                  offset: carouselSnapInterval * index,
+                  index,
+                })}
                 renderItem={({ item }) => (
                   <Pressable
                     onPress={() => onMoviePress(item.movie)}
-                    style={[styles.carouselCard, { width: carouselCardWidth }]}
+                    style={[
+                      styles.carouselCard,
+                      {
+                        width: carouselCardWidth,
+                        marginRight: carouselCardGap,
+                      },
+                    ]}
                     accessibilityRole="button"
                     accessibilityLabel={`Open ${item.title}`}
                   >
                     <Image
-                      source={getPosterSource(item.movie.poster_path)}
+                      source={getMoviePosterSource(item.movie)}
                       style={styles.carouselPoster}
                       resizeMode="cover"
                     />
@@ -209,7 +226,7 @@ export function PersonDetail({
               accessibilityLabel={`Open ${item.title}`}
             >
               <Image
-                source={getPosterSource(item.movie.poster_path)}
+                source={getMoviePosterSource(item.movie)}
                 style={styles.filmographyPoster}
                 resizeMode="cover"
               />
@@ -355,9 +372,11 @@ function getProfileSource(profilePath: string | null | undefined): ImageSourcePr
     : IMAGE_NOT_FOUND;
 }
 
-function getPosterSource(posterPath: string | null | undefined): ImageSourcePropType {
-  return posterPath
-    ? { uri: `${TMDB_IMAGE_BASE_URL}/w500${posterPath}` }
+function getMoviePosterSource(movie: movieType): ImageSourcePropType {
+  const imageUri = getMovieImageUri(movie);
+
+  return imageUri
+    ? { uri: imageUri }
     : IMAGE_NOT_FOUND;
 }
 
@@ -489,7 +508,6 @@ const styles = StyleSheet.create({
     paddingRight: scaleSize(18),
   },
   carouselCard: {
-    marginRight: scaleSize(12),
     borderRadius: scaleSize(8),
     overflow: 'hidden',
     backgroundColor: colors.surfaceMuted,

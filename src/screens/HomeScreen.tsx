@@ -11,11 +11,9 @@ Purpose:
      local movie-detail overlay behavior used by Advanced Search.
 */
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import Ionicons from '@react-native-vector-icons/ionicons/static';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useHomeGenreMoviesQuery,
   usePopularMoviesQuery,
@@ -23,7 +21,8 @@ import {
 } from '../hooks/queries/useMovieSearchQuery';
 import { HomeHeroCarousel } from '../components/home/HomeHeroCarousel';
 import { HomeMoviePosterRow } from '../components/home/HomeMoviePosterRow';
-import { DrawerMenuButton } from '../components/navigation/DrawerMenuButton';
+import { HeaderActionRow } from '../components/navigation/HeaderActionRow';
+import { HeaderNavButton } from '../components/navigation/HeaderNavButton';
 import { DetailStackOverlay } from '../components/detail/DetailStackOverlay';
 import { useDetailStack } from '../hooks/useDetailStack';
 import { colors } from '../theme/colors';
@@ -32,7 +31,6 @@ import type { AppDrawerParamList } from '../navigation/types';
 
 export function HomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
-  const insets = useSafeAreaInsets();
   const upcomingMoviesQuery = useUpcomingMoviesQuery();
   const popularMoviesQuery = usePopularMoviesQuery();
   const familyMoviesQuery = useHomeGenreMoviesQuery('familyMovies', 10751);
@@ -100,29 +98,23 @@ export function HomeScreen() {
                 isAutoPlayPaused={isDetailStackOpen}
                 onMoviePress={pushMovie}
               />
-              <DrawerMenuButton
-                onPress={handleOpenDrawer}
-                buttonStyle={[
-                  styles.heroMenuButton,
-                  { top: insets.top + scaleSize(20) },
-                ]}
-                imageStyle={styles.heroMenuImage}
+              <HeaderActionRow
+                left={
+                  <HeaderNavButton
+                    variant="menu"
+                    anchored={false}
+                    onPress={handleOpenDrawer}
+                  />
+                }
+                right={
+                  <HeaderNavButton
+                    variant="search"
+                    anchored={false}
+                    onPress={handleOpenTitleSearch}
+                    color={colors.actionOnPrimary}
+                  />
+                }
               />
-              <Pressable
-                onPress={handleOpenTitleSearch}
-                style={[
-                  styles.heroSearchButton,
-                  { top: insets.top + scaleSize(20) },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Search by movie title"
-              >
-                <Ionicons
-                  name="search-outline"
-                  size={scaleSize(30)}
-                  color={colors.actionOnPrimary}
-                />
-              </Pressable>
             </View>
 
             {moviePosterRows.map(row => (
@@ -175,23 +167,5 @@ const styles = StyleSheet.create({
   heroStage: {
     position: 'relative',
     backgroundColor: '#d9d9d9',
-  },
-  heroMenuButton: {
-    position: 'absolute',
-    left: scaleSize(36),
-    zIndex: 2,
-  },
-  heroMenuImage: {
-    width: scaleSize(48),
-    height: scaleSize(48),
-  },
-  heroSearchButton: {
-    position: 'absolute',
-    right: scaleSize(36),
-    width: scaleSize(48),
-    height: scaleSize(48),
-    zIndex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

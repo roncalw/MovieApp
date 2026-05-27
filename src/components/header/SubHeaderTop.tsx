@@ -17,7 +17,9 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { scaleSize } from '../../theme/scale';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
-import { DrawerMenuButton } from '../navigation/DrawerMenuButton';
+import { HeaderActionRow } from '../navigation/HeaderActionRow';
+import { HeaderNavButton } from '../navigation/HeaderNavButton';
+import { getHeaderNavSecondaryTop } from '../navigation/headerNavMetrics';
 
 type SubHeaderTopProps = {
   title: string;
@@ -41,54 +43,32 @@ export function SubHeaderTop({
   } = useHeaderMovieSearchContext();
 
   return (
-    /*
-      Combine the real safe-area inset with a scaled extra top gap so the header
-      clears the status area on all devices without using one fixed number.
-    */
-    <View
-      style={[styles.container, { paddingTop: insets.top + scaleSize(10) }]}
-    >
-      <View style={styles.row}>
-        <View style={styles.sideSlot}>
-          {isDetailOpen ? (
-            <Pressable
+    <View style={[styles.container, { minHeight: insets.top + scaleSize(118) }]}>
+      <HeaderActionRow
+        left={
+          isDetailOpen ? (
+            <HeaderNavButton
+              variant="back"
+              anchored={false}
               onPress={triggerDetailBack}
-              style={styles.detailBackButton}
-            >
-              <Ionicons name="chevron-back" size={42} color="#800000" />
-            </Pressable>
+              color="#800000"
+            />
           ) : (
-            <DrawerMenuButton
+            <HeaderNavButton
+              variant="menu"
+              anchored={false}
               onPress={onRequestDrawerOpen}
             />
-          )}
-        </View>
-
-        <View style={styles.titleBlock}>
+          )
+        }
+        center={
           <Text allowFontScaling={false} style={styles.title}>
             {isDetailOpen ? 'Movie Details' : title}
           </Text>
-          {!isDetailOpen && searchModeLinkLabel && onSearchModeLinkPress ? (
-            <Pressable
-              onPress={onSearchModeLinkPress}
-              style={styles.searchModeLink}
-              accessibilityRole="button"
-              accessibilityLabel={searchModeLinkLabel}
-            >
-              <Text allowFontScaling={false} style={styles.searchModeLinkText}>
-                {searchModeLinkLabel}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={scaleSize(15)}
-                color={colors.brandText}
-              />
-            </Pressable>
-          ) : null}
-        </View>
-
-        <View style={styles.sideSlot}>
-          {isDetailOpen ? null : (
+        }
+        rightStyle={isDetailOpen ? undefined : styles.submitSlot}
+        right={
+          isDetailOpen ? null : (
             <Pressable
               disabled={isSubmitDisabled}
               onPress={submitDraftFilters}
@@ -101,52 +81,46 @@ export function SubHeaderTop({
                 Submit
               </Text>
             </Pressable>
-          )}
-        </View>
-      </View>
+          )
+        }
+      />
+      {!isDetailOpen && searchModeLinkLabel && onSearchModeLinkPress ? (
+        <Pressable
+          onPress={onSearchModeLinkPress}
+          style={[
+            styles.searchModeLink,
+            { top: getHeaderNavSecondaryTop(insets.top) },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={searchModeLinkLabel}
+        >
+          <Text allowFontScaling={false} style={styles.searchModeLinkText}>
+            {searchModeLinkLabel}
+          </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={scaleSize(15)}
+            color={colors.brandText}
+          />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    /*
-      scaleSize(...) is used throughout this header's spacing so the title row,
-      placeholder, and action pill stay visually balanced on both compact and
-      larger phones.
-    */
-    paddingHorizontal: scaleSize(16),
     paddingBottom: scaleSize(14),
     backgroundColor: colors.background,
-  },
-  row: {
-    minHeight: scaleSize(44),
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sideSlot: {
-    width: scaleSize(96),
-    minHeight: scaleSize(32),
-    justifyContent: 'center',
-  },
-  detailBackButton: {
-    width: '100%',
-    minHeight: scaleSize(48),
-    marginLeft: scaleSize(10),
-    justifyContent: 'center',
   },
   title: {
     ...typography.pageTitle,
     color: colors.brandText,
     textAlign: 'center',
   },
-  titleBlock: {
-    flex: 1,
-    marginHorizontal: scaleSize(12),
-    alignItems: 'center',
-  },
   searchModeLink: {
-    marginTop: scaleSize(8),
+    position: 'absolute',
+    alignSelf: 'center',
     minHeight: scaleSize(30),
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,12 +131,17 @@ const styles = StyleSheet.create({
   },
   rightAction: {
     minHeight: scaleSize(36),
+    minWidth: scaleSize(94),
     paddingHorizontal: scaleSize(14),
     paddingVertical: scaleSize(8),
     borderRadius: 999,
     backgroundColor: '#F8EBCE',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  submitSlot: {
+    width: scaleSize(112),
+    alignItems: 'flex-end',
   },
   rightActionDisabled: {
     opacity: 0.45,
