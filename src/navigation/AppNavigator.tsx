@@ -3,6 +3,7 @@ import {
   Image,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -33,6 +34,9 @@ const Drawer = createDrawerNavigator<AppDrawerParamList>();
 const cinemaMenuIcon = require('../assets/images/cinema_menu.jpg');
 const drawerActiveTintColor = '#007AFF';
 const drawerInactiveTintColor = '#6F6F6F';
+const androidStoreUrl =
+  'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
+const iosStoreUrl = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
 const drawerLegacyLabelFontFamily = Platform.select({
   android: 'Roboto-Medium',
 });
@@ -127,6 +131,33 @@ function SecondaryDrawerLink({
 function AppDrawerContent(props: DrawerContentComponentProps) {
   const focusedRouteName = getFocusedRouteName(props);
 
+  async function shareWithFriend() {
+    try {
+      const storeUrl = Platform.OS === 'android' ? androidStoreUrl : iosStoreUrl;
+      const contentToShare =
+        Platform.OS === 'android'
+          ? {
+              message:
+                'Check out this Movie app!\n\nWith this movie guide you can find out what movies are playing and where they are streaming or where they are for rent as well!\n\nClick on the link below to download it!\n\nhttps://play.google.com/store/apps/details?id=com.codefest.movieapp',
+            }
+          : {
+              title: 'Check out this Movie app!',
+              message:
+                'With this movie guide you can find out what movies are playing and where they are streaming or where they are for rent as well!\n\nClick on the link below to download it!',
+              url: storeUrl,
+            };
+
+      const result = await Share.share(contentToShare);
+
+      if (result.action === Share.dismissedAction) {
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error sharing:', err.message);
+    }
+  }
+
   return (
     <View style={styles.drawerRoot}>
       <DrawerContentScrollView
@@ -155,7 +186,14 @@ function AppDrawerContent(props: DrawerContentComponentProps) {
             key={route.name}
             route={route}
             focused={focusedRouteName === route.name}
-            onPress={() => props.navigation.navigate(route.name)}
+            onPress={() => {
+              if (route.name === 'TellAFriend') {
+                shareWithFriend();
+                return;
+              }
+
+              props.navigation.navigate(route.name);
+            }}
           />
         ))}
       </View>

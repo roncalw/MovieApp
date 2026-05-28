@@ -16,7 +16,7 @@ import { typography } from '../../theme/typography';
 import { getMovieImageUri } from '../../utils/movieImages';
 
 const imageIMDB = require('../../assets/images/imdb.png');
-const imageNotFound = require('../../assets/images/PicNotFoundV6.png');
+const imageNotFound = require('../../assets/images/MissingMoviePlaceholder.png');
 
 type MovieCardProps = {
   movie: movieType;

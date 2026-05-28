@@ -62,7 +62,8 @@ import { getMovieImageUri } from '../utils/movieImages';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const CINEMA_MENU_BACKGROUND = require('../assets/images/cinema_menu.jpg');
-const IMAGE_NOT_FOUND = require('../assets/images/PicNotFoundV6.png');
+const IMAGE_PERSON_NOT_FOUND = require('../assets/images/MissingPersonPlaceholder.png');
+const IMAGE_MOVIE_NOT_FOUND = require('../assets/images/MissingMoviePlaceholder.png');
 const IMAGE_IMDB = require('../assets/images/imdb.png');
 const IMAGE_TMDB_LOGO = require('../assets/images/TMDB_Logo.png');
 const IMAGE_JUSTWATCH_LOGO = require('../assets/images/JustWatch_Logo.png');
@@ -886,17 +887,17 @@ function LegacyFooter() {
 function getPosterSource(movie: movieType | null): ImageSourcePropType {
   const imageUri = getMovieImageUri(movie);
 
-  return imageUri ? { uri: imageUri } : IMAGE_NOT_FOUND;
+  return imageUri ? { uri: imageUri } : IMAGE_MOVIE_NOT_FOUND;
 }
 
 function getProfileSource(profilePath: string | null | undefined) {
   return profilePath
     ? { uri: buildImageUrl('w500', profilePath) }
-    : IMAGE_NOT_FOUND;
+    : IMAGE_PERSON_NOT_FOUND;
 }
 
 function getLogoSource(logoPath: string | null | undefined) {
-  return logoPath ? { uri: buildImageUrl('w500', logoPath) } : IMAGE_NOT_FOUND;
+  return logoPath ? { uri: buildImageUrl('w500', logoPath) } : IMAGE_MOVIE_NOT_FOUND;
 }
 
 function buildImageUrl(size: 'w500', path: string) {

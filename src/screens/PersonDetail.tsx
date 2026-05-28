@@ -27,7 +27,8 @@ import type {
 } from '../types/MovieTypes';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
-const IMAGE_NOT_FOUND = require('../assets/images/PicNotFoundV6.png');
+const IMAGE_PERSON_NOT_FOUND = require('../assets/images/MissingPersonPlaceholder.png');
+const IMAGE_MOVIE_NOT_FOUND = require('../assets/images/MissingMoviePlaceholder.png');
 
 type PersonDetailProps = {
   personId: number;
@@ -369,7 +370,7 @@ function addRoleLabel(roles: string[], roleLabel: string) {
 function getProfileSource(profilePath: string | null | undefined): ImageSourcePropType {
   return profilePath
     ? { uri: `${TMDB_IMAGE_BASE_URL}/w500${profilePath}` }
-    : IMAGE_NOT_FOUND;
+    : IMAGE_PERSON_NOT_FOUND;
 }
 
 function getMoviePosterSource(movie: movieType): ImageSourcePropType {
@@ -377,7 +378,7 @@ function getMoviePosterSource(movie: movieType): ImageSourcePropType {
 
   return imageUri
     ? { uri: imageUri }
-    : IMAGE_NOT_FOUND;
+    : IMAGE_MOVIE_NOT_FOUND;
 }
 
 function getYear(releaseDate: string) {

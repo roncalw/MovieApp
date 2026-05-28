@@ -125,6 +125,12 @@ export async function removeMovieFromStoredList(
   await AsyncStorage.setItem(storageKey, JSON.stringify(nextMovies));
 }
 
+export async function clearStoredMovieList(
+  storageKey: MovieUserListStorageKey
+): Promise<void> {
+  await AsyncStorage.removeItem(storageKey);
+}
+
 export async function getStoredMovieIds(
   storageKey: MovieUserListStorageKey
 ): Promise<Set<number>> {
