@@ -10,12 +10,12 @@ Purpose:
 */
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
 import type { movieType } from '../../types/MovieTypes';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
 import { getMovieImageUri } from '../../utils/movieImages';
 
-const imageIMDB = require('../../assets/images/imdb.png');
 const imageNotFound = require('../../assets/images/MissingMoviePlaceholder.png');
 
 type MovieCardProps = {
@@ -54,11 +54,11 @@ export function MovieCard({
         />
         {isPosterRating && showRatingBadge ? (
           <View style={styles.ratingBadge}>
-            <Image
-              source={imageIMDB}
-              style={styles.imdbLogo}
-              resizeMode="contain"
-              accessibilityLabel="IMDb rating"
+            <Ionicons
+              name="star"
+              size={scaleSize(12)}
+              color="#FFD400"
+              accessibilityLabel="Movie rating"
             />
             <Text allowFontScaling={false} style={styles.ratingBadgeText}>
               {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}
@@ -140,10 +140,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: scaleSize(3),
-  },
-  imdbLogo: {
-    width: scaleSize(21),
-    height: scaleSize(10),
   },
   ratingBadgeText: {
     ...typography.cardMeta,
