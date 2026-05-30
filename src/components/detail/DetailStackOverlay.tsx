@@ -10,7 +10,6 @@ type DetailStackOverlayProps = {
   detailStack: DetailStackEntry[];
   onPopDetail: () => void;
   onCloseAllDetails: () => void;
-  onBackToOriginalMovie: () => void;
   onPushMovie: (movie: movieType) => void;
   onPushPerson: (personId: number, initialPersonName?: string) => void;
 };
@@ -19,7 +18,6 @@ export function DetailStackOverlay({
   detailStack,
   onPopDetail,
   onCloseAllDetails,
-  onBackToOriginalMovie,
   onPushMovie,
   onPushPerson,
 }: DetailStackOverlayProps) {
@@ -48,20 +46,15 @@ export function DetailStackOverlay({
               <MovieDetail
                 movieId={entry.movieId}
                 initialMovie={entry.initialMovie}
-                stackDepth={index + 1}
                 onBackPress={onPopDetail}
-                onCloseAllPress={onCloseAllDetails}
-                onBackToOriginalMoviePress={onBackToOriginalMovie}
                 onPersonPress={onPushPerson}
               />
             ) : (
               <PersonDetail
                 personId={entry.personId}
                 initialPersonName={entry.initialPersonName}
-                stackDepth={index + 1}
                 onBackPress={onPopDetail}
                 onCloseAllPress={onCloseAllDetails}
-                onBackToOriginalMoviePress={onBackToOriginalMovie}
                 onMoviePress={onPushMovie}
               />
             )}

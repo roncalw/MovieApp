@@ -48,10 +48,6 @@ export function useDetailStack() {
     setDetailStack([]);
   }, []);
 
-  const backToOriginalMovie = useCallback(() => {
-    setDetailStack(currentStack => currentStack.slice(0, 1));
-  }, []);
-
   return {
     detailStack,
     isDetailStackOpen: detailStack.length > 0,
@@ -60,6 +56,5 @@ export function useDetailStack() {
     pushPerson,
     popDetail,
     closeAllDetails,
-    backToOriginalMovie,
   };
 }

@@ -40,7 +40,6 @@ export function StoredMovieListScreen({
     pushPerson,
     popDetail,
     closeAllDetails,
-    backToOriginalMovie,
   } = useDetailStack();
   const isDetailOpen = isDetailStackOpen;
 
@@ -157,7 +156,6 @@ export function StoredMovieListScreen({
           detailStack={detailStack}
           onPopDetail={handlePopDetail}
           onCloseAllDetails={handleCloseAllDetails}
-          onBackToOriginalMovie={backToOriginalMovie}
           onPushMovie={pushMovie}
           onPushPerson={pushPerson}
         />

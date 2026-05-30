@@ -194,25 +194,25 @@ export function SubHeaderMovieSearchFields() {
         </View>
       </Pressable>
 
-      <Pressable
-        onPress={onToggleExcludeSeenMovies}
-        style={styles.excludeSeenToggle}
-        accessibilityRole="button"
-        accessibilityState={{ selected: excludeSeenMovies }}
-      >
-        <Text
-          allowFontScaling={false}
-          style={[
-            styles.excludeSeenToggleText,
-            excludeSeenMovies ? styles.excludeSeenToggleTextActive : null,
-          ]}
-        >
-          Exclude Movies I Have Seen
-        </Text>
-      </Pressable>
-
       {!isFiltersVisible ? null : (
         <>
+          <Pressable
+            onPress={onToggleExcludeSeenMovies}
+            style={styles.excludeSeenToggle}
+            accessibilityRole="button"
+            accessibilityState={{ selected: excludeSeenMovies }}
+          >
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.excludeSeenToggleText,
+                excludeSeenMovies ? styles.excludeSeenToggleTextActive : null,
+              ]}
+            >
+              Exclude Movies I Have Seen
+            </Text>
+          </Pressable>
+
           <View style={styles.yearFieldsRow}>
             <View style={styles.yearFieldColumn}>
               <Text allowFontScaling={false} style={styles.dateFieldLabel}>
@@ -304,9 +304,10 @@ const styles = StyleSheet.create({
     paddingBottom: scaleSize(8),
   },
   excludeSeenToggleText: {
-    fontSize: scaleSize(10),
+    fontSize: scaleSize(12),
     lineHeight: scaleSize(13),
-    color: colors.textSecondary,
+    color: '#777777',
+    fontStyle: 'italic',
     textAlign: 'center',
   },
   excludeSeenToggleTextActive: {

@@ -66,7 +66,6 @@ export function MovieSearchScreen() {
     pushPerson,
     popDetail,
     closeAllDetails,
-    backToOriginalMovie,
   } = useDetailStack();
   const [excludeSeenMovies, setExcludeSeenMovies] = useState(false);
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
@@ -243,7 +242,12 @@ export function MovieSearchScreen() {
 
   return (
     <View style={styles.container}>
-      {isDetailOpen ? null : (
+      <View
+        pointerEvents={isDetailOpen ? 'none' : 'auto'}
+        accessibilityElementsHidden={isDetailOpen}
+        importantForAccessibility={isDetailOpen ? 'no-hide-descendants' : 'auto'}
+        style={isDetailOpen ? styles.headerHidden : null}
+      >
         <HeaderMovieSearch
           title="Movie Search"
           appliedParams={submittedParams}
@@ -264,7 +268,7 @@ export function MovieSearchScreen() {
           onSubmitFilters={handleApplyFilters}
           onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
         />
-      )}
+      </View>
 
       <View style={styles.contentStack}>
         <View
@@ -294,7 +298,6 @@ export function MovieSearchScreen() {
           detailStack={detailStack}
           onPopDetail={handlePopDetail}
           onCloseAllDetails={handleCloseAllDetails}
-          onBackToOriginalMovie={backToOriginalMovie}
           onPushMovie={pushMovie}
           onPushPerson={pushPerson}
         />
@@ -316,6 +319,9 @@ const styles = StyleSheet.create({
   },
   searchContentHidden: {
     opacity: 0,
+  },
+  headerHidden: {
+    display: 'none',
   },
   centered: {
     /*

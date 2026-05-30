@@ -49,7 +49,6 @@ export function SearchByMovieTitleScreen() {
     pushPerson,
     popDetail,
     closeAllDetails,
-    backToOriginalMovie,
   } = useDetailStack();
   const {
     data,
@@ -285,7 +284,6 @@ export function SearchByMovieTitleScreen() {
             detailStack={detailStack}
             onPopDetail={popDetail}
             onCloseAllDetails={closeAllDetails}
-            onBackToOriginalMovie={backToOriginalMovie}
             onPushMovie={pushMovie}
             onPushPerson={pushPerson}
           />

@@ -261,6 +261,75 @@ export async function fetchMovieListImdbRating(
   return (await response.json()) as CloudflareMovieListImdbRating;
 }
 
+export async function scrapeImdbWebsiteRating(
+  imdbId: string
+): Promise<{ imdbRating: number | null; imdbVotes: string }> {
+  const imdbRatingsUrl = `https://www.imdb.com/title/${imdbId}/ratings/`;
+  const directRating = await scrapeDirectImdbRating(imdbRatingsUrl);
+
+  if (directRating.imdbRating !== null) {
+    return directRating;
+  }
+
+  /*
+    IMDb sometimes returns an AWS WAF page instead of the ratings HTML. When that
+    happens, read the same IMDb URL through a text-rendered view so the manual
+    refresh button still has a practical way to recover the rating.
+  */
+  return scrapeReadableImdbRating(imdbRatingsUrl);
+}
+
+async function scrapeDirectImdbRating(
+  imdbRatingsUrl: string
+): Promise<{ imdbRating: number | null; imdbVotes: string }> {
+  const response = await fetch(imdbRatingsUrl, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+    },
+  });
+
+  if (!response.ok && response.status !== 202) {
+    throw new Error(`IMDb rating scrape failed: ${response.status}`);
+  }
+
+  const htmlString = await response.text();
+  const ratingMatch =
+    htmlString.match(
+      /data-testid="rating-button__aggregate-rating__score"[\s\S]*?<span[^>]*>(\d+(?:\.\d+)?)<\/span>/i
+    ) ?? htmlString.match(/"ratingValue"\s*:\s*"?(\d+(?:\.\d+)?)"?/i);
+  const votesMatch = htmlString.match(/"ratingCount"\s*:\s*"?([\d,]+)"?/i);
+  const imdbRating = ratingMatch ? Number.parseFloat(ratingMatch[1]) : NaN;
+
+  return {
+    imdbRating: Number.isNaN(imdbRating) ? null : imdbRating,
+    imdbVotes: votesMatch?.[1] ?? '',
+  };
+}
+
+async function scrapeReadableImdbRating(
+  imdbRatingsUrl: string
+): Promise<{ imdbRating: number | null; imdbVotes: string }> {
+  const response = await fetch(
+    `https://r.jina.ai/http://r.jina.ai/http://${imdbRatingsUrl}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Readable IMDb rating scrape failed: ${response.status}`);
+  }
+
+  const markdownText = await response.text();
+  const ratingMatch =
+    markdownText.match(/IMDb rating[\s\S]*?(\d+(?:\.\d+)?)\/10/i) ??
+    markdownText.match(/(\d+(?:\.\d+)?)\/10/);
+  const imdbRating = ratingMatch ? Number.parseFloat(ratingMatch[1]) : NaN;
+
+  return {
+    imdbRating: Number.isNaN(imdbRating) ? null : imdbRating,
+    imdbVotes: '',
+  };
+}
+
 export async function fetchMoviesByTitle(
   title: string,
   page: number

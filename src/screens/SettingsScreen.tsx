@@ -176,8 +176,9 @@ export function SettingsScreen() {
             <Switch
               value={isSubscribed}
               onValueChange={setIsSubscribed}
+              ios_backgroundColor="grey"
               thumbColor="#FFFFFF"
-              trackColor={{ false: '#808080', true: '#007BFF' }}
+              trackColor={{ false: 'grey', true: '#007BFF' }}
               style={styles.notificationSwitch}
             />
           </View>

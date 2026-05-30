@@ -50,7 +50,6 @@ export function HomeScreen() {
     pushPerson,
     popDetail,
     closeAllDetails,
-    backToOriginalMovie,
   } = useDetailStack();
   const moviePosterRows = [
     { title: 'Popular Movies', query: popularMoviesQuery },
@@ -134,7 +133,6 @@ export function HomeScreen() {
           detailStack={detailStack}
           onPopDetail={popDetail}
           onCloseAllDetails={closeAllDetails}
-          onBackToOriginalMovie={backToOriginalMovie}
           onPushMovie={pushMovie}
           onPushPerson={pushPerson}
         />

@@ -36,6 +36,7 @@ import {
   useMovieDetailsQuery,
   useMovieListImdbRatingQuery,
 } from '../hooks/queries/useMovieSearchQuery';
+import { scrapeImdbWebsiteRating } from '../api/tmdb/services/movieService';
 import type {
   movieCastProfile,
   movieCrewProfile,
@@ -71,10 +72,7 @@ const IMAGE_JUSTWATCH_LOGO = require('../assets/images/JustWatch_Logo.png');
 type MovieDetailProps = {
   movieId: number;
   initialMovie?: movieType | null;
-  stackDepth?: number;
   onBackPress?: () => void;
-  onCloseAllPress?: () => void;
-  onBackToOriginalMoviePress?: () => void;
   onPersonPress?: (personId: number, initialPersonName?: string) => void;
 };
 
@@ -112,14 +110,13 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 export function MovieDetail({
   movieId,
   initialMovie,
-  stackDepth = 1,
   onBackPress,
-  onCloseAllPress,
-  onBackToOriginalMoviePress,
   onPersonPress,
 }: MovieDetailProps) {
   const insets = useSafeAreaInsets();
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
+  const [scrapedImdbRating, setScrapedImdbRating] = useState<number | null>(null);
+  const [isScrapingImdbRating, setIsScrapingImdbRating] = useState(false);
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
   const {
     data: movieDetails,
@@ -127,17 +124,39 @@ export function MovieDetail({
     isError,
     error,
   } = useMovieDetailsQuery(movieId);
-  const {
-    data: movieListImdbRating,
-    refetch: refetchMovieListImdbRating,
-  } = useMovieListImdbRatingQuery(movieId);
+  const { data: movieListImdbRating } = useMovieListImdbRatingQuery(movieId);
 
   const displayMovie = movieDetails ?? initialMovie ?? null;
-  const imdbRating = movieListImdbRating?.imdb_rating ?? null;
+  const imdbRating = scrapedImdbRating ?? movieListImdbRating?.imdb_rating ?? null;
+  useEffect(() => {
+    setScrapedImdbRating(null);
+    setIsScrapingImdbRating(false);
+  }, [movieId]);
   const preferredTrailer = useMemo(
     () => getPreferredYouTubeTrailer(movieDetails?.videos?.results ?? []),
     [movieDetails?.videos?.results]
   );
+  const handleRetryImdbRating = useCallback(async () => {
+    const imdbId = movieDetails?.external_ids?.imdb_id;
+
+    if (!imdbId) {
+      return;
+    }
+
+    setIsScrapingImdbRating(true);
+
+    try {
+      const scrapedRating = await scrapeImdbWebsiteRating(imdbId);
+
+      if (scrapedRating.imdbRating !== null) {
+        setScrapedImdbRating(scrapedRating.imdbRating);
+      }
+    } catch (scrapeError) {
+      console.error('Error scraping IMDb rating:', scrapeError);
+    } finally {
+      setIsScrapingImdbRating(false);
+    }
+  }, [movieDetails?.external_ids?.imdb_id]);
   const handleOpenTrailer = useCallback(() => {
     if (preferredTrailer) {
       setActiveTrailerKey(preferredTrailer.key);
@@ -158,8 +177,9 @@ export function MovieDetail({
         <MovieHero
           movie={displayMovie}
           imdbRating={imdbRating}
+          isImdbRatingLoading={isScrapingImdbRating}
           onBackPress={onBackPress}
-          onRetryImdbRating={refetchMovieListImdbRating}
+          onRetryImdbRating={handleRetryImdbRating}
         />
 
         {isLoading ? (
@@ -171,11 +191,7 @@ export function MovieDetail({
             movie={movieDetails}
             imdbRating={imdbRating}
             trailer={preferredTrailer}
-            stackDepth={stackDepth}
             onTrailerPress={handleOpenTrailer}
-            onBackPress={onBackPress}
-            onCloseAllPress={onCloseAllPress}
-            onBackToOriginalMoviePress={onBackToOriginalMoviePress}
             onPersonPress={onPersonPress}
           />
         ) : null}
@@ -190,21 +206,13 @@ function LoadedMovieDetail({
   movie,
   imdbRating,
   trailer,
-  stackDepth,
   onTrailerPress,
-  onBackPress,
-  onCloseAllPress,
-  onBackToOriginalMoviePress,
   onPersonPress,
 }: {
   movie: movieType;
   imdbRating: number | null;
   trailer: movieTrailerVideo | null;
-  stackDepth: number;
   onTrailerPress: () => void;
-  onBackPress?: () => void;
-  onCloseAllPress?: () => void;
-  onBackToOriginalMoviePress?: () => void;
   onPersonPress?: (personId: number, initialPersonName?: string) => void;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -389,15 +397,6 @@ function LoadedMovieDetail({
         </>
       ) : null}
 
-      {onBackPress && onCloseAllPress ? (
-        <DetailStackActionFooter
-          stackDepth={stackDepth}
-          onBackPress={onBackPress}
-          onCloseAllPress={onCloseAllPress}
-          onBackToOriginalMoviePress={onBackToOriginalMoviePress}
-        />
-      ) : null}
-
       <LegacyFooter />
     </>
   );
@@ -492,11 +491,13 @@ function TrailerModal({ trailerKey, onClose }: TrailerModalProps) {
 function MovieHero({
   movie,
   imdbRating,
+  isImdbRatingLoading,
   onBackPress,
   onRetryImdbRating,
 }: {
   movie: movieType | null;
   imdbRating: number | null;
+  isImdbRatingLoading: boolean;
   onBackPress?: () => void;
   onRetryImdbRating: () => void;
 }) {
@@ -529,12 +530,16 @@ function MovieHero({
         />
 
         <Pressable
-          onPress={hasImdbRating ? undefined : onRetryImdbRating}
-          disabled={hasImdbRating}
+          onPress={
+            hasImdbRating || isImdbRatingLoading ? undefined : onRetryImdbRating
+          }
+          disabled={hasImdbRating || isImdbRatingLoading}
           style={styles.imdbBadge}
           accessibilityRole="button"
           accessibilityLabel={
-            hasImdbRating ? `IMDb rating ${imdbRating}` : 'Retry IMDb rating'
+            hasImdbRating
+              ? `IMDb rating ${imdbRating}`
+              : 'Scrape IMDb rating from IMDb'
           }
         >
           <Image
@@ -544,9 +549,13 @@ function MovieHero({
             accessibilityLabel="IMDb"
           />
           <Text allowFontScaling={false} style={styles.imdbRatingText}>
-            {hasImdbRating ? formatImdbRating(imdbRating) : 'No Data'}
+            {isImdbRatingLoading
+              ? 'Loading...'
+              : hasImdbRating
+                ? formatImdbRating(imdbRating)
+                : 'No Data'}
           </Text>
-          {!hasImdbRating ? (
+          {!hasImdbRating && !isImdbRatingLoading ? (
             <Text allowFontScaling={false} style={styles.imdbVotesText}>
               Tap to Refresh
             </Text>
@@ -760,43 +769,6 @@ function CreditCard({
         </Text>
       </View>
     </Pressable>
-  );
-}
-
-function DetailStackActionFooter({
-  stackDepth,
-  onBackPress,
-  onCloseAllPress,
-  onBackToOriginalMoviePress,
-}: {
-  stackDepth: number;
-  onBackPress: () => void;
-  onCloseAllPress: () => void;
-  onBackToOriginalMoviePress?: () => void;
-}) {
-  return (
-    <View style={styles.stackFooter}>
-      <Pressable onPress={onBackPress} style={styles.stackFooterButton}>
-        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-          Back One
-        </Text>
-      </Pressable>
-      {stackDepth > 1 && onBackToOriginalMoviePress ? (
-        <Pressable
-          onPress={onBackToOriginalMoviePress}
-          style={styles.stackFooterButton}
-        >
-          <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-            Original Movie
-          </Text>
-        </Pressable>
-      ) : null}
-      <Pressable onPress={onCloseAllPress} style={styles.stackFooterButton}>
-        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-          Close All
-        </Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -1271,26 +1243,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: 0,
     textAlign: 'center',
-  },
-  stackFooter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: scaleSize(10),
-    paddingHorizontal: scaleSize(18),
-    paddingTop: scaleSize(22),
-    paddingBottom: scaleSize(8),
-  },
-  stackFooterButton: {
-    minHeight: scaleSize(42),
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(14),
-    borderRadius: scaleSize(6),
-    backgroundColor: colors.textPrimary,
-  },
-  stackFooterButtonText: {
-    ...typography.buttonLabel,
-    color: colors.actionOnPrimary,
   },
   infoPanel: {
     marginLeft: scaleSize(5),

@@ -33,10 +33,8 @@ const IMAGE_MOVIE_NOT_FOUND = require('../assets/images/MissingMoviePlaceholder.
 type PersonDetailProps = {
   personId: number;
   initialPersonName?: string;
-  stackDepth: number;
   onBackPress: () => void;
   onCloseAllPress: () => void;
-  onBackToOriginalMoviePress: () => void;
   onMoviePress: (movie: movieType) => void;
 };
 
@@ -54,20 +52,11 @@ type FilmographyGroup = Omit<FilmographyItem, 'roleLabel'> & {
   roles: string[];
 };
 
-type StackActionFooterProps = {
-  stackDepth: number;
-  onBackPress: () => void;
-  onBackToOriginalMoviePress: () => void;
-  onCloseAllPress: () => void;
-};
-
 export function PersonDetail({
   personId,
   initialPersonName,
-  stackDepth,
   onBackPress,
   onCloseAllPress,
-  onBackToOriginalMoviePress,
   onMoviePress,
 }: PersonDetailProps) {
   const insets = useSafeAreaInsets();
@@ -102,9 +91,6 @@ export function PersonDetail({
         <View style={styles.headerTitleBlock}>
           <Text allowFontScaling={false} numberOfLines={1} style={styles.headerTitle}>
             {title}
-          </Text>
-          <Text allowFontScaling={false} style={styles.stackDepthText}>
-            {stackDepth} deep
           </Text>
         </View>
         <Pressable
@@ -246,12 +232,6 @@ export function PersonDetail({
             </Pressable>
           ))}
 
-          <StackActionFooter
-            stackDepth={stackDepth}
-            onBackPress={onBackPress}
-            onBackToOriginalMoviePress={onBackToOriginalMoviePress}
-            onCloseAllPress={onCloseAllPress}
-          />
         </ScrollView>
       ) : null}
     </View>
@@ -268,38 +248,6 @@ function DetailLine({ label, value }: { label: string; value?: string | null }) 
       <Text style={styles.detailLineLabel}>{label}: </Text>
       {value}
     </Text>
-  );
-}
-
-function StackActionFooter({
-  stackDepth,
-  onBackPress,
-  onBackToOriginalMoviePress,
-  onCloseAllPress,
-}: StackActionFooterProps) {
-  return (
-    <View style={styles.stackFooter}>
-      <Pressable onPress={onBackPress} style={styles.stackFooterButton}>
-        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-          Back One
-        </Text>
-      </Pressable>
-      {stackDepth > 1 ? (
-        <Pressable
-          onPress={onBackToOriginalMoviePress}
-          style={styles.stackFooterButton}
-        >
-          <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-            Original Movie
-          </Text>
-        </Pressable>
-      ) : null}
-      <Pressable onPress={onCloseAllPress} style={styles.stackFooterButton}>
-        <Text allowFontScaling={false} style={styles.stackFooterButtonText}>
-          Close All
-        </Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -434,12 +382,6 @@ const styles = StyleSheet.create({
     ...typography.pageTitle,
     color: colors.brandText,
   },
-  stackDepthText: {
-    ...typography.summaryBody,
-    color: colors.textSecondary,
-    fontSize: scaleSize(11),
-    lineHeight: scaleSize(14),
-  },
   scrollView: {
     flex: 1,
   },
@@ -564,25 +506,5 @@ const styles = StyleSheet.create({
     ...typography.summaryBody,
     color: colors.textPrimary,
     marginTop: scaleSize(2),
-  },
-  stackFooter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: scaleSize(10),
-    paddingHorizontal: scaleSize(18),
-    paddingTop: scaleSize(22),
-    paddingBottom: scaleSize(10),
-  },
-  stackFooterButton: {
-    minHeight: scaleSize(42),
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(14),
-    borderRadius: scaleSize(6),
-    backgroundColor: colors.textPrimary,
-  },
-  stackFooterButtonText: {
-    ...typography.buttonLabel,
-    color: colors.actionOnPrimary,
   },
 });
