@@ -294,7 +294,10 @@ function LoadedMovieDetail({
 
           <Pressable
             onPress={handleSeenPress}
-            style={styles.seenButton}
+            style={[
+              styles.seenButton,
+              isSeen ? styles.seenButtonActive : null,
+            ]}
             accessibilityRole="button"
             accessibilityLabel={isSeen ? 'Remove from seen movies' : 'Mark as seen'}
           >
@@ -1097,9 +1100,17 @@ const styles = StyleSheet.create({
   },
   seenButton: {
     minWidth: scaleSize(72),
-    height: scaleSize(50),
+    height: scaleSize(28),
+    paddingHorizontal: scaleSize(7),
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
+    borderWidth: scaleSize(2),
+    borderColor: '#8C8C8C',
+    borderRadius: scaleSize(14),
+  },
+  seenButtonActive: {
+    borderColor: colors.brandText,
   },
   seenButtonText: {
     color: '#8C8C8C',
@@ -1109,7 +1120,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   seenButtonTextActive: {
-    color: colors.textPrimary,
+    color: colors.brandText,
   },
   trailerPlayButton: {
     width: scaleSize(50),

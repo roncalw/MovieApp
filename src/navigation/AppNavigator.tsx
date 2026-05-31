@@ -32,7 +32,7 @@ import type { AppDrawerParamList } from './types';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 const cinemaMenuIcon = require('../assets/images/cinema_menu.jpg');
-const drawerActiveTintColor = '#007AFF';
+const drawerActiveTintColor = colors.brandText;
 const drawerInactiveTintColor = '#6F6F6F';
 const androidStoreUrl =
   'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
