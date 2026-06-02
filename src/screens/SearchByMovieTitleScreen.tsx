@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -25,14 +25,15 @@ import { HeaderNavButton } from '../components/navigation/HeaderNavButton';
 import { getHeaderNavSecondaryTop } from '../components/navigation/headerNavMetrics';
 import { useMovieTitleSearchQuery } from '../hooks/queries/useMovieSearchQuery';
 import { useDetailStack } from '../hooks/useDetailStack';
-import { hydrateMoviesWithCurrentImdbRatings } from '../storage/movieListRatingHydration';
+import { fetchMovieListImdbRating } from '../api/tmdb/services/movieService';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 import type { movieType } from '../types/MovieTypes';
 import type { AppDrawerParamList } from '../navigation/types';
 
-const MAX_TITLE_SEARCH_RESULTS_TO_HYDRATE = 20;
+const TITLE_SEARCH_RATING_CONCURRENCY = 6;
+type MovieRatingById = Record<number, number | null>;
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
@@ -40,8 +41,11 @@ export function SearchByMovieTitleScreen() {
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
   const [draftTitle, setDraftTitle] = useState('');
   const [submittedTitle, setSubmittedTitle] = useState('');
-  const [hydratedMovies, setHydratedMovies] = useState<movieType[]>([]);
-  const [isHydratingRatings, setIsHydratingRatings] = useState(false);
+  const [movieRatingsById, setMovieRatingsById] = useState<MovieRatingById>({});
+  const [ratingHydrationRunId, setRatingHydrationRunId] = useState(0);
+  const requestedRatingIdsRef = useRef<Set<number>>(new Set());
+  const isMountedRef = useRef(true);
+  const ratingHydrationRunIdRef = useRef(0);
   const {
     detailStack,
     isDetailStackOpen,
@@ -63,16 +67,16 @@ export function SearchByMovieTitleScreen() {
     () => data?.pages.flatMap(page => page.movies) ?? [],
     [data]
   );
-  const totalResults = data?.pages[0]?.totalResults ?? 0;
-  const shouldHydrateRatings =
-    totalResults <= MAX_TITLE_SEARCH_RESULTS_TO_HYDRATE;
   const movies = useMemo(() => {
     if (!data) {
       return [];
     }
 
-    return shouldHydrateRatings ? hydratedMovies : titleSearchMovies;
-  }, [data, hydratedMovies, shouldHydrateRatings, titleSearchMovies]);
+    return titleSearchMovies.map((movie) => ({
+      ...movie,
+      vote_average: movieRatingsById[movie.id] ?? 0,
+    }));
+  }, [data, movieRatingsById, titleSearchMovies]);
 
   function handleOpenAdvancedSearch() {
     navigation.navigate('AdvancedSearch');
@@ -82,70 +86,66 @@ export function SearchByMovieTitleScreen() {
     navigation.navigate(route.params?.returnTo ?? 'Home');
   }
 
+  function resetRatingHydrationState() {
+    requestedRatingIdsRef.current.clear();
+    ratingHydrationRunIdRef.current += 1;
+    setMovieRatingsById({});
+    setRatingHydrationRunId(ratingHydrationRunIdRef.current);
+  }
+
   function handleSubmitSearch() {
     const nextSubmittedTitle = draftTitle.trim();
 
     closeAllDetails();
-    setHydratedMovies([]);
+    resetRatingHydrationState();
     setSubmittedTitle(nextSubmittedTitle);
   }
 
   function handleClearTitle() {
     setDraftTitle('');
     setSubmittedTitle('');
-    setHydratedMovies([]);
+    resetRatingHydrationState();
     closeAllDetails();
   }
 
   useEffect(() => {
-    let isMounted = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    async function hydrateSearchResults() {
-      if (!data) {
-        setHydratedMovies([]);
-        return;
-      }
+  useEffect(() => {
+    const moviesNeedingRatings = titleSearchMovies.filter((movie) => {
+      return !requestedRatingIdsRef.current.has(movie.id);
+    });
 
-      if (!shouldHydrateRatings) {
-        /*
-          Broad title searches can return hundreds of TMDB matches. When TMDB says
-          more than 20 movies match, this screen intentionally skips per-movie
-          Cloudflare IMDb lookups so one search does not trigger a large burst of
-          rating requests. The result cards still display, but the IMDb overlay
-          is hidden for that broad result set because the app has not fetched
-          Cloudflare IMDb ratings for those movies.
-        */
-        setHydratedMovies(titleSearchMovies);
-        return;
-      }
-
-      setIsHydratingRatings(true);
-
-      try {
-        const moviesWithRatings = await hydrateMoviesWithCurrentImdbRatings(
-          titleSearchMovies,
-          false
-        );
-
-        if (isMounted) {
-          setHydratedMovies(moviesWithRatings);
-        }
-      } finally {
-        if (isMounted) {
-          setIsHydratingRatings(false);
-        }
-      }
+    if (moviesNeedingRatings.length === 0) {
+      return;
     }
 
-    hydrateSearchResults();
+    moviesNeedingRatings.forEach((movie) => {
+      requestedRatingIdsRef.current.add(movie.id);
+    });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [data, shouldHydrateRatings, titleSearchMovies]);
+    const activeRatingHydrationRunId = ratingHydrationRunIdRef.current;
+
+    hydrateLoadedTitleSearchRatings(moviesNeedingRatings, (ratingUpdates) => {
+      if (
+        !isMountedRef.current ||
+        ratingHydrationRunIdRef.current !== activeRatingHydrationRunId
+      ) {
+        return;
+      }
+
+      setMovieRatingsById((currentRatings) => ({
+        ...currentRatings,
+        ...ratingUpdates,
+      }));
+    });
+  }, [ratingHydrationRunId, titleSearchMovies]);
 
   const isDetailOpen = isDetailStackOpen;
-  const isLoadingResults = isLoading || isHydratingRatings;
+  const isLoadingResults = isLoading;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -271,7 +271,7 @@ export function SearchByMovieTitleScreen() {
               <MovieResults
                 movies={movies}
                 cardVariant="posterRating"
-                showRatingBadge={shouldHydrateRatings}
+                showRatingBadge
                 onMoviePress={pushMovie}
                 onEndReached={fetchNextPage}
                 hasNextPage={hasNextPage}
@@ -381,3 +381,38 @@ const styles = StyleSheet.create({
     color: colors.brandText,
   },
 });
+
+async function hydrateLoadedTitleSearchRatings(
+  movies: movieType[],
+  onRatingBatchLoaded: (ratingUpdates: MovieRatingById) => void
+) {
+  /*
+    Title searches can match many TMDB pages. This hydrates only the movies that
+    the app has already loaded into the scrolling list, and it does the requests
+    in small batches so a broad title search does not block the first cards from
+    rendering or create one large burst of Cloudflare rating calls.
+  */
+  for (
+    let index = 0;
+    index < movies.length;
+    index += TITLE_SEARCH_RATING_CONCURRENCY
+  ) {
+    const movieBatch = movies.slice(
+      index,
+      index + TITLE_SEARCH_RATING_CONCURRENCY
+    );
+    const ratingBatch = await Promise.all(
+      movieBatch.map(async (movie) => {
+        try {
+          const rating = await fetchMovieListImdbRating(movie.id);
+
+          return [movie.id, rating.imdb_rating] as const;
+        } catch {
+          return [movie.id, null] as const;
+        }
+      })
+    );
+
+    onRatingBatchLoaded(Object.fromEntries(ratingBatch) as MovieRatingById);
+  }
+}

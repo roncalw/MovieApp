@@ -10,7 +10,7 @@ Purpose:
    * Shows the selected movie detail view inside the existing Home/Search overlay, using the legacy Movie Detail layout as the
      visual reference while keeping unfinished actions such as favorites inactive.
 */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -31,12 +31,16 @@ import {
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import YoutubePlayer from 'react-native-youtube-iframe';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useMovieDetailsQuery,
   useMovieListImdbRatingQuery,
 } from '../hooks/queries/useMovieSearchQuery';
-import { scrapeImdbWebsiteRating } from '../api/tmdb/services/movieService';
+import {
+  type ImdbWebsiteRatingScrapeResult,
+  type ImdbWebsiteRatingScrapeStatus,
+} from '../api/tmdb/services/movieService';
 import type {
   movieCastProfile,
   movieCrewProfile,
@@ -101,11 +105,117 @@ type TrailerModalProps = {
   onClose: () => void;
 };
 
+type ImdbScrapeRequest = {
+  imdbId: string;
+  requestKey: number;
+};
+
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   currency: 'USD',
   maximumFractionDigits: 0,
   style: 'currency',
 });
+
+const IMDB_RENDERED_PAGE_SCRAPE_TIMEOUT_MS = 15000;
+const IMDB_RENDERED_PAGE_SCRAPE_SCRIPT = `
+(function () {
+  var hasPostedResult = false;
+  var attempts = 0;
+  var maxAttempts = 50;
+
+  function postResult(status, imdbRating, imdbVotes) {
+    if (hasPostedResult) {
+      return;
+    }
+
+    hasPostedResult = true;
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      status: status,
+      imdbRating: imdbRating,
+      imdbVotes: imdbVotes || ''
+    }));
+  }
+
+  function readJsonLdRating() {
+    var scripts = Array.prototype.slice.call(document.querySelectorAll('script[type="application/ld+json"]'));
+
+    for (var index = 0; index < scripts.length; index += 1) {
+      try {
+        var jsonValue = JSON.parse(scripts[index].textContent || '{}');
+        var aggregateRating = jsonValue && jsonValue.aggregateRating;
+        var ratingValue = aggregateRating && aggregateRating.ratingValue;
+
+        if (ratingValue) {
+          return {
+            imdbRating: Number.parseFloat(String(ratingValue)),
+            imdbVotes: aggregateRating.ratingCount ? String(aggregateRating.ratingCount) : ''
+          };
+        }
+      } catch (error) {
+      }
+    }
+
+    return null;
+  }
+
+  function readVisibleRating() {
+    var ratingElements = [
+      document.querySelector('[data-testid="rating-button__aggregate-rating__score"]'),
+      document.querySelector('[data-testid="hero-rating-bar__aggregate-rating__score"]')
+    ].filter(Boolean);
+
+    for (var index = 0; index < ratingElements.length; index += 1) {
+      var ratingText = ratingElements[index].textContent || '';
+      var ratingMatch = ratingText.match(/(\\d+(?:\\.\\d+)?)/);
+
+      if (ratingMatch) {
+        return {
+          imdbRating: Number.parseFloat(ratingMatch[1]),
+          imdbVotes: ''
+        };
+      }
+    }
+
+    return null;
+  }
+
+  function scrapeRenderedPage() {
+    attempts += 1;
+
+    var pageText = document.body ? document.body.innerText || '' : '';
+    var challengeTextPattern = /(captcha|not a robot|robot check|verify you are human|unusual traffic|aws waf|challenge)/i;
+    var noRatingTextPattern = /(we don't have any ratings for this title yet|we do not have any ratings for this title yet|no ratings for this title yet)/i;
+
+    if (challengeTextPattern.test(pageText)) {
+      postResult('imdb_challenge', null, '');
+      return;
+    }
+
+    var jsonLdRating = readJsonLdRating();
+    var visibleRating = jsonLdRating || readVisibleRating();
+
+    if (visibleRating && !Number.isNaN(visibleRating.imdbRating)) {
+      postResult('rating_found', visibleRating.imdbRating, visibleRating.imdbVotes);
+      return;
+    }
+
+    if (noRatingTextPattern.test(pageText)) {
+      postResult('rating_not_found', null, '');
+      return;
+    }
+
+    if (attempts >= maxAttempts) {
+      postResult('request_failed', null, '');
+      return;
+    }
+
+    setTimeout(scrapeRenderedPage, 250);
+  }
+
+  scrapeRenderedPage();
+})();
+true;
+`;
 
 export function MovieDetail({
   movieId,
@@ -116,7 +226,11 @@ export function MovieDetail({
   const insets = useSafeAreaInsets();
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const [scrapedImdbRating, setScrapedImdbRating] = useState<number | null>(null);
+  const [imdbRefreshStatus, setImdbRefreshStatus] =
+    useState<ImdbWebsiteRatingScrapeStatus | null>(null);
   const [isScrapingImdbRating, setIsScrapingImdbRating] = useState(false);
+  const [imdbScrapeRequest, setImdbScrapeRequest] =
+    useState<ImdbScrapeRequest | null>(null);
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
   const {
     data: movieDetails,
@@ -130,13 +244,29 @@ export function MovieDetail({
   const imdbRating = scrapedImdbRating ?? movieListImdbRating?.imdb_rating ?? null;
   useEffect(() => {
     setScrapedImdbRating(null);
+    setImdbRefreshStatus(null);
     setIsScrapingImdbRating(false);
+    setImdbScrapeRequest(null);
   }, [movieId]);
   const preferredTrailer = useMemo(
     () => getPreferredYouTubeTrailer(movieDetails?.videos?.results ?? []),
     [movieDetails?.videos?.results]
   );
-  const handleRetryImdbRating = useCallback(async () => {
+  const handleImdbScrapeResult = useCallback(
+    (scrapedRating: ImdbWebsiteRatingScrapeResult) => {
+      if (scrapedRating.imdbRating !== null) {
+        setScrapedImdbRating(scrapedRating.imdbRating);
+        setImdbRefreshStatus('rating_found');
+      } else {
+        setImdbRefreshStatus(scrapedRating.status);
+      }
+
+      setIsScrapingImdbRating(false);
+      setImdbScrapeRequest(null);
+    },
+    []
+  );
+  const handleRetryImdbRating = useCallback(() => {
     const imdbId = movieDetails?.external_ids?.imdb_id;
 
     if (!imdbId) {
@@ -144,18 +274,11 @@ export function MovieDetail({
     }
 
     setIsScrapingImdbRating(true);
-
-    try {
-      const scrapedRating = await scrapeImdbWebsiteRating(imdbId);
-
-      if (scrapedRating.imdbRating !== null) {
-        setScrapedImdbRating(scrapedRating.imdbRating);
-      }
-    } catch (scrapeError) {
-      console.error('Error scraping IMDb rating:', scrapeError);
-    } finally {
-      setIsScrapingImdbRating(false);
-    }
+    setImdbRefreshStatus(null);
+    setImdbScrapeRequest({
+      imdbId,
+      requestKey: Date.now(),
+    });
   }, [movieDetails?.external_ids?.imdb_id]);
   const handleOpenTrailer = useCallback(() => {
     if (preferredTrailer) {
@@ -177,6 +300,7 @@ export function MovieDetail({
         <MovieHero
           movie={displayMovie}
           imdbRating={imdbRating}
+          imdbRefreshStatus={imdbRefreshStatus}
           isImdbRatingLoading={isScrapingImdbRating}
           onBackPress={onBackPress}
           onRetryImdbRating={handleRetryImdbRating}
@@ -198,6 +322,10 @@ export function MovieDetail({
       </ScrollView>
 
       <TrailerModal trailerKey={activeTrailerKey} onClose={handleCloseTrailer} />
+      <RenderedImdbRatingScraper
+        scrapeRequest={imdbScrapeRequest}
+        onResult={handleImdbScrapeResult}
+      />
     </View>
   );
 }
@@ -288,7 +416,7 @@ function LoadedMovieDetail({
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={scaleSize(48)}
-              color="red"
+              color={isFavorite ? 'red' : '#8C8C8C'}
             />
           </Pressable>
 
@@ -491,21 +619,138 @@ function TrailerModal({ trailerKey, onClose }: TrailerModalProps) {
   );
 }
 
+function RenderedImdbRatingScraper({
+  scrapeRequest,
+  onResult,
+}: {
+  scrapeRequest: ImdbScrapeRequest | null;
+  onResult: (result: ImdbWebsiteRatingScrapeResult) => void;
+}) {
+  const hasReportedResultRef = useRef(false);
+
+  const reportResult = useCallback(
+    (result: ImdbWebsiteRatingScrapeResult) => {
+      if (hasReportedResultRef.current) {
+        return;
+      }
+
+      hasReportedResultRef.current = true;
+      onResult(result);
+    },
+    [onResult]
+  );
+
+  useEffect(() => {
+    hasReportedResultRef.current = false;
+
+    if (!scrapeRequest) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => {
+      reportResult({
+        imdbRating: null,
+        imdbVotes: '',
+        status: 'request_failed',
+      });
+    }, IMDB_RENDERED_PAGE_SCRAPE_TIMEOUT_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [reportResult, scrapeRequest]);
+
+  const handleMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const parsedMessage = JSON.parse(event.nativeEvent.data) as Partial<
+          ImdbWebsiteRatingScrapeResult
+        >;
+        const scrapeStatus = parsedMessage.status;
+
+        if (!isImdbScrapeStatus(scrapeStatus)) {
+          reportResult({
+            imdbRating: null,
+            imdbVotes: '',
+            status: 'request_failed',
+          });
+          return;
+        }
+
+        reportResult({
+          imdbRating:
+            typeof parsedMessage.imdbRating === 'number'
+              ? parsedMessage.imdbRating
+              : null,
+          imdbVotes:
+            typeof parsedMessage.imdbVotes === 'string'
+              ? parsedMessage.imdbVotes
+              : '',
+          status: scrapeStatus,
+        });
+      } catch {
+        reportResult({
+          imdbRating: null,
+          imdbVotes: '',
+          status: 'request_failed',
+        });
+      }
+    },
+    [reportResult]
+  );
+
+  const handleWebViewError = useCallback(() => {
+    reportResult({
+      imdbRating: null,
+      imdbVotes: '',
+      status: 'request_failed',
+    });
+  }, [reportResult]);
+
+  if (!scrapeRequest) {
+    return null;
+  }
+
+  return (
+    <WebView
+      key={scrapeRequest.requestKey}
+      source={{
+        uri: getImdbRatingsUrl(scrapeRequest.imdbId),
+        headers: {
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      }}
+      injectedJavaScript={IMDB_RENDERED_PAGE_SCRAPE_SCRIPT}
+      javaScriptEnabled
+      domStorageEnabled
+      sharedCookiesEnabled
+      thirdPartyCookiesEnabled
+      onMessage={handleMessage}
+      onError={handleWebViewError}
+      onHttpError={handleWebViewError}
+      style={styles.hiddenImdbScrapeWebView}
+      containerStyle={styles.hiddenImdbScrapeWebView}
+      pointerEvents="none"
+    />
+  );
+}
+
 function MovieHero({
   movie,
   imdbRating,
+  imdbRefreshStatus,
   isImdbRatingLoading,
   onBackPress,
   onRetryImdbRating,
 }: {
   movie: movieType | null;
   imdbRating: number | null;
+  imdbRefreshStatus: ImdbWebsiteRatingScrapeStatus | null;
   isImdbRatingLoading: boolean;
   onBackPress?: () => void;
   onRetryImdbRating: () => void;
 }) {
   const posterSource = getPosterSource(movie);
   const hasImdbRating = imdbRating !== null;
+  const missingImdbCopy = getMissingImdbCopy(imdbRefreshStatus);
 
   return (
     <ImageBackground
@@ -556,11 +801,11 @@ function MovieHero({
               ? 'Loading...'
               : hasImdbRating
                 ? formatImdbRating(imdbRating)
-                : 'No Data'}
+                : missingImdbCopy.primary}
           </Text>
           {!hasImdbRating && !isImdbRatingLoading ? (
             <Text allowFontScaling={false} style={styles.imdbVotesText}>
-              Tap to Refresh
+              {missingImdbCopy.secondary}
             </Text>
           ) : null}
         </Pressable>
@@ -967,8 +1212,44 @@ function formatImdbRating(imdbRating: number) {
   return imdbRating.toFixed(1);
 }
 
+function getMissingImdbCopy(status: ImdbWebsiteRatingScrapeStatus | null) {
+  if (status === 'rating_not_found') {
+    return {
+      primary: 'No Data',
+      secondary: 'No Rating Yet',
+    };
+  }
+
+  if (status === 'imdb_challenge' || status === 'request_failed') {
+    return {
+      primary: 'Try Later',
+      secondary: 'Data is Pending',
+    };
+  }
+
+  return {
+    primary: 'No Data',
+    secondary: 'Tap to Refresh',
+  };
+}
+
+function isImdbScrapeStatus(
+  value: unknown
+): value is ImdbWebsiteRatingScrapeStatus {
+  return (
+    value === 'rating_found' ||
+    value === 'imdb_challenge' ||
+    value === 'rating_not_found' ||
+    value === 'request_failed'
+  );
+}
+
 function getImdbReviewsUrl(imdbId: string | undefined) {
   return imdbId ? `https://www.imdb.com/title/${imdbId}/reviews/` : null;
+}
+
+function getImdbRatingsUrl(imdbId: string) {
+  return `https://www.imdb.com/title/${imdbId}/ratings/`;
 }
 
 function getPreferredYouTubeTrailer(videos: movieTrailerVideo[]) {
@@ -1003,6 +1284,12 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  hiddenImdbScrapeWebView: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   nativeTopSpacer: {
     width: '100%',
@@ -1110,6 +1397,7 @@ const styles = StyleSheet.create({
     borderRadius: scaleSize(14),
   },
   seenButtonActive: {
+    backgroundColor: '#F8EBCE',
     borderColor: colors.brandText,
   },
   seenButtonText: {
