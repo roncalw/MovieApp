@@ -9,11 +9,42 @@ Purpose:
    * Starts the React Native app, wraps the visible screen in the shared providers, and chooses MovieSearchScreen as the current root 
      screen.
 */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { AppProvider } from './src/providers/AppProvider';
+import { LogLevel, OneSignal, type NotificationClickEvent } from 'react-native-onesignal';
+
+const ONE_SIGNAL_APP_ID = 'a2f43b3a-482e-4129-a076-01e647897d55';
+
 
 export default function App() {
+  
+  useEffect(() => {
+    // Enable verbose logging while testing. Remove or reduce before release.
+    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+
+    // Initialize OneSignal once when the root app component mounts.
+    OneSignal.initialize(ONE_SIGNAL_APP_ID);
+
+    // Optional: use this only if you want the native prompt immediately.
+    // For a better user experience, trigger permission after your own explanation screen.
+    // OneSignal.Notifications.requestPermission(false);
+
+    const clickListener = (event: NotificationClickEvent) => {
+      //__DEV__ is a React Native global boolean that is set to true when in development mode, false in production.
+      if (__DEV__) {
+        console.log('OneSignal: notification clicked:', event);
+      }
+    };
+
+    OneSignal.Notifications.addEventListener('click', clickListener);
+
+    return () => {
+      OneSignal.Notifications.removeEventListener('click', clickListener);
+    };
+  }, []);
+
+
   return (
     <AppProvider>
       <AppNavigator />
