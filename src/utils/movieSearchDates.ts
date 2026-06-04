@@ -2,10 +2,10 @@
 Step: 5
    * /MovieApp/src/utils/movieSearchDates.ts
 Imported by:
-   * /MovieApp/src/screens/MovieSearchScreen.tsx
-   * /MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx
+   * /MovieApp/src/search/advanced/MovieSearchScreen.tsx
+   * /MovieApp/src/search/advanced/SubHeaderMovieSearchFields.tsx
 Next step path:
-   * /MovieApp/src/components/ui/YearWheelField.tsx
+   * /MovieApp/src/search/advanced/fields/YearWheelField.tsx
 Purpose:
    * Centralizes the movie-search year/date rules so the screen, header, and year-wheel UI all derive the same real query dates.
 */

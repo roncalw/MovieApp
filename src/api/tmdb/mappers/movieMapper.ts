@@ -4,12 +4,12 @@ Step: 12
 Imported by:
    * /MovieApp/src/api/tmdb/services/movieService.ts
 Next step path:
-   * /MovieApp/src/types/MovieTypes.ts
+   * /MovieApp/src/types/movie/MovieTypes.ts
 Purpose:
    * Normalizes TMDB movie payloads into the app's movieType shape and fills in safe defaults for fields that are missing 
      from list responses.
 */
-import type { movieType } from '../../../types/MovieTypes';
+import type { movieType } from '../../../types/movie/MovieTypes';
 
 /*
   mapMovieToMovie = repackaging station

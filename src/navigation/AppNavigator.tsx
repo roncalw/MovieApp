@@ -15,20 +15,23 @@ import {
   DrawerItemList,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import Ionicons, {
-  type IoniconsIconName,
-} from '@react-native-vector-icons/ionicons/static';
-import { MovieSearchScreen } from '../screens/MovieSearchScreen';
-import { HomeScreen } from '../screens/HomeScreen';
-import { MovieFavoritesScreen } from '../screens/MovieFavoritesScreen';
-import { MovieSeenScreen } from '../screens/MovieSeenScreen';
-import { SearchByMovieTitleScreen } from '../screens/SearchByMovieTitleScreen';
-import { SettingsScreen } from '../screens/SettingsScreen';
-import { TellAFriendScreen } from '../screens/TellAFriendScreen';
-import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
+import { MovieSearchScreen } from '../search/advanced/MovieSearchScreen';
+import { HomeScreen } from '../home/HomeScreen';
+import { MovieFavoritesScreen } from '../drawer/MovieFavoritesScreen';
+import { MovieSeenScreen } from '../drawer/MovieSeenScreen';
+import { SearchByMovieTitleScreen } from '../search/title/SearchByMovieTitleScreen';
+import { SettingsScreen } from '../drawer/SettingsScreen';
+import { TellAFriendScreen } from '../drawer/TellAFriendScreen';
+import { PrivacyPolicyScreen } from '../drawer/PrivacyPolicyScreen';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
-import type { AppDrawerParamList } from './types';
+import type {
+  AppDrawerParamList,
+  DrawerIconProps,
+  SecondaryDrawerLinkProps,
+  SecondaryDrawerRoute,
+} from '../types/navigation/navigationTypes';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 const cinemaMenuIcon = require('../assets/images/cinema_menu.jpg');
@@ -40,12 +43,6 @@ const iosStoreUrl = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
 const drawerLegacyLabelFontFamily = Platform.select({
   android: 'Roboto-Medium',
 });
-
-type SecondaryDrawerRoute = {
-  name: keyof Pick<AppDrawerParamList, 'TellAFriend' | 'PrivacyPolicy'>;
-  title: string;
-  iconName: IoniconsIconName;
-};
 
 const secondaryDrawerRoutes: SecondaryDrawerRoute[] = [
   {
@@ -59,17 +56,6 @@ const secondaryDrawerRoutes: SecondaryDrawerRoute[] = [
     iconName: 'shield-checkmark-outline',
   },
 ];
-
-type DrawerIconProps = {
-  color: string;
-  size: number;
-};
-
-type SecondaryDrawerLinkProps = {
-  route: SecondaryDrawerRoute;
-  focused: boolean;
-  onPress: () => void;
-};
 
 function getFocusedRouteName(props: DrawerContentComponentProps) {
   return props.state.routeNames[props.state.index];

@@ -4,7 +4,7 @@ Step: 3
 Imported by:
    * /MovieApp/src/providers/SafeAreaProvider.tsx
 Next step path:
-   * /MovieApp/src/screens/MovieSearchScreen.tsx
+   * /MovieApp/src/search/advanced/MovieSearchScreen.tsx
 Purpose:
    * Creates the shared TanStack Query client and exposes it to the rest of the app so hooks can fetch, cache, and reuse movie 
      data.
@@ -17,12 +17,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
   IN THIS PROJECT:
   - It manages the cache for movie-related queries
-  - Right now that means the "popular movies" query
-  - Later it may also manage:
-      - movie details
-      - search results
-      - genres
-      - cast
+  - That includes movie search results, Home page rows, movie details,
+    person details, and title-search results
 
   WHY WE CREATE IT ONCE:
   - This app needs one shared query manager
@@ -59,8 +55,9 @@ export function QueryProvider({ children }: PropsWithChildren) {
       - Makes the queryClient available to everything nested inside it
 
       IN THIS PROJECT:
-      - PopularMoviesScreen uses usePopularMoviesQuery()
-      - usePopularMoviesQuery() calls useQuery(...)
+      - Screens call hooks such as useMovieSearchQuery(), usePopularMoviesQuery(),
+        and useMovieDetailsQuery()
+      - Those hooks call useQuery(...) or useInfiniteQuery(...)
       - useQuery(...) needs access to QueryClient
       - QueryClientProvider is what supplies that access
 

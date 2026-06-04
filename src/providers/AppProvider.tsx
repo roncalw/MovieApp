@@ -30,13 +30,13 @@ export function AppProvider({ children }: PropsWithChildren) {
       - So when navigation is added next, App.tsx does not become cluttered
 
       WHAT children IS HERE:
-      - In App.tsx, AppProvider wraps PopularMoviesScreen
+      - In App.tsx, AppProvider wraps AppNavigator
 
         <AppProvider>
-          <PopularMoviesScreen />
+          <AppNavigator />
         </AppProvider>
 
-      So in THIS project, children = <PopularMoviesScreen />
+      So in THIS project, children = <AppNavigator />
 
       WHAT HAPPENS TO THAT CHILD:
       - AppProvider passes that child into SafeAreaProvider
@@ -46,10 +46,6 @@ export function AppProvider({ children }: PropsWithChildren) {
       SO AppProvider is saying:
       - "Take whatever visible part of the app I wrap,
          and place it inside the building systems"
-
-      LATER IN THIS PROJECT:
-      - children will probably change from PopularMoviesScreen
-      - to AppNavigator
 
       ANALOGY:
       - This is the main utility Provider  room of the building

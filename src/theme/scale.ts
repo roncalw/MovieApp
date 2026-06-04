@@ -3,12 +3,12 @@ Step: 9
    * /MovieApp/src/theme/scale.ts
 Imported by:
    * /MovieApp/src/theme/typography.ts
-   * /MovieApp/src/components/header/SubHeaderTop.tsx
-   * /MovieApp/src/components/header/SubHeaderMovieSearchFields.tsx
-   * /MovieApp/src/components/ui/MovieCard.tsx
-   * /MovieApp/src/screens/MovieDetail.tsx
-   * /MovieApp/src/screens/MovieSearchScreen.tsx
-   * /MovieApp/src/screens/PopularMoviesScreen.tsx
+   * /MovieApp/src/search/advanced/SubHeaderTop.tsx
+   * /MovieApp/src/search/advanced/SubHeaderMovieSearchFields.tsx
+   * /MovieApp/src/search/results/MovieCard.tsx
+   * /MovieApp/src/movie/MovieDetail.tsx
+   * /MovieApp/src/search/advanced/MovieSearchScreen.tsx
+   * /MovieApp/src/home/HomeScreen.tsx
 Next step path:
    * /MovieApp/src/theme/typography.ts
 Purpose:

@@ -103,7 +103,7 @@ MovieSearchScreen (as children)
 Without this, React Query does not work at all.
 
 5.) MovieSearchScreen
-Defined in: src/screens/MovieSearchScreen.tsx
+Defined in: src/search/advanced/MovieSearchScreen.tsx
 Imported by:
 QueryProvider
 Calls:
@@ -117,7 +117,7 @@ It says:
 “Show the search filters, load the movie results, and hand the shared list/detail behavior to reusable components.”
 
 6.) HeaderMovieSearch
-Defined in: src/components/header/HeaderMovieSearch.tsx
+Defined in: src/search/advanced/HeaderMovieSearch.tsx
 Imported by:
 MovieSearchScreen
 Calls:
@@ -130,10 +130,11 @@ It says:
 “Coordinate the two header siblings so the top submit button and the search fields stay in sync.”
 
 7.) MovieResults
-Defined in: src/components/body/MovieResults.tsx
+Defined in: src/search/results/MovieResults.tsx
 Imported by:
 MovieSearchScreen
-PopularMoviesScreen
+SearchByMovieTitleScreen
+StoredMovieListScreen
 Calls:
 MovieCard
 MovieDetail (when a movie is selected)
@@ -144,7 +145,7 @@ It says:
 “Show movie cards, open details when one is tapped, and restore the list position when the user comes back.”
 
 8.) MovieCard
-Defined in: src/components/ui/MovieCard.tsx
+Defined in: src/search/results/MovieCard.tsx
 Imported by:
 MovieResults
 Calls:
@@ -157,7 +158,7 @@ It says:
 “Render one tappable movie summary card.”
 
 9.) useMovieSearchQuery
-Defined in: src/hooks/queries/useMovieSearchQuery.ts
+Defined in: src/hooks/useMovieSearchQuery.ts
 Imported by:
 MovieSearchScreen
 Calls:
@@ -296,7 +297,7 @@ filter controls + movie cards
 “Customer sees the products”
 
 20.) User taps a movie card
-Defined in: src/components/body/MovieResults.tsx
+Defined in: src/search/results/MovieResults.tsx
 Imported by:
 the user tapping a Pressable movie card
 Calls:
@@ -307,7 +308,7 @@ MovieDetail
 “Customer picks a product to inspect”
 
 21.) MovieDetail
-Defined in: src/screens/MovieDetail.tsx
+Defined in: src/movie/MovieDetail.tsx
 Imported by:
 MovieResults
 Calls:
@@ -319,7 +320,7 @@ It says:
 “Go get me the full details for this one movie.”
 
 22.) useMovieDetailsQuery
-Defined in: src/hooks/queries/useMovieSearchQuery.ts
+Defined in: src/hooks/useMovieSearchQuery.ts
 Imported by:
 MovieDetail
 Calls:

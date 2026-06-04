@@ -2,7 +2,7 @@
 Step: 7
    * /MovieApp/src/api/tmdb/services/movieService.ts
 Imported by:
-   * /MovieApp/src/hooks/queries/useMovieSearchQuery.ts
+   * /MovieApp/src/hooks/useMovieSearchQuery.ts
 Next step path:
    * /MovieApp/src/api/tmdb/client.ts
 Purpose:
@@ -13,17 +13,22 @@ import { tmdbClient } from '../client';
 import { CONFIG } from '../config';
 import { ENDPOINTS } from '../endpoints';
 import type {
-  movieSearchResults,
   movieType,
   personDetailType,
   personMovieCastCredit,
   personMovieCrewCredit,
-} from '../../../types/MovieTypes';
-import type { MovieSearchParams } from '../../../types/movieSearchParams';
+} from '../../../types/movie/MovieTypes';
+import type { MovieSearchParams } from '../../../types/search/movieSearchParams';
 import type {
-  MovieListResponse,
+  CloudflareMovieListImdbRating,
+  CloudflareMovieSearchItem,
+  CloudflareMovieSearchResponse,
+  CloudflareMovieSearchResults,
+  HomeMovieGenreId,
   MovieDetailsResponse,
-} from '../responseTypes';
+  MovieListResponse,
+  MovieTitleSearchResults,
+} from '../../../types/tmdb/tmdbApiTypes';
 import { mapMovieToMovie } from '../mappers/movieMapper';
 import {
   getDefaultBeginDate,
@@ -47,8 +52,6 @@ const ALL_STREAMER_PROVIDER_IDS = [
   '526',
   '531',
 ];
-
-export type HomeMovieGenreId = 18 | 27 | 35 | 80 | 99 | 10402 | 10751;
 
 function buildLegacyTmdbPath(endpoint: string, queryString = '') {
   const suffix = queryString.length > 0 ? `&${queryString}` : '';
@@ -107,49 +110,6 @@ function logHomeTmdbError(
     error,
   });
 }
-
-type CloudflareMovieSearchItem = {
-  tmdb_id: number;
-  poster_path: string;
-  imdb_rating: number | null;
-};
-
-type CloudflareMovieSearchResponse = {
-  movies: CloudflareMovieSearchItem[];
-  nextCursor: string | null;
-  pageSize: number;
-  sort: string;
-  beginDate: string;
-  endDate: string;
-};
-
-export type CloudflareMovieListImdbRating = {
-  tmdb_id: number;
-  imdb_rating: number | null;
-};
-
-export type ImdbWebsiteRatingScrapeStatus =
-  | 'rating_found'
-  | 'imdb_challenge'
-  | 'rating_not_found'
-  | 'request_failed';
-
-export type ImdbWebsiteRatingScrapeResult = {
-  imdbRating: number | null;
-  imdbVotes: string;
-  status: ImdbWebsiteRatingScrapeStatus;
-};
-
-type CloudflareMovieSearchResults = movieSearchResults & {
-  nextCursor: string | null;
-};
-
-export type MovieTitleSearchResults = {
-  movies: movieType[];
-  page: number;
-  totalPages: number;
-  totalResults: number;
-};
 
 /*
 ======================================================== fetchPopularMovies ====================================================

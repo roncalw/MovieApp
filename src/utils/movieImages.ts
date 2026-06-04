@@ -1,8 +1,6 @@
-import type { movieType } from '../types/MovieTypes';
+import type { MovieImageFields } from '../types/movie/movieImageTypes';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
-
-type MovieImageFields = Pick<movieType, 'poster_path' | 'backdrop_path'>;
 
 export function getMovieImagePath(
   movie: MovieImageFields | null | undefined

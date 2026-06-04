@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { movieType } from '../types/MovieTypes';
-import type { DetailStackEntry } from '../navigation/detailStackTypes';
+import type { movieType } from '../types/movie/MovieTypes';
+import type { DetailStackEntry } from '../types/navigation/detailStackTypes';
 
 export function useDetailStack() {
   const [detailStack, setDetailStack] = useState<DetailStackEntry[]>([]);

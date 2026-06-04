@@ -4,7 +4,7 @@ Step: 10
 Imported by:
    * /MovieApp/src/api/tmdb/services/movieService.ts
 Next step path:
-   * /MovieApp/src/api/tmdb/responseTypes.ts
+   * /MovieApp/src/types/tmdb/tmdbApiTypes.ts
 Purpose:
    * Centralizes the TMDB endpoint path strings so the service layer can build requests without hardcoding route fragments 
      everywhere.
