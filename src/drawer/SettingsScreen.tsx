@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -11,6 +11,10 @@ import {
 } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import {
+  OneSignal,
+  type PushSubscriptionChangedState,
+} from 'react-native-onesignal';
 import packageJson from '../../package.json';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
@@ -38,7 +42,75 @@ const seenClearMessage =
 export function SettingsScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(true);
+  const [isSubscriptionUpdating, setIsSubscriptionUpdating] = useState(false);
   const storeUrl = Platform.OS === 'android' ? androidStoreUrl : iosStoreUrl;
+
+  // When Settings opens, loadPushSubscriptionState reads OneSignal and sets
+  // the switch. When the user changes the switch, handlePushSubscriptionChange
+  // asks OneSignal to opt in or opt out, then refreshes this same state.
+  // Re-read OneSignal after an opt-in or opt-out call. The switch should show
+  // OneSignal's confirmed state, not just the value the user tapped.
+  const refreshPushSubscriptionState = useCallback(async () => {
+    const optedIn = await OneSignal.User.pushSubscription.getOptedInAsync();
+    setIsSubscribed(optedIn);
+  }, []);
+
+  useEffect(() => {
+    // Async OneSignal calls can finish after the user leaves Settings.
+    // isMounted lets this effect ignore late results instead of updating state
+    // on a screen instance that React has already closed.
+    let isMounted = true;
+
+    // Load the current OneSignal push-subscription value when Settings opens.
+    // This keeps the switch accurate if the user changed notification settings
+    // outside the app or from another app session.
+    const loadPushSubscriptionState = async () => {
+      try {
+        const optedIn =
+          await OneSignal.User.pushSubscription.getOptedInAsync();
+        if (isMounted) {
+          setIsSubscribed(optedIn);
+        }
+      } catch (error) {
+        console.error('Error reading push notification subscription:', error);
+      } finally {
+        if (isMounted) {
+          setIsSubscriptionLoading(false);
+        }
+      }
+    };
+
+    const subscriptionChangeListener = (
+      event: PushSubscriptionChangedState
+    ) => {
+      if (isMounted) {
+        // OneSignal sends the latest push-subscription state in event.current.
+        // Keeping this screen tied to that value prevents the UI from showing
+        // "(Subscribed)" after OneSignal says the device is actually opted out.
+        setIsSubscribed(event.current.optedIn);
+      }
+    };
+
+    loadPushSubscriptionState();
+    // "change" is the event name defined by the OneSignal React Native SDK for
+    // push-subscription updates. It is not a React keyword; it tells OneSignal
+    // which event should call subscriptionChangeListener.
+    OneSignal.User.pushSubscription.addEventListener(
+      'change',
+      subscriptionChangeListener
+    );
+
+    return () => {
+      isMounted = false;
+      // Remove the same OneSignal listener when Settings closes. Otherwise an
+      // old screen instance could keep receiving subscription updates later.
+      OneSignal.User.pushSubscription.removeEventListener(
+        'change',
+        subscriptionChangeListener
+      );
+    };
+  }, []);
 
   async function handleCheckForUpdate() {
     try {
@@ -102,6 +174,51 @@ export function SettingsScreen() {
         },
       ]
     );
+  }
+
+  async function handlePushSubscriptionChange(nextValue: boolean) {
+    setIsSubscriptionUpdating(true);
+
+    try {
+      if (nextValue) {
+        const alreadyAllowed =
+          await OneSignal.Notifications.getPermissionAsync();
+        const isAllowed =
+          alreadyAllowed ||
+          (await OneSignal.Notifications.requestPermission(true));
+
+        if (!isAllowed) {
+          setIsSubscribed(false);
+          Alert.alert(
+            'Push Notifications Disabled',
+            'Notifications were not enabled. You can turn them on later from iOS Settings.'
+          );
+          return;
+        }
+
+        OneSignal.User.pushSubscription.optIn();
+        setIsSubscribed(true);
+      } else {
+        OneSignal.User.pushSubscription.optOut();
+        setIsSubscribed(false);
+      }
+
+      await refreshPushSubscriptionState();
+    } catch (error) {
+      console.error('Error updating push notification subscription:', error);
+      Alert.alert(
+        'Unable to Update Notifications',
+        'Push notification settings could not be updated right now.'
+      );
+      await refreshPushSubscriptionState().catch(refreshError => {
+        console.error(
+          'Error refreshing push notification subscription:',
+          refreshError
+        );
+      });
+    } finally {
+      setIsSubscriptionUpdating(false);
+    }
   }
 
   return (
@@ -175,7 +292,8 @@ export function SettingsScreen() {
             </Text>
             <Switch
               value={isSubscribed}
-              onValueChange={setIsSubscribed}
+              onValueChange={handlePushSubscriptionChange}
+              disabled={isSubscriptionLoading || isSubscriptionUpdating}
               ios_backgroundColor="grey"
               thumbColor="#FFFFFF"
               trackColor={{ false: 'grey', true: '#007BFF' }}
