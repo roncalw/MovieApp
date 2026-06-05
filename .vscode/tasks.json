@@ -128,7 +128,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run iphone16promax; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS - iPhone 16 Pro Max - Device - Run App",
+          "TASK_EXPLORER_ORDER": "11"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -145,7 +151,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run iphone17promax; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS - iPhone 17 Pro Max - Simulator - Run App",
+          "TASK_EXPLORER_ORDER": "12"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -162,7 +174,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run start-reset"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "METRO - Start with Reset Cache",
+          "TASK_EXPLORER_ORDER": "10"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
