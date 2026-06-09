@@ -9,7 +9,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run list-androids; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - List Devices",
+          "TASK_EXPLORER_ORDER": "31"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -26,7 +32,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run list-avds; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - List Simulators",
+          "TASK_EXPLORER_ORDER": "32"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -43,7 +55,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run note4; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RUN APP",
+          "TASK_EXPLORER_ORDER": "22"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -60,7 +78,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run reload-device-note4; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RELOAD",
+          "TASK_EXPLORER_ORDER": "23"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -77,7 +101,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run galaxys22; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RUN APP",
+          "TASK_EXPLORER_ORDER": "20"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -94,7 +124,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run reload-emulator-5554; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RELOAD",
+          "TASK_EXPLORER_ORDER": "21"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
@@ -111,7 +147,13 @@
         "-lic",
         "cd /Users/croncallo/repo/MovieApp && npm run list-iphones; exec /bin/zsh -l"
       ],
-      "options": { "cwd": "/Users/croncallo/repo/MovieApp" },
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS - List Devices",
+          "TASK_EXPLORER_ORDER": "30"
+        }},
       "presentation": {
         "reveal": "always",
         "focus": true,
