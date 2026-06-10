@@ -60,7 +60,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RUN APP",
-          "TASK_EXPLORER_ORDER": "22"
+          "TASK_EXPLORER_ORDER": "20"
         }},
       "presentation": {
         "reveal": "always",
@@ -83,7 +83,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RELOAD",
-          "TASK_EXPLORER_ORDER": "23"
+          "TASK_EXPLORER_ORDER": "21"
         }},
       "presentation": {
         "reveal": "always",
@@ -106,7 +106,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RUN APP",
-          "TASK_EXPLORER_ORDER": "20"
+          "TASK_EXPLORER_ORDER": "22"
         }},
       "presentation": {
         "reveal": "always",
@@ -129,7 +129,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RELOAD",
-          "TASK_EXPLORER_ORDER": "21"
+          "TASK_EXPLORER_ORDER": "23"
         }},
       "presentation": {
         "reveal": "always",
