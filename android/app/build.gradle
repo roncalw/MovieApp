@@ -72,6 +72,23 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+def repoRoot = rootDir.parentFile
+
+// Android entry point for the TypeScript installed-version snapshot.
+// Triggered by: Gradle preBuild (line 135) before the Android app build.
+// Next file in build flow: scripts/generate-app-build-version.js, which writes
+// src/appVersion/generatedBuildVersion.ts for SettingsScreen runtime use.
+// Code flow: preBuild (line 135) -> generateAppBuildVersion (line 84)
+// -> generator script -> generated TypeScript snapshot.
+// This keeps version maintenance in Gradle/Xcode instead of Kotlin.
+def generatedAppBuildVersion = tasks.register("generateAppBuildVersion", Exec) {
+    workingDir repoRoot
+    commandLine "node", "scripts/generate-app-build-version.js"
+    inputs.file file("build.gradle")
+    inputs.file file("${repoRoot}/ios/MovieApp.xcodeproj/project.pbxproj")
+    outputs.file file("${repoRoot}/src/appVersion/generatedBuildVersion.ts")
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -113,6 +130,10 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(generatedAppBuildVersion)
 }
 
 dependencies {

@@ -1,6 +1,6 @@
 export const colors = {
   background: '#fff',
-  brandText: '#7F1D1D',
+  brandText: 'rgb(127, 29, 29)',
   textPrimary: '#111827',
   textSecondary: '#444',
   actionPrimary: '#111827',

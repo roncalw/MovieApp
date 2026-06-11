@@ -32,6 +32,7 @@ export type SecondaryDrawerRoute = {
 
 export type DrawerIconProps = {
   color: string;
+  focused: boolean;
   size: number;
 };
 

@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   message: {
     ...typography.feedbackBody,
     marginTop: scaleSize(12),
-    color: colors.textPrimary,
+    color: colors.brandText,
     textAlign: 'center',
   },
 });

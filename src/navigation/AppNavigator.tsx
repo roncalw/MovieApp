@@ -36,12 +36,15 @@ import type {
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
 const cinemaMenuIcon = require('../assets/images/cinema_menu.jpg');
 const drawerActiveTintColor = colors.brandText;
-const drawerInactiveTintColor = '#6F6F6F';
+const drawerInactiveTintColor = colors.brandText;
+const drawerInactiveIconColor = 'rgb(180, 58, 58)';
+const secondaryDrawerIconColor = 'rgb(180, 29, 29)';
+const secondaryDrawerTextColor = 'rgb(127, 29, 29)';
 const androidStoreUrl =
   'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
 const iosStoreUrl = 'https://apps.apple.com/us/app/movie-guider/id6465793035';
 const drawerLegacyLabelFontFamily = Platform.select({
-  android: 'Roboto-Medium',
+  android: 'Roboto',
 });
 
 const secondaryDrawerRoutes: SecondaryDrawerRoute[] = [
@@ -61,24 +64,59 @@ function getFocusedRouteName(props: DrawerContentComponentProps) {
   return props.state.routeNames[props.state.index];
 }
 
-function HomeDrawerIcon({ color, size }: DrawerIconProps) {
-  return <Ionicons name="home" color={color} size={size} />;
+function HomeDrawerIcon({ focused, size }: DrawerIconProps) {
+  return <Ionicons name="home" color={getDrawerIconColor(focused)} size={size} />;
 }
 
-function FavoritesDrawerIcon({ color, size }: DrawerIconProps) {
-  return <Ionicons name="heart" color={color} size={size} />;
+function FavoritesDrawerIcon({ focused, size }: DrawerIconProps) {
+  return <Ionicons name="heart" color={getDrawerIconColor(focused)} size={size} />;
 }
 
-function SeenDrawerIcon({ color, size }: DrawerIconProps) {
-  return <Ionicons name="checkmark-circle" color={color} size={size} />;
+function SeenDrawerIcon({ focused, size }: DrawerIconProps) {
+  return (
+    <Ionicons
+      name="checkmark-circle"
+      color={getDrawerIconColor(focused)}
+      size={size}
+    />
+  );
 }
 
-function SearchDrawerIcon({ color, size }: DrawerIconProps) {
-  return <Ionicons name="search" color={color} size={size} />;
+function SearchDrawerIcon({ focused, size }: DrawerIconProps) {
+  return <Ionicons name="search" color={getDrawerIconColor(focused)} size={size} />;
 }
 
-function SettingsDrawerIcon({ color, size }: DrawerIconProps) {
-  return <Ionicons name="settings" color={color} size={size} />;
+function SettingsDrawerIcon({ focused, size }: DrawerIconProps) {
+  return (
+    <Ionicons name="settings" color={getDrawerIconColor(focused)} size={size} />
+  );
+}
+
+function getDrawerIconColor(focused: boolean) {
+  return focused ? drawerActiveTintColor : drawerInactiveIconColor;
+}
+
+function makePrimaryDrawerLabel(label: string) {
+  return function PrimaryDrawerLabel({
+    focused,
+    color,
+  }: {
+    focused: boolean;
+    color: string;
+  }) {
+    return (
+      <Text
+        allowFontScaling={false}
+        style={[
+          styles.drawerLabel,
+          { color },
+          focused ? styles.drawerLabelFocused : null,
+        ]}
+      >
+        {label}
+      </Text>
+    );
+  };
 }
 
 function SecondaryDrawerLink({
@@ -86,9 +124,7 @@ function SecondaryDrawerLink({
   focused,
   onPress,
 }: SecondaryDrawerLinkProps) {
-  const contentColor = focused
-    ? drawerActiveTintColor
-    : colors.textPrimary;
+  const contentColor = secondaryDrawerTextColor;
 
   return (
     <Pressable
@@ -101,12 +137,16 @@ function SecondaryDrawerLink({
     >
       <Ionicons
         name={route.iconName}
-        color={contentColor}
+        color={secondaryDrawerIconColor}
         size={scaleSize(22)}
       />
       <Text
         allowFontScaling={false}
-        style={[styles.secondaryDrawerLabel, { color: contentColor }]}
+        style={[
+          styles.secondaryDrawerLabel,
+          { color: contentColor },
+          styles.secondaryDrawerLabelFocused,
+        ]}
       >
         {route.title}
       </Text>
@@ -193,26 +233,31 @@ function renderDrawerContent(props: DrawerContentComponentProps) {
 
 const homeDrawerOptions = {
   title: 'Home',
+  drawerLabel: makePrimaryDrawerLabel('Home'),
   drawerIcon: HomeDrawerIcon,
 };
 
 const movieFavoritesDrawerOptions = {
   title: 'My Movie Favorites',
+  drawerLabel: makePrimaryDrawerLabel('My Movie Favorites'),
   drawerIcon: FavoritesDrawerIcon,
 };
 
 const movieSeenDrawerOptions = {
   title: 'Movies I Have Seen',
+  drawerLabel: makePrimaryDrawerLabel('Movies I Have Seen'),
   drawerIcon: SeenDrawerIcon,
 };
 
 const advancedSearchDrawerOptions = {
   title: 'Advanced Search',
+  drawerLabel: makePrimaryDrawerLabel('Advanced Search'),
   drawerIcon: SearchDrawerIcon,
 };
 
 const settingsDrawerOptions = {
   title: 'Settings',
+  drawerLabel: makePrimaryDrawerLabel('Settings'),
   drawerIcon: SettingsDrawerIcon,
 };
 
@@ -331,9 +376,11 @@ const styles = StyleSheet.create({
   drawerHeaderTitle: {
     fontSize: scaleSize(15),
     lineHeight: scaleSize(20),
+    fontFamily: drawerLegacyLabelFontFamily,
+    fontWeight: '600',
     letterSpacing: 0,
     marginTop: scaleSize(2),
-    color: colors.textPrimary,
+    color: colors.brandText,
   },
   primaryDrawerItems: {
     paddingTop: scaleSize(10),
@@ -353,8 +400,12 @@ const styles = StyleSheet.create({
     fontFamily: drawerLegacyLabelFontFamily,
     fontSize: scaleSize(15),
     lineHeight: scaleSize(25),
+    fontWeight: '400',
     height: scaleSize(25),
     letterSpacing: 0,
+  },
+  drawerLabelFocused: {
+    fontWeight: '500',
   },
   secondaryDrawerLink: {
     paddingVertical: scaleSize(15),
@@ -373,8 +424,12 @@ const styles = StyleSheet.create({
     fontFamily: drawerLegacyLabelFontFamily,
     fontSize: scaleSize(15),
     lineHeight: scaleSize(25),
+    fontWeight: '400',
     letterSpacing: 0,
     marginLeft: scaleSize(5),
+  },
+  secondaryDrawerLabelFocused: {
+    fontWeight: '500',
   },
   hiddenDrawerItem: {
     display: 'none',

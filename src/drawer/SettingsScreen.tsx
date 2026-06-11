@@ -15,7 +15,15 @@ import {
   OneSignal,
   type PushSubscriptionChangedState,
 } from 'react-native-onesignal';
-import packageJson from '../../package.json';
+import {
+  fetchStoreAppVersion,
+  getUpdateCheckResult,
+  type UpdateCheckResult,
+} from '../api/appVersion';
+import {
+  getInstalledAppVersion,
+  type InstalledAppVersion,
+} from '../appVersion/installedAppVersion';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
@@ -27,6 +35,22 @@ import {
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
+
+/*
+ * Settings drawer screen.
+ *
+ * Rendered from:
+ * - src/navigation/AppNavigator.tsx mounts SettingsScreen (line 66 in this
+ *   file) as the Settings drawer route at AppNavigator.tsx line 283.
+ *
+ * Next files in UI flow for the app-version row:
+ * - src/appVersion/installedAppVersion.ts gets the installed app version.
+ * - src/api/appVersion.ts fetches and compares the public store version.
+ *
+ * The version-check flow starts when SettingsScreen (line 66) renders, then
+ * loadVersionState (line 92) runs from useEffect (line 181) and again from
+ * handleCheckForUpdate (line 185).
+ */
 
 const androidStoreUrl =
   'https://play.google.com/store/apps/details?id=com.codefest.movieapp';
@@ -44,7 +68,56 @@ export function SettingsScreen() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(true);
   const [isSubscriptionUpdating, setIsSubscriptionUpdating] = useState(false);
+  const [installedVersion, setInstalledVersion] =
+    useState<InstalledAppVersion | null>(null);
+  const [updateCheck, setUpdateCheck] = useState<UpdateCheckResult>({
+    status: 'checking',
+    storeVersion: null,
+    message: 'Checking for updates...',
+  });
+  const [isUpdateCheckLoading, setIsUpdateCheckLoading] = useState(true);
   const storeUrl = Platform.OS === 'android' ? androidStoreUrl : iosStoreUrl;
+  const storeName =
+    Platform.OS === 'android' ? 'Google Play Store' : 'Apple Store';
+  const storeVersionLabel = `${storeName} Details`;
+  const updateStatusLabel =
+    updateCheck.status === 'updateAvailable'
+      ? 'Update Available'
+      : 'Current version installed';
+
+  // App-version code flow for this screen:
+  // 1. loadVersionState (line 99) runs when Settings opens and again before
+  //    opening the app store page from handleCheckForUpdate (line 192).
+  // 2. getInstalledAppVersion (installedAppVersion.ts line 41) reads the
+  //    build-generated local version snapshot.
+  // 3. fetchStoreAppVersion (appVersion.ts line 100) reads the latest public
+  //    versions from Cloudflare.
+  // 4. getUpdateCheckResult (appVersion.ts line 110) compares those two values
+  //    and returns the user message rendered in Settings.
+  // These calls happen at runtime. The generated snapshot itself is created
+  // earlier by the Android or iOS build hook, not by SettingsScreen.
+  const loadVersionState = useCallback(async () => {
+    setIsUpdateCheckLoading(true);
+
+    try {
+      const currentInstalledVersion = await getInstalledAppVersion();
+      setInstalledVersion(currentInstalledVersion);
+
+      const storeVersionResponse = await fetchStoreAppVersion();
+      setUpdateCheck(
+        getUpdateCheckResult(currentInstalledVersion, storeVersionResponse)
+      );
+    } catch (error) {
+      console.error('Error checking app version:', error);
+      setUpdateCheck({
+        status: 'unavailable',
+        storeVersion: null,
+        message: 'Could not check for updates',
+      });
+    } finally {
+      setIsUpdateCheckLoading(false);
+    }
+  }, []);
 
   // When Settings opens, loadPushSubscriptionState reads OneSignal and sets
   // the switch. When the user changes the switch, handlePushSubscriptionChange
@@ -112,7 +185,13 @@ export function SettingsScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    loadVersionState();
+  }, [loadVersionState]);
+
   async function handleCheckForUpdate() {
+    await loadVersionState();
+
     try {
       await Linking.openURL(storeUrl);
     } catch (error) {
@@ -253,11 +332,25 @@ export function SettingsScreen() {
             style={({ pressed }) => [pressed ? styles.pressed : null]}
           >
             <Text allowFontScaling={false} style={styles.linkText}>
-              Check for Update
+              {storeVersionLabel}
             </Text>
           </Pressable>
           <Text allowFontScaling={false} style={styles.versionText}>
-            Version: {packageJson.version}
+            Version: {formatInstalledVersion(installedVersion)}
+          </Text>
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.updateStatusText,
+              updateCheck.status === 'updateAvailable'
+                ? styles.updateAvailableText
+                : null,
+            ]}
+          >
+            {isUpdateCheckLoading ? 'On Current Version' : updateStatusLabel}
+          </Text>
+          <Text allowFontScaling={false} style={styles.storeVersionText}>
+            Tap above for version details
           </Text>
         </View>
 
@@ -344,8 +437,24 @@ const styles = StyleSheet.create({
   },
   versionText: {
     ...typography.summaryBody,
-    marginTop: scaleSize(6),
+    marginTop: scaleSize(2),
     color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  updateStatusText: {
+    ...typography.summaryBody,
+    marginTop: scaleSize(2),
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  updateAvailableText: {
+    color: '#007BFF',
+  },
+  storeVersionText: {
+    ...typography.summaryBody,
+    maxWidth: scaleSize(280),
+    marginTop: scaleSize(2),
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   notificationBlock: {
@@ -372,3 +481,19 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
 });
+
+function formatInstalledVersion(version: InstalledAppVersion | null) {
+  if (!version) {
+    return 'Loading...';
+  }
+
+  if (Platform.OS === 'android' && version.versionCode !== null) {
+    return `${version.versionName} (${version.versionCode})`;
+  }
+
+  if (version.buildNumber) {
+    return `${version.versionName} (${version.buildNumber})`;
+  }
+
+  return version.versionName || 'Unknown';
+}
