@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { scaleSize } from '../../../theme/scale';
+import { Modal, Pressable, Text, View } from 'react-native';
 import {
   RATING_ITEMS,
   toggleArrayValue,
@@ -10,8 +9,9 @@ import {
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
   MovieSearchPopupChip,
-  movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
+import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
+import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { RatingFieldProps } from '../../../types/search/movieSearchFieldTypes';
 
 export function RatingField({ value, onChange }: RatingFieldProps) {
@@ -87,8 +87,6 @@ export function RatingField({ value, onChange }: RatingFieldProps) {
   );
 }
 
-const sharedStyles = movieSearchFieldSharedStyles;
-
 function parseRatingValue(value: string) {
   if (value.trim() === '') {
     return [];
@@ -119,17 +117,3 @@ function formatRatingSummary(values: string[]) {
     .map((item) => item.label)
     .join(' | ');
 }
-
-const styles = StyleSheet.create({
-  ratingModalCard: {
-    maxWidth: scaleSize(320),
-    paddingBottom: scaleSize(14),
-  },
-  ratingChipGroup: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: scaleSize(8),
-    paddingTop: scaleSize(8),
-  },
-});

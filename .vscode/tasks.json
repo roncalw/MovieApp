@@ -230,6 +230,30 @@
         "clear": false
       },
       "problemMatcher": []
+    },
+    {
+      "label": "UAT - Open Latest Spreadsheet",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "open /Users/croncallo/repo/MovieApp/artifacts/UAT/UAT_2026-06-11.xlsx"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "UAT - Open Latest Spreadsheet",
+          "TASK_EXPLORER_ORDER": "40"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
     }
   ]
 }

@@ -11,12 +11,13 @@ Purpose:
      MovieSearchScreen own that sibling wiring.
 */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import {
   HeaderMovieSearchContext,
 } from './HeaderMovieSearchContext';
 import { SubHeaderMovieSearchFields } from './SubHeaderMovieSearchFields';
 import { SubHeaderTop } from './SubHeaderTop';
+import { headerMovieSearchStyles as styles } from '../../styles/search/headerMovieSearchStyles';
 import type {
   HeaderMovieSearchContextValue,
   HeaderMovieSearchProps,
@@ -93,9 +94,3 @@ export function HeaderMovieSearch({
     </HeaderMovieSearchContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  filtersHidden: {
-    display: 'none',
-  },
-});

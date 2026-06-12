@@ -1,9 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
-import { scaleSize } from '../theme/scale';
-import { typography } from '../theme/typography';
+import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import type { PlaceholderScreenProps } from '../types/drawer/drawerScreenTypes';
@@ -12,7 +10,7 @@ export function PlaceholderScreen({ title }: PlaceholderScreenProps) {
   const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <View style={styles.header}>
         <HeaderActionRow
           left={
@@ -40,25 +38,3 @@ export function PlaceholderScreen({ title }: PlaceholderScreenProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    minHeight: scaleSize(142),
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(24),
-  },
-  headerTitle: {
-    ...typography.pageTitle,
-    width: '100%',
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-});

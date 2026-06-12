@@ -10,12 +10,12 @@ Purpose:
      header context.
 */
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
-import { colors } from '../../theme/colors';
-import { typography } from '../../theme/typography';
+import { colors } from '../../styles/colors';
 import { scaleSize } from '../../theme/scale';
+import { subHeaderTopStyles as styles } from '../../styles/search/subHeaderTopStyles';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
 import { HeaderActionRow } from '../../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../../shared/header/HeaderNavButton';
@@ -45,7 +45,7 @@ export function SubHeaderTop({
               variant="back"
               anchored={false}
               onPress={triggerDetailBack}
-              color="#800000"
+              color={colors.movieBackButton}
             />
           ) : (
             <HeaderNavButton
@@ -101,48 +101,3 @@ export function SubHeaderTop({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingBottom: scaleSize(14),
-    backgroundColor: colors.background,
-  },
-  title: {
-    ...typography.pageTitle,
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-  searchModeLink: {
-    position: 'absolute',
-    alignSelf: 'center',
-    minHeight: scaleSize(30),
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchModeLinkText: {
-    ...typography.summaryBody,
-    color: colors.brandText,
-  },
-  rightAction: {
-    minHeight: scaleSize(36),
-    minWidth: scaleSize(94),
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(8),
-    borderRadius: 999,
-    backgroundColor: '#F8EBCE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitSlot: {
-    width: scaleSize(112),
-    alignItems: 'flex-end',
-  },
-  rightActionDisabled: {
-    opacity: 0.45,
-  },
-  rightActionText: {
-    ...typography.buttonLabel,
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-});

@@ -10,7 +10,7 @@ Purpose:
      header context.
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { GenreField } from './fields/GenreField';
 import { RatingField } from './fields/RatingField';
@@ -20,9 +20,9 @@ import { YearWheelField } from './fields/YearWheelField';
 import {
   getInitialSortValue,
 } from './fields/movieSearchFieldUtils';
-import { colors } from '../../theme/colors';
+import { colors } from '../../styles/colors';
 import { scaleSize } from '../../theme/scale';
-import { typography } from '../../theme/typography';
+import { subHeaderMovieSearchFieldsStyles as styles } from '../../styles/search/subHeaderMovieSearchFieldsStyles';
 import {
   buildSearchYearOptions,
   getBeginDateFromYear,
@@ -275,73 +275,3 @@ export function SubHeaderMovieSearchFields() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  visibilityToggle: {
-    /*
-      scaleSize(...) drives the spacing and control heights in this filter area
-      so inputs, chips, and summary spacing compress on narrow phones but keep
-      the same overall design system.
-    */
-    alignSelf: 'center',
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(8),
-    marginBottom: scaleSize(6),
-  },
-  visibilityToggleText: {
-    ...typography.visibilityToggle,
-    color: colors.brandText,
-  },
-  visibilityToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: scaleSize(6),
-  },
-  excludeSeenToggle: {
-    alignSelf: 'center',
-    paddingHorizontal: scaleSize(12),
-    paddingBottom: scaleSize(8),
-  },
-  excludeSeenToggleText: {
-    fontSize: scaleSize(12),
-    lineHeight: scaleSize(13),
-    color: '#777777',
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  excludeSeenToggleTextActive: {
-    color: colors.brandText,
-    fontWeight: '700',
-  },
-  yearFieldsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: scaleSize(12),
-  },
-  yearFieldColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: scaleSize(8),
-    marginBottom: scaleSize(6),
-  },
-  dateFieldLabel: {
-    color: colors.brandText,
-    fontSize: scaleSize(20),
-    lineHeight: scaleSize(24),
-    marginTop: scaleSize(8),
-    marginBottom: scaleSize(4),
-    fontWeight: '400',
-  },
-  validationText: {
-    ...typography.summaryBody,
-    color: colors.brandText,
-    textAlign: 'center',
-    marginTop: scaleSize(8),
-    marginBottom: scaleSize(4),
-  },
-});

@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import type { InstalledAppVersion } from '../types/appVersion/appVersionTypes';
 import { INSTALLED_APP_VERSION } from './generatedBuildVersion';
 
 /*
@@ -6,9 +7,6 @@ import { INSTALLED_APP_VERSION } from './generatedBuildVersion';
  *
  * Imported by:
  * - src/drawer/SettingsScreen.tsx imports getInstalledAppVersion.
- *
- * Function called by SettingsScreen:
- * - getInstalledAppVersion (line 41).
  *
  * Next file in UI flow:
  * - Control returns to src/drawer/SettingsScreen.tsx with the installed
@@ -23,20 +21,13 @@ import { INSTALLED_APP_VERSION } from './generatedBuildVersion';
  *    build finishes.
  * 2. This file imports that generated snapshot when the JavaScript bundle
  *    loads.
- * 3. getInstalledAppVersion (line 41) selects only the current platform's
- *    values.
+ * 3. getInstalledAppVersion selects only the current platform's values.
  * 4. SettingsScreen passes this result to api/appVersion.ts so it can compare
  *    the installed build with the public store build.
  *
  * This is intentionally TypeScript-only. There is no Kotlin, Swift, or native
  * bridge to maintain for the version check.
  */
-
-export type InstalledAppVersion = {
-  versionName: string;
-  buildNumber: string;
-  versionCode: number | null;
-};
 
 export async function getInstalledAppVersion(): Promise<InstalledAppVersion> {
   const platformVersion =

@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { scaleSize } from '../../../theme/scale';
+import { Modal, Pressable, Text, View } from 'react-native';
 import {
   formatInlineSummary,
   GENRE_ITEMS,
@@ -11,8 +10,9 @@ import {
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
   MovieSearchPopupChip,
-  movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
+import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
+import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { GenreFieldProps } from '../../../types/search/movieSearchFieldTypes';
 
 export function GenreField({ value, onChange }: GenreFieldProps) {
@@ -85,16 +85,3 @@ export function GenreField({ value, onChange }: GenreFieldProps) {
     </>
   );
 }
-
-const sharedStyles = movieSearchFieldSharedStyles;
-
-const styles = StyleSheet.create({
-  selectionChipGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: scaleSize(4),
-    gap: scaleSize(6),
-  },
-});

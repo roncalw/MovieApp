@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { scaleSize } from '../../../theme/scale';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { getSelectedSortLabel, SORT_ITEMS } from './movieSearchFieldUtils';
 import {
   MovieSearchFieldTrigger,
   MovieSearchModalActions,
-  movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
+import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
+import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { SortFieldProps } from '../../../types/search/movieSearchFieldTypes';
 
 export function SortField({ value, onChange }: SortFieldProps) {
@@ -93,49 +93,3 @@ export function SortField({ value, onChange }: SortFieldProps) {
     </>
   );
 }
-
-const sharedStyles = movieSearchFieldSharedStyles;
-
-const styles = StyleSheet.create({
-  sortModalCard: {
-    paddingTop: scaleSize(12),
-    paddingHorizontal: scaleSize(14),
-    paddingBottom: scaleSize(14),
-  },
-  sortOptionGroup: {
-    width: '100%',
-    maxWidth: scaleSize(340),
-    gap: scaleSize(10),
-    paddingTop: scaleSize(8),
-    paddingBottom: scaleSize(4),
-  },
-  sortOptionRow: {
-    minHeight: scaleSize(34),
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: scaleSize(8),
-  },
-  radioOuter: {
-    width: scaleSize(28),
-    height: scaleSize(28),
-    borderRadius: scaleSize(14),
-    borderWidth: scaleSize(2),
-    borderColor: '#8FB7DF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: scaleSize(14),
-    backgroundColor: 'transparent',
-  },
-  radioInner: {
-    width: scaleSize(14),
-    height: scaleSize(14),
-    borderRadius: scaleSize(7),
-    backgroundColor: '#8FB7DF',
-  },
-  sortOptionText: {
-    flex: 1,
-    color: '#222222',
-    fontSize: scaleSize(16),
-    lineHeight: scaleSize(20),
-  },
-});

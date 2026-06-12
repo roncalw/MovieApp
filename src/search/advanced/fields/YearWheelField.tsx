@@ -13,15 +13,13 @@ import DatePicker from 'react-native-date-picker';
 import {
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { buttons } from '../../../theme/buttons';
-import { colors } from '../../../theme/colors';
 import { scaleSize } from '../../../theme/scale';
-import { typography } from '../../../theme/typography';
+import { colors } from '../../../styles/colors';
+import { yearWheelFieldStyles as styles } from '../../../styles/search/yearWheelFieldStyles';
 import { getCurrentYear } from '../../../utils/movieSearchDates';
 import type { YearWheelFieldProps } from '../../../types/search/movieSearchFieldTypes';
 
@@ -173,7 +171,7 @@ export function YearWheelField({
                   onDateChange={setDraftDate}
                   theme="light"
                   locale="en-US"
-                  dividerColor="#000000"
+                  dividerColor={colors.pickerDivider}
                   style={[styles.anchoredDatePicker, { width: anchoredPickerWidth }]}
                 />
               </View>
@@ -212,7 +210,7 @@ export function YearWheelField({
                 onDateChange={setDraftDate}
                 theme="light"
                 locale="en-US"
-                dividerColor="#000000"
+                dividerColor={colors.pickerDivider}
                 style={styles.modalDatePicker}
               />
 
@@ -236,179 +234,3 @@ export function YearWheelField({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: scaleSize(8),
-    minHeight: scaleSize(44),
-    paddingHorizontal: scaleSize(12),
-    paddingVertical: scaleSize(10),
-    backgroundColor: colors.background,
-  },
-  fieldValue: {
-    ...typography.inputText,
-    color: colors.textPrimary,
-  },
-  fieldChevron: {
-    ...typography.inputText,
-    color: colors.brandText,
-  },
-  anchoredDateField: {
-    width: scaleSize(120),
-    minHeight: scaleSize(40),
-    paddingHorizontal: scaleSize(10),
-    paddingVertical: 0,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    backgroundColor: '#F8EBCE',
-    borderWidth: 0,
-    borderColor: '#771F14',
-    borderRadius: scaleSize(10),
-    borderStartWidth: 2,
-    borderEndWidth: 3,
-    borderTopWidth: 1,
-    borderBottomWidth: 2.5,
-  },
-  anchoredDateFieldValue: {
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  modalRoot: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(20),
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(17, 24, 39, 0.35)',
-  },
-  anchoredDateBackdrop: {
-    backgroundColor: 'transparent',
-  },
-  anchoredDateModalAnchor: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  anchoredDateModalCard: {
-    width: '100%',
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(10),
-    borderRadius: scaleSize(30),
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8EBCE',
-    borderColor: '#771F14',
-    borderStartWidth: 3,
-    borderEndWidth: 7,
-    borderTopWidth: 1,
-    borderBottomWidth: 5,
-  },
-  anchoredDatePicker: {
-    height: scaleSize(180),
-  },
-  anchoredDateActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: scaleSize(10),
-    marginTop: scaleSize(10),
-  },
-  anchoredDateCloseButton: {
-    width: scaleSize(96),
-    minHeight: scaleSize(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8EBCE',
-    borderRadius: scaleSize(10),
-    borderWidth: 0,
-    borderColor: '#771F14',
-    borderStartWidth: 2,
-    borderEndWidth: 3,
-    borderTopWidth: 1,
-    borderBottomWidth: 2.5,
-  },
-  anchoredDateSecondaryButton: {
-    width: scaleSize(96),
-    minHeight: scaleSize(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8EBCE',
-    borderRadius: scaleSize(10),
-    borderWidth: 0,
-    borderColor: '#771F14',
-    borderStartWidth: 2,
-    borderEndWidth: 3,
-    borderTopWidth: 1,
-    borderBottomWidth: 2.5,
-  },
-  anchoredDateSecondaryButtonText: {
-    color: colors.textPrimary,
-    fontSize: scaleSize(16),
-    lineHeight: scaleSize(20),
-    textAlign: 'center',
-  },
-  anchoredDateCloseButtonText: {
-    color: colors.textPrimary,
-    fontSize: scaleSize(16),
-    lineHeight: scaleSize(20),
-    textAlign: 'center',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: scaleSize(320),
-    padding: scaleSize(16),
-    borderRadius: scaleSize(16),
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-  },
-  modalTitle: {
-    ...typography.summaryTitle,
-    color: colors.brandText,
-    textAlign: 'center',
-    marginBottom: scaleSize(12),
-  },
-  modalDatePicker: {
-    alignSelf: 'center',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: scaleSize(10),
-    marginTop: scaleSize(16),
-  },
-  secondaryAction: {
-    minHeight: scaleSize(36),
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(8),
-    borderRadius: 999,
-    backgroundColor: colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryActionText: {
-    ...typography.buttonLabel,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  primaryAction: {
-    minHeight: scaleSize(36),
-    paddingHorizontal: scaleSize(14),
-    paddingVertical: scaleSize(8),
-    borderRadius: 999,
-    backgroundColor: buttons.primaryPill.backgroundColor,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryActionText: {
-    ...typography.buttonLabel,
-    color: buttons.primaryPill.textColor,
-    textAlign: 'center',
-  },
-});

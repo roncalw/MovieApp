@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { scaleSize } from '../../../theme/scale';
+import { Modal, Pressable, Text, View } from 'react-native';
 import {
   formatInlineSummary,
   STREAMER_ITEMS,
@@ -11,8 +10,9 @@ import {
   MovieSearchModalActions,
   MovieSearchBulkSelectionLinks,
   MovieSearchStreamerTile,
-  movieSearchFieldSharedStyles,
 } from './MovieSearchFieldShared';
+import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
+import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { StreamerFieldProps } from '../../../types/search/movieSearchFieldTypes';
 
 export function StreamerField({ value, onChange }: StreamerFieldProps) {
@@ -90,18 +90,3 @@ export function StreamerField({ value, onChange }: StreamerFieldProps) {
     </>
   );
 }
-
-const sharedStyles = movieSearchFieldSharedStyles;
-
-const styles = StyleSheet.create({
-  streamerTileGroup: {
-    width: '100%',
-    maxWidth: scaleSize(350),
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: scaleSize(6),
-    paddingHorizontal: scaleSize(4),
-  },
-});

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { MovieResults } from '../search/results/MovieResults';
@@ -7,9 +7,7 @@ import { DetailStackOverlay } from '../movie/DetailStackOverlay';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import { useDetailStack } from '../hooks/useDetailStack';
-import { colors } from '../theme/colors';
-import { scaleSize } from '../theme/scale';
-import { typography } from '../theme/typography';
+import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
 import { hydrateMoviesWithCurrentImdbRatings } from '../utils/storage/movieListRatingHydration';
 import {
   getStoredMovieList,
@@ -157,44 +155,3 @@ export function StoredMovieListScreen({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    minHeight: scaleSize(142),
-    backgroundColor: colors.background,
-  },
-  title: {
-    width: '100%',
-    fontSize: scaleSize(22),
-    lineHeight: scaleSize(28),
-    fontWeight: '400',
-    letterSpacing: 0,
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-  contentStack: {
-    flex: 1,
-  },
-  listContent: {
-    flex: 1,
-  },
-  listContentHidden: {
-    opacity: 0,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(24),
-  },
-  message: {
-    ...typography.feedbackBody,
-    marginTop: scaleSize(12),
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-});

@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { PersonDetail } from '../person/PersonDetail';
 import { MovieDetail } from './MovieDetail';
-import { colors } from '../theme/colors';
+import { detailStackOverlayStyles as styles } from '../styles/movie/detailStackOverlayStyles';
 import type {
   DetailStackEntry,
   DetailStackOverlayProps,
@@ -64,18 +64,3 @@ function getDetailStackEntryKey(entry: DetailStackEntry, index: number) {
     ? `movie-${entry.movieId}-${index}`
     : `person-${entry.personId}-${index}`;
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 2,
-    backgroundColor: colors.background,
-  },
-  layer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.background,
-  },
-  hiddenLayer: {
-    opacity: 0,
-  },
-});

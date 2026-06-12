@@ -1,5 +1,9 @@
 import { Platform } from 'react-native';
-import type { InstalledAppVersion } from '../appVersion/installedAppVersion';
+import type {
+  AppVersionResponse,
+  InstalledAppVersion,
+  UpdateCheckResult,
+} from '../types/appVersion/appVersionTypes';
 
 /*
  * Store-version API client and comparison logic.
@@ -8,29 +12,24 @@ import type { InstalledAppVersion } from '../appVersion/installedAppVersion';
  * - src/drawer/SettingsScreen.tsx imports fetchStoreAppVersion and
  *   getUpdateCheckResult.
  *
- * Functions called by SettingsScreen:
- * - fetchStoreAppVersion (line 100).
- * - getUpdateCheckResult (line 110).
- *
  * Next file in UI flow:
  * - Control returns to src/drawer/SettingsScreen.tsx after this file fetches
  *   the store data and calculates the update message.
  *
  * Calls next outside the app:
- * - fetchStoreAppVersion (line 100) calls the Cloudflare Worker
- *   /app-version/latest endpoint.
- * - getUpdateCheckResult (line 110) calls getPlatformStoreVersion (line 96),
- *   compareNumber (line 71), and compareSemanticVersion (line 79).
+ * - fetchStoreAppVersion calls the Cloudflare Worker /app-version/latest
+ *   endpoint.
+ * - getUpdateCheckResult calls local platform and version comparison helpers.
  *
  * Code flow:
- * 1. SettingsScreen calls fetchStoreAppVersion (line 100) when Settings opens
- *    or when the user taps the update row.
- * 2. fetchStoreAppVersion (line 100) asks the Cloudflare Worker for the latest
+ * 1. SettingsScreen calls fetchStoreAppVersion when Settings opens or when the
+ *    user taps the update row.
+ * 2. fetchStoreAppVersion asks the Cloudflare Worker for the latest
  *    public iOS and Android store versions.
  * 3. SettingsScreen passes that response plus the installed version from
- *    installedAppVersion.ts into getUpdateCheckResult (line 110).
- * 4. getUpdateCheckResult (line 110) returns the message Settings should show,
- *    such as "Up to date", "Update available", or "Newer than store".
+ *    installedAppVersion.ts into getUpdateCheckResult.
+ * 4. getUpdateCheckResult returns the message Settings should show, such as
+ *    "Up to date", "Update available", or "Newer than store".
  *
  * Platform rule:
  * Android uses versionCode because Google Play exposes a numeric release code.
@@ -40,33 +39,6 @@ import type { InstalledAppVersion } from '../appVersion/installedAppVersion';
 
 const APP_VERSION_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/app-version/latest?country=us';
-
-export type UpdateCheckStatus =
-  | 'checking'
-  | 'upToDate'
-  | 'newerThanStore'
-  | 'updateAvailable'
-  | 'unavailable';
-
-export type StoreAppVersion = {
-  status?: string;
-  latestVersion?: string | null;
-  latestVersionCode?: number | null;
-  latestVersionName?: string | null;
-  storeUrl?: string | null;
-  error?: string;
-};
-
-export type AppVersionResponse = {
-  ios?: StoreAppVersion;
-  android?: StoreAppVersion;
-};
-
-export type UpdateCheckResult = {
-  status: UpdateCheckStatus;
-  storeVersion: StoreAppVersion | null;
-  message: string;
-};
 
 function compareNumber(left: number, right: number) {
   if (left === right) {

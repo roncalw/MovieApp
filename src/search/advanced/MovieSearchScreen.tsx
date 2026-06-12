@@ -11,7 +11,7 @@ Purpose:
      between search results mode and movie-detail mode.
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import {
   DrawerActions,
   useFocusEffect,
@@ -24,9 +24,7 @@ import { HeaderMovieSearch } from './HeaderMovieSearch';
 import { MovieResults } from '../results/MovieResults';
 import { DetailStackOverlay } from '../../movie/DetailStackOverlay';
 import type { MovieSearchParams } from '../../types/search/movieSearchParams';
-import { colors } from '../../theme/colors';
-import { scaleSize } from '../../theme/scale';
-import { typography } from '../../theme/typography';
+import { movieSearchScreenStyles as styles } from '../../styles/search/movieSearchScreenStyles';
 import { useDetailStack } from '../../hooks/useDetailStack';
 import {
   getDefaultBeginDate,
@@ -305,43 +303,3 @@ export function MovieSearchScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  contentStack: {
-    flex: 1,
-  },
-  searchContent: {
-    flex: 1,
-  },
-  searchContentHidden: {
-    opacity: 0,
-  },
-  headerHidden: {
-    display: 'none',
-  },
-  centered: {
-    /*
-      scaleSize(...) is only used here for the loading/error layout so the
-      horizontal breathing room stays proportional on compact and larger phones.
-    */
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: scaleSize(24),
-    backgroundColor: colors.background,
-  },
-  message: {
-    ...typography.feedbackBody,
-    marginTop: scaleSize(10),
-    textAlign: 'center',
-    color: colors.textSecondary,
-  },
-  errorText: {
-    ...typography.feedbackTitle,
-    color: colors.brandText,
-  },
-});
