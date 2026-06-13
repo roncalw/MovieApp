@@ -6,6 +6,7 @@ import {
   MOVIE_SEEN_STORAGE_KEY,
 } from '../../utils/storage/movieUserListsStorage';
 import { settingsStyles } from '../../styles/drawer/settingsStyles';
+import { useStoredMovieListCount } from './useStoredMovieListCount';
 
 const favoriteClearTitle = 'Your Movie Favorites are Cleared!';
 const favoriteClearMessage =
@@ -18,6 +19,7 @@ export function ClearMovieListsSection() {
   return (
     <>
       <ClearListButton
+        countLabel="Favorites I have saved"
         label="Clear Movie Favorites"
         confirmTitle="Clear Movie Favorites?"
         confirmMessage={`Selecting Yes will clear your movie favorites. ${favoriteClearMessage}`}
@@ -30,6 +32,7 @@ export function ClearMovieListsSection() {
       />
 
       <ClearListButton
+        countLabel="Movies I have seen"
         label="Clear Movies I Have Seen"
         confirmTitle="Clear Movies I Have Seen?"
         confirmMessage={`Selecting Yes will clear your movies you have seen. ${seenClearMessage}`}
@@ -47,6 +50,7 @@ export function ClearMovieListsSection() {
 function ClearListButton({
   confirmMessage,
   confirmTitle,
+  countLabel,
   failureMessage,
   failureTitle,
   label,
@@ -57,6 +61,7 @@ function ClearListButton({
 }: {
   confirmMessage: string;
   confirmTitle: string;
+  countLabel: string;
   failureMessage: string;
   failureTitle: string;
   label: string;
@@ -65,6 +70,8 @@ function ClearListButton({
   successMessage: string;
   successTitle: string;
 }) {
+  const { count, refreshCount } = useStoredMovieListCount(storageKey);
+
   function handleClearList() {
     Alert.alert(confirmTitle, confirmMessage, [
       { text: 'No', style: 'cancel' },
@@ -74,6 +81,7 @@ function ClearListButton({
         onPress: async () => {
           try {
             await clearStoredMovieList(storageKey);
+            await refreshCount();
             Alert.alert(successTitle, successMessage);
           } catch (error) {
             console.error(logMessage, error);
@@ -95,6 +103,11 @@ function ClearListButton({
           {label}
         </Text>
       </Pressable>
+      {count !== null ? (
+        <Text allowFontScaling={false} style={settingsStyles.listCountText}>
+          {countLabel}: {count}
+        </Text>
+      ) : null}
     </View>
   );
 }

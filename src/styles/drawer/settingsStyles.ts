@@ -39,8 +39,10 @@ export const settingsStyles = StyleSheet.create({
     marginBottom: scaleSize(28),
   },
   linkText: {
-    ...typography.feedbackTitle,
-    color: colors.actionLink,
+    fontSize: scaleSize(20),
+    lineHeight: scaleSize(24),
+    fontWeight: '400',
+    color: colors.brandText,
     textAlign: 'center',
   },
   versionText: {
@@ -65,9 +67,14 @@ export const settingsStyles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
+  listCountText: {
+    ...typography.summaryBody,
+    marginTop: scaleSize(2),
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
   notificationBlock: {
     alignItems: 'center',
-    marginTop: scaleSize(2),
   },
   notificationRow: {
     flexDirection: 'row',
@@ -83,6 +90,13 @@ export const settingsStyles = StyleSheet.create({
     minHeight: scaleSize(20),
     marginTop: scaleSize(-8),
     color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  notificationIdText: {
+    ...typography.summaryBody,
+    maxWidth: scaleSize(320),
+    marginTop: scaleSize(2),
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   pressed: {

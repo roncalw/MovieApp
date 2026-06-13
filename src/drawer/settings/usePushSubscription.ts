@@ -14,12 +14,22 @@ import {
  */
 export function usePushSubscription() {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [appGuestId, setAppGuestId] = useState<string | null>(null);
+  const [devicePushId, setDevicePushId] = useState<string | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(true);
   const [isSubscriptionUpdating, setIsSubscriptionUpdating] = useState(false);
 
   const refreshPushSubscriptionState = useCallback(async () => {
-    const optedIn = await OneSignal.User.pushSubscription.getOptedInAsync();
+    const [optedIn, currentAppGuestId, currentDevicePushId] =
+      await Promise.all([
+        OneSignal.User.pushSubscription.getOptedInAsync(),
+        OneSignal.User.getOnesignalId(),
+        OneSignal.User.pushSubscription.getIdAsync(),
+      ]);
+
     setIsSubscribed(optedIn);
+    setAppGuestId(currentAppGuestId);
+    setDevicePushId(currentDevicePushId);
   }, []);
 
   useEffect(() => {
@@ -27,10 +37,8 @@ export function usePushSubscription() {
 
     const loadPushSubscriptionState = async () => {
       try {
-        const optedIn =
-          await OneSignal.User.pushSubscription.getOptedInAsync();
         if (isMounted) {
-          setIsSubscribed(optedIn);
+          await refreshPushSubscriptionState();
         }
       } catch (error) {
         console.error('Error reading push notification subscription:', error);
@@ -46,6 +54,8 @@ export function usePushSubscription() {
     ) => {
       if (isMounted) {
         setIsSubscribed(event.current.optedIn);
+        setDevicePushId(event.current.id ?? null);
+        void refreshPushSubscriptionState();
       }
     };
 
@@ -62,7 +72,7 @@ export function usePushSubscription() {
         subscriptionChangeListener
       );
     };
-  }, []);
+  }, [refreshPushSubscriptionState]);
 
   const handlePushSubscriptionChange = useCallback(
     async (nextValue: boolean) => {
@@ -113,6 +123,8 @@ export function usePushSubscription() {
   );
 
   return {
+    appGuestId,
+    devicePushId,
     handlePushSubscriptionChange,
     isSubscribed,
     isSubscriptionLoading,

@@ -77,6 +77,14 @@ export async function getStoredMovieList(
   return parseStoredMovieList(value);
 }
 
+export async function getStoredMovieListCount(
+  storageKey: MovieUserListStorageKey
+): Promise<number> {
+  const movies = await getStoredMovieList(storageKey);
+
+  return movies.length;
+}
+
 export async function isMovieInStoredList(
   storageKey: MovieUserListStorageKey,
   movieId: number
