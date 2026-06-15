@@ -9,6 +9,8 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).NotificationService</string>
 	</dict>
+	<key>OneSignal_app_groups_key</key>
+	<string>group.com.codefest.movieapp.onesignal</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 </dict>
