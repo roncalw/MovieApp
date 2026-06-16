@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   searchInputFrame: {
     flex: 1,
-    minHeight: scaleSize(50),
+    height: scaleSize(44),
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: Platform.OS === 'android' ? 1 : StyleSheet.hairlineWidth,
@@ -278,10 +278,12 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    minHeight: scaleSize(48),
-    ...typography.detailBody,
+    height: '100%',
+    ...typography.inputText,
     color: colors.textPrimary,
+    textAlignVertical: 'center',
     paddingVertical: 0,
+    transform: [{ translateY: -1 }],
   },
   clearSearchButton: {
     width: scaleSize(32),

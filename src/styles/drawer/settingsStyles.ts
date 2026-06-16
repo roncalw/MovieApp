@@ -88,7 +88,7 @@ export const settingsStyles = StyleSheet.create({
   subscriptionText: {
     ...typography.summaryBody,
     minHeight: scaleSize(20),
-    marginTop: scaleSize(-8),
+    marginTop: scaleSize(2),
     color: colors.textPrimary,
     textAlign: 'center',
   },

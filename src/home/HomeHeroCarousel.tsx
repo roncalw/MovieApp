@@ -27,6 +27,7 @@ import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 
 const AUTO_PLAY_INTERVAL_MS = 3000;
+const FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS = true;
 
 export function HomeHeroCarousel({
   movies,
@@ -52,7 +53,11 @@ export function HomeHeroCarousel({
   }, [heroMovies]);
 
   useEffect(() => {
-    if (isAutoPlayPaused || heroMovies.length <= 1) {
+    if (
+      FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS ||
+      isAutoPlayPaused ||
+      heroMovies.length <= 1
+    ) {
       return undefined;
     }
 
