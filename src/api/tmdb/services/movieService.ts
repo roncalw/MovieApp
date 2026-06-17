@@ -324,7 +324,7 @@ export async function fetchCloudflareMovieSearchResults(
     }
   }
 
-  if (movieVoteCount) {
+  if (movieVoteCount && movieVoteCount !== '0') {
     searchParams.set('minImdbVotes', movieVoteCount);
   }
 

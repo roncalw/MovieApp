@@ -11,7 +11,7 @@ Purpose:
      between search results mode and movie-detail mode.
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import {
   DrawerActions,
   useFocusEffect,
@@ -172,6 +172,32 @@ export function MovieSearchScreen() {
     : 0;
   const isDetailOpen = isDetailStackOpen;
 
+  const resetSearchScreen = useCallback(() => {
+    closeAllDetails();
+    queryClient.removeQueries({
+      queryKey: ['movieSearch'],
+    });
+    setExcludeSeenMovies(false);
+    setSeenMovieIds(new Set());
+    setSubmittedParams({
+      movieRatings: '',
+      beginDate: defaultBeginDate,
+      endDate: defaultEndDate,
+      movieGenres: [],
+      movieStreamers: [],
+      movieVoteCount: '',
+      movieSortBy: '',
+    });
+    setHasDisplayedFilterChanges(false);
+    setHasSubmittedSearch(false);
+  }, [closeAllDetails, defaultBeginDate, defaultEndDate, queryClient]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return resetSearchScreen;
+    }, [resetSearchScreen])
+  );
+
   useEffect(() => {
     const shouldFetchMoreFilteredResults =
       hasActiveSubmittedSearch &&
@@ -234,6 +260,31 @@ export function MovieSearchScreen() {
         <Text allowFontScaling={false} style={styles.message}>
           {message}
         </Text>
+        <View style={styles.errorActions}>
+          <Pressable
+            onPress={resetSearchScreen}
+            style={styles.errorPrimaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Return to movie search filters"
+          >
+            <Text allowFontScaling={false} style={styles.errorPrimaryButtonText}>
+              Try Again
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={resetSearchScreen}
+            style={styles.errorSecondaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Return to movie search filters"
+          >
+            <Text
+              allowFontScaling={false}
+              style={styles.errorSecondaryButtonText}
+            >
+              Back to Search
+            </Text>
+          </Pressable>
+        </View>
       </View>
     );
   }

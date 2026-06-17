@@ -47,4 +47,37 @@ export const movieSearchScreenStyles = StyleSheet.create({
     ...typography.feedbackTitle,
     color: colors.brandText,
   },
+  errorActions: {
+    marginTop: scaleSize(22),
+    alignItems: 'center',
+    gap: scaleSize(12),
+  },
+  errorPrimaryButton: {
+    minWidth: scaleSize(150),
+    minHeight: scaleSize(44),
+    paddingHorizontal: scaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: scaleSize(8),
+    backgroundColor: colors.brandText,
+  },
+  errorPrimaryButtonText: {
+    ...typography.buttonLabel,
+    color: colors.actionOnPrimary,
+  },
+  errorSecondaryButton: {
+    minWidth: scaleSize(150),
+    minHeight: scaleSize(44),
+    paddingHorizontal: scaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.brandText,
+    borderRadius: scaleSize(8),
+    backgroundColor: colors.background,
+  },
+  errorSecondaryButtonText: {
+    ...typography.buttonLabel,
+    color: colors.brandText,
+  },
 });

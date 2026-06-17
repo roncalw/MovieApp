@@ -81,6 +81,36 @@ export function SubHeaderMovieSearchFields() {
     () => getSortedValueSignature(selectedStreamer),
     [selectedStreamer]
   );
+
+  useEffect(() => {
+    setBeginYear(
+      getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear())
+    );
+    setEndYear(
+      getYearFromDateString(appliedParams.endDate, getDefaultEndYear())
+    );
+    setSelectedRating(appliedParams.movieRatings);
+    setSelectedGenre([...appliedParams.movieGenres]);
+    setSelectedStreamer([...appliedParams.movieStreamers]);
+    setSelectedSortValue(
+      getInitialSortValue(
+        appliedParams.movieSortBy,
+        appliedParams.movieVoteCount
+      )
+    );
+    setIsFiltersVisible(true);
+  }, [
+    appliedGenreSignature,
+    appliedParams.beginDate,
+    appliedParams.endDate,
+    appliedParams.movieGenres,
+    appliedParams.movieRatings,
+    appliedParams.movieSortBy,
+    appliedParams.movieStreamers,
+    appliedParams.movieVoteCount,
+    appliedStreamerSignature,
+  ]);
+
   const displayedFiltersAreDirty = useMemo(
     () =>
       getBeginDateFromYear(beginYear) !== appliedParams.beginDate ||
@@ -115,7 +145,7 @@ export function SubHeaderMovieSearchFields() {
       nextVoteCount = '';
       nextSortBy = '';
     } else if (selectedSortValue === '0') {
-      nextVoteCount = '0';
+      nextVoteCount = '';
       nextSortBy = 'popularity.desc';
     } else {
       nextVoteCount = selectedSortValue;

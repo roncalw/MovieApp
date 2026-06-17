@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import {
+  useFocusEffect,
   useRoute,
   useNavigation,
   type RouteProp,
@@ -18,6 +19,7 @@ import {
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { MovieResults } from '../results/MovieResults';
 import { DetailStackOverlay } from '../../movie/DetailStackOverlay';
 import { HeaderActionRow } from '../../shared/header/HeaderActionRow';
@@ -33,6 +35,7 @@ import type { AppDrawerParamList } from '../../types/navigation/navigationTypes'
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
   const [draftTitle, setDraftTitle] = useState('');
@@ -77,12 +80,21 @@ export function SearchByMovieTitleScreen() {
     setSubmittedTitle(nextSubmittedTitle);
   }
 
-  function handleClearTitle() {
+  const handleClearTitle = useCallback(() => {
+    queryClient.removeQueries({
+      queryKey: ['movieTitleSearch'],
+    });
     setDraftTitle('');
     setSubmittedTitle('');
     resetRatingHydrationState();
     closeAllDetails();
-  }
+  }, [closeAllDetails, queryClient, resetRatingHydrationState]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return handleClearTitle;
+    }, [handleClearTitle])
+  );
 
   const isDetailOpen = isDetailStackOpen;
   const isLoadingResults = isLoading;
@@ -206,6 +218,34 @@ export function SearchByMovieTitleScreen() {
                 <Text allowFontScaling={false} style={styles.message}>
                   {error instanceof Error ? error.message : 'Unknown error'}
                 </Text>
+                <View style={styles.errorActions}>
+                  <Pressable
+                    onPress={handleClearTitle}
+                    style={styles.errorPrimaryButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Return to movie title search"
+                  >
+                    <Text
+                      allowFontScaling={false}
+                      style={styles.errorPrimaryButtonText}
+                    >
+                      Try Again
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleBackPress}
+                    style={styles.errorSecondaryButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go back"
+                  >
+                    <Text
+                      allowFontScaling={false}
+                      style={styles.errorSecondaryButtonText}
+                    >
+                      Back
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             ) : (
               <MovieResults
@@ -320,6 +360,39 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.feedbackTitle,
+    color: colors.brandText,
+  },
+  errorActions: {
+    marginTop: scaleSize(22),
+    alignItems: 'center',
+    gap: scaleSize(12),
+  },
+  errorPrimaryButton: {
+    minWidth: scaleSize(150),
+    minHeight: scaleSize(44),
+    paddingHorizontal: scaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: scaleSize(8),
+    backgroundColor: colors.brandText,
+  },
+  errorPrimaryButtonText: {
+    ...typography.buttonLabel,
+    color: colors.actionOnPrimary,
+  },
+  errorSecondaryButton: {
+    minWidth: scaleSize(150),
+    minHeight: scaleSize(44),
+    paddingHorizontal: scaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.brandText,
+    borderRadius: scaleSize(8),
+    backgroundColor: colors.background,
+  },
+  errorSecondaryButtonText: {
+    ...typography.buttonLabel,
     color: colors.brandText,
   },
 });

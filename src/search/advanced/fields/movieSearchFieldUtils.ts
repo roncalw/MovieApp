@@ -86,7 +86,7 @@ export function toggleArrayValue(currentValues: string[], nextValue: string) {
 }
 
 export function getInitialSortValue(appliedSortBy: string, appliedVoteCount: string) {
-  if (appliedSortBy === 'popularity.desc' && appliedVoteCount === '0') {
+  if (appliedSortBy === 'popularity.desc') {
     return '0';
   }
 
