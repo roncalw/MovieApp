@@ -27,7 +27,7 @@ import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 
 const AUTO_PLAY_INTERVAL_MS = 3000;
-const FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS = true;
+const FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS = false;
 
 export function HomeHeroCarousel({
   movies,
