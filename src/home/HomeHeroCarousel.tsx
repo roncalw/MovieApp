@@ -13,6 +13,7 @@ import {
   Image,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -40,6 +41,7 @@ export function HomeHeroCarousel({
   const listRef = useRef<FlatList<movieType>>(null);
   const currentIndexRef = useRef(0);
   const { width, height } = useWindowDimensions();
+  const isIPad = Platform.OS === 'ios' && Platform.isPad;
   // Keep the hero dominant, but leave just enough room for the next row title
   // to peek onto the first screen so Home clearly continues below the fold.
   const heroHeight = Math.round(height * 0.655);
@@ -140,7 +142,11 @@ export function HomeHeroCarousel({
           return (
             <Pressable
               onPress={() => onMoviePress(item)}
-              style={[styles.slide, { width, height: heroHeight }]}
+              style={[
+                styles.slide,
+                isIPad ? styles.iPadSlide : null,
+                { width, height: heroHeight },
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`Open ${item.title || item.original_title}`}
             >
@@ -148,7 +154,7 @@ export function HomeHeroCarousel({
                 <Image
                   source={{ uri: movieImageUri }}
                   style={styles.heroImage}
-                  resizeMode="cover"
+                  resizeMode={isIPad ? 'contain' : 'cover'}
                 />
               ) : null}
             </Pressable>
@@ -166,6 +172,9 @@ const styles = StyleSheet.create({
   },
   slide: {
     backgroundColor: '#d9d9d9',
+  },
+  iPadSlide: {
+    backgroundColor: '#000000',
   },
   heroImage: {
     width: '100%',

@@ -146,6 +146,30 @@
       "problemMatcher": []
     },
     {
+      "label": "IOS - iPad Pro 13-inch",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run ipadpro13; exec /bin/zsh -l"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS - iPad Pro 13-inch",
+          "TASK_EXPLORER_ORDER": "170"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "ANDROID - Note 4 - Device - RUN APP",
       "type": "shell",
       "command": "/bin/zsh",
@@ -158,7 +182,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RUN APP",
-          "TASK_EXPLORER_ORDER": "170"
+          "TASK_EXPLORER_ORDER": "180"
         }
       },
       "presentation": {
@@ -182,7 +206,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RUN APP",
-          "TASK_EXPLORER_ORDER": "180"
+          "TASK_EXPLORER_ORDER": "190"
         }
       },
       "presentation": {
@@ -206,7 +230,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "=========== LIST DEVICES ===========",
-          "TASK_EXPLORER_ORDER": "190"
+          "TASK_EXPLORER_ORDER": "200"
         }
       },
       "presentation": {
@@ -230,7 +254,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "IOS - List Devices",
-          "TASK_EXPLORER_ORDER": "200"
+          "TASK_EXPLORER_ORDER": "210"
         }
       },
       "presentation": {
@@ -254,7 +278,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - List Devices",
-          "TASK_EXPLORER_ORDER": "210"
+          "TASK_EXPLORER_ORDER": "220"
         }
       },
       "presentation": {
@@ -278,7 +302,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - List Simulators",
-          "TASK_EXPLORER_ORDER": "220"
+          "TASK_EXPLORER_ORDER": "230"
         }
       },
       "presentation": {
@@ -302,7 +326,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "=========== SPREADSHEETS ===========",
-          "TASK_EXPLORER_ORDER": "230"
+          "TASK_EXPLORER_ORDER": "240"
         }
       },
       "presentation": {
@@ -326,7 +350,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "UAT - Open Latest Spreadsheet",
-          "TASK_EXPLORER_ORDER": "240"
+          "TASK_EXPLORER_ORDER": "250"
         }
       },
       "presentation": {
@@ -350,7 +374,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "=========== RELOAD APP ===========",
-          "TASK_EXPLORER_ORDER": "250"
+          "TASK_EXPLORER_ORDER": "260"
         }
       },
       "presentation": {
@@ -374,7 +398,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Note 4 - Device - RELOAD",
-          "TASK_EXPLORER_ORDER": "260"
+          "TASK_EXPLORER_ORDER": "270"
         }
       },
       "presentation": {
@@ -398,7 +422,7 @@
         "env": {
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID - Samsung Galaxy S22 - Simulator - RELOAD",
-          "TASK_EXPLORER_ORDER": "270"
+          "TASK_EXPLORER_ORDER": "280"
         }
       },
       "presentation": {
