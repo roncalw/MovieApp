@@ -9,7 +9,7 @@ import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
 
 const privacyPolicyUrl =
-  'https://www.privacypolicies.com/live/bc91d018-505a-4539-965d-37e7416a16b3';
+  'https://movieapp-cloudflare.carlo-roncallo.workers.dev/privacy-policy';
 
 export function PrivacyPolicyScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
