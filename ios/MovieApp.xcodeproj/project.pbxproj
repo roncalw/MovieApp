@@ -277,7 +277,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# iOS entry point for the TypeScript installed-version snapshot.\n# Triggered by: Xcode build phase \"Generate app build version\" at project.pbxproj line 265.\n# Next file in build flow: scripts/generate-app-build-version.js, which writes src/appVersion/generatedBuildVersion.ts.\n# Code flow: Xcode build phase -> generator script -> generated TypeScript snapshot -> SettingsScreen at runtime.\nset -e\ncd \"$SRCROOT/..\"\nnode scripts/generate-app-build-version.js\n";
+			shellScript = "# iOS entry point for the TypeScript installed-version snapshot.\n# Triggered by: Xcode build phase \"Generate app build version\" at project.pbxproj line 265.\n# Next file: scripts/generate-app-build-version-ios.sh.\n# Code flow: Xcode build phase -> React Native environment -> generator -> generated TypeScript -> Settings.\nset -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nGENERATOR=\"$SRCROOT/../scripts/generate-app-build-version-ios.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$GENERATOR\\\"\"\n";
 		};
 		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
