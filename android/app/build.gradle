@@ -75,12 +75,12 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 def repoRoot = rootDir.parentFile
 
 // Android entry point for the TypeScript installed-version snapshot.
-// Triggered by: Gradle preBuild (line 135) before the Android app build.
-// Next file in build flow: scripts/generate-app-build-version.js, which writes
-// src/appVersion/generatedBuildVersion.ts for SettingsScreen runtime use.
-// Code flow: preBuild (line 135) -> generateAppBuildVersion (line 84)
-// -> generator script -> generated TypeScript snapshot.
-// This keeps version maintenance in Gradle/Xcode instead of Kotlin.
+//
+// The React Native JavaScript bundle imports src/appVersion/generatedBuildVersion.ts,
+// so Android must regenerate that file before Metro creates a release bundle.
+// Keeping this generated file in the normal Gradle task graph prevents stale
+// version data from being packaged into the app and satisfies Gradle's task
+// dependency validation.
 def generatedAppBuildVersion = tasks.register("generateAppBuildVersion", Exec) {
     workingDir repoRoot
     commandLine "node", "scripts/generate-app-build-version.js"
@@ -133,6 +133,16 @@ android {
 }
 
 tasks.named("preBuild").configure {
+    dependsOn(generatedAppBuildVersion)
+}
+
+// React Native creates variant-specific bundle tasks such as
+// createBundleReleaseJsAndAssets. Those tasks read the generated TypeScript
+// snapshot while Metro bundles JavaScript, so they must wait for the generator
+// just like preBuild does.
+tasks.matching { task ->
+    task.name.startsWith("createBundle") && task.name.endsWith("JsAndAssets")
+}.configureEach {
     dependsOn(generatedAppBuildVersion)
 }
 
