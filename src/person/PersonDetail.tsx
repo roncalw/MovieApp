@@ -15,6 +15,7 @@ import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mapPersonMovieCreditToMovie } from '../api/tmdb/services/movieService';
 import { usePersonDetailsQuery } from '../hooks/useMovieSearchQuery';
+import { ExpandableText } from '../shared/ExpandableText';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
@@ -127,9 +128,12 @@ export function PersonDetail({
           </View>
 
           {person.biography ? (
-            <Text allowFontScaling={false} numberOfLines={8} style={styles.biography}>
-              {person.biography}
-            </Text>
+            <ExpandableText
+              text={person.biography}
+              collapsedLines={8}
+              containerStyle={styles.biographyBlock}
+              textStyle={styles.biography}
+            />
           ) : null}
 
           {carouselItems.length > 0 ? (
@@ -416,11 +420,13 @@ const styles = StyleSheet.create({
   detailLineLabel: {
     fontWeight: '700',
   },
-  biography: {
-    ...typography.detailBody,
-    color: colors.textPrimary,
+  biographyBlock: {
     paddingHorizontal: scaleSize(18),
     paddingTop: scaleSize(16),
+  },
+  biography: {
+    ...typography.summaryBody,
+    color: colors.textPrimary,
   },
   sectionTitle: {
     ...typography.sectionLabel,

@@ -27,6 +27,7 @@ import {
   useMovieDetailsQuery,
   useMovieListImdbRatingQuery,
 } from '../hooks/useMovieSearchQuery';
+import { ExpandableText } from '../shared/ExpandableText';
 import type {
   movieGenres,
   movieTrailerVideo,
@@ -200,11 +201,13 @@ function LoadedMovieDetail({
               accessibilityRole="button"
               accessibilityLabel={`Play trailer: ${trailer.name}`}
             >
-              <Ionicons
-                name="caret-forward-outline"
-                size={scaleSize(30)}
-                color={colors.actionOnPrimary}
-              />
+              <View style={styles.trailerPlayCircle}>
+                <Ionicons
+                  name="caret-forward"
+                  size={scaleSize(26)}
+                  color={colors.actionOnPrimary}
+                />
+              </View>
             </Pressable>
           ) : null}
         </View>
@@ -221,13 +224,12 @@ function LoadedMovieDetail({
         <GenreList genres={movie.genres ?? []} />
         <MovieStarRating imdbRating={imdbRating} />
 
-        <Text
-          allowFontScaling={false}
-          numberOfLines={20}
-          style={styles.overview}
-        >
-          {movie.overview || 'Overview is not available.'}
-        </Text>
+        <ExpandableText
+          text={movie.overview || 'Overview is not available.'}
+          collapsedLines={20}
+          containerStyle={styles.overviewBlock}
+          textStyle={styles.overview}
+        />
 
         {movieRating ? (
           <Text allowFontScaling={false} style={styles.boldMetaText}>

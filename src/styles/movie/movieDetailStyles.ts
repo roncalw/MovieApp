@@ -84,8 +84,15 @@ export const movieDetailStyles = StyleSheet.create({
     height: scaleSize(50),
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: scaleSize(25),
-    backgroundColor: colors.trailerPlayBackground,
+  },
+  trailerPlayCircle: {
+    width: scaleSize(40),
+    height: scaleSize(40),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: scaleSize(20),
+    backgroundColor: colors.brandText,
+    transform: [{ translateY: scaleSize(-3) }],
   },
   movieTitle: {
     color: colors.textPrimary,
@@ -126,12 +133,15 @@ export const movieDetailStyles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 0.5,
   },
-  overview: {
-    ...typography.detailBody,
-    color: colors.textPrimary,
+  overviewBlock: {
     paddingHorizontal: scaleSize(15),
     paddingTop: scaleSize(13),
     paddingBottom: scaleSize(12),
+    alignSelf: 'stretch',
+  },
+  overview: {
+    ...typography.detailBody,
+    color: colors.textPrimary,
     textAlign: 'left',
   },
   boldMetaText: {

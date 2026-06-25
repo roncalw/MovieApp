@@ -35,6 +35,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Movie Time does not currently request your location. This message is included because a bundled notification library supports optional location-based features.</string>
 	<key>OneSignal_app_groups_key</key>
 	<string>group.com.codefest.movieapp.onesignal</string>
 	<key>RCTNewArchEnabled</key>
