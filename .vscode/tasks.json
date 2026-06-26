@@ -432,6 +432,126 @@
         "clear": false
       },
       "problemMatcher": []
+    },
+    {
+      "label": "===== Package =====",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "echo 'Package'"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "=========== PACKAGE ===========",
+          "TASK_EXPLORER_ORDER": "290"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ECHOVERSION-MovieApp",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run --silent version-movieapp; exec /bin/zsh -l"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ECHO VERSION-MovieApp",
+          "TASK_EXPLORER_ORDER": "295"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "IOS-Archive",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run iosarchive; exec /bin/zsh -l"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS-Archive",
+          "TASK_EXPLORER_ORDER": "300"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "IOS-Archive Validation",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run iosarchive-validation; exec /bin/zsh -l"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "IOS-Archive Validation",
+          "TASK_EXPLORER_ORDER": "305"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ANDROID-Bundle",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "cd /Users/croncallo/repo/MovieApp && npm run androidbundle; exec /bin/zsh -l"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "ANDROID-Bundle",
+          "TASK_EXPLORER_ORDER": "310"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
     }
   ]
 }
