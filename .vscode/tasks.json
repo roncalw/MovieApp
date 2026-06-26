@@ -314,54 +314,6 @@
       "problemMatcher": []
     },
     {
-      "label": "===== Spreadsheets =====",
-      "type": "shell",
-      "command": "/bin/zsh",
-      "args": [
-        "-lic",
-        "echo 'Spreadsheets'"
-      ],
-      "options": {
-        "cwd": "/Users/croncallo/repo/MovieApp",
-        "env": {
-          "TASK_EXPLORER_SHOW": "true",
-          "TASK_EXPLORER_NAME": "=========== SPREADSHEETS ===========",
-          "TASK_EXPLORER_ORDER": "240"
-        }
-      },
-      "presentation": {
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated",
-        "clear": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "UAT - Open Latest Spreadsheet",
-      "type": "shell",
-      "command": "/bin/zsh",
-      "args": [
-        "-lic",
-        "open /Users/croncallo/repo/MovieApp/artifacts/UAT/UAT_2026-06-11.xlsx"
-      ],
-      "options": {
-        "cwd": "/Users/croncallo/repo/MovieApp",
-        "env": {
-          "TASK_EXPLORER_SHOW": "true",
-          "TASK_EXPLORER_NAME": "UAT - Open Latest Spreadsheet",
-          "TASK_EXPLORER_ORDER": "250"
-        }
-      },
-      "presentation": {
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated",
-        "clear": false
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "===== Reload App =====",
       "type": "shell",
       "command": "/bin/zsh",
@@ -543,6 +495,102 @@
           "TASK_EXPLORER_SHOW": "true",
           "TASK_EXPLORER_NAME": "ANDROID-Bundle",
           "TASK_EXPLORER_ORDER": "310"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "===== Spreadsheets =====",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "echo 'Spreadsheets'"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "=========== SPREADSHEETS ===========",
+          "TASK_EXPLORER_ORDER": "320"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "UAT - Open Latest Spreadsheet",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "open /Users/croncallo/repo/MovieApp/artifacts/UAT/UAT_2026-06-11.xlsx"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "UAT - Open Latest Spreadsheet",
+          "TASK_EXPLORER_ORDER": "330"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "===== Documentation =====",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "echo 'Documentation'"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "=========== DOCUMENTATION ===========",
+          "TASK_EXPLORER_ORDER": "340"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DOCS - Open ReactNative Word Document",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "open '/Users/croncallo/Library/CloudStorage/OneDrive-Personal/reference/IT/Programming/ReactNative/ReactNative.docx'"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "DOCS - Open ReactNative Word Document",
+          "TASK_EXPLORER_ORDER": "350"
         }
       },
       "presentation": {
