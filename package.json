@@ -48,6 +48,7 @@
     "iosarchive": "zsh scripts/iosarchive.sh",
     "iosarchive-validation": "zsh scripts/ios-archive-validation.sh",
     "androidbundle": "zsh scripts/androidbundle.sh",
+    "androidbundle-validation": "zsh scripts/android-bundle-validation.sh",
     "==================================================================TESTS==============================================================================================": "TESTS",
     "=======ESLINT===============================================================================================": "ESLINT (lint) - TEST SYNTAX  - Statically analyze code, catch ",
     "========ESLINT==============================================================================================": "     syntax issues, enforce coding standards, prevent ",
