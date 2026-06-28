@@ -674,18 +674,18 @@
       "problemMatcher": []
     },
     {
-      "label": "IOS - Apple Store Connect",
+      "label": "IOS-BUILDS - Apple Store Connect",
       "type": "shell",
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "open 'https://appstoreconnect.apple.com/'"
+        "open 'https://appstoreconnect.apple.com/teams/6895da44-6fa8-4c0c-9822-9d4707d1e3c1/apps/6465793035/testflight/ios'"
       ],
       "options": {
         "cwd": "/Users/croncallo/repo/MovieApp",
         "env": {
           "TASK_EXPLORER_SHOW": "true",
-          "TASK_EXPLORER_NAME": "IOS - Apple Store Connect",
+          "TASK_EXPLORER_NAME": "IOS-BUILDS - Apple Store Connect",
           "TASK_EXPLORER_ORDER": "380"
         }
       },
@@ -698,19 +698,43 @@
       "problemMatcher": []
     },
     {
-      "label": "ANDROID - Google Play Console",
+      "label": "ANDROID-BUILDS - Google Play Store",
       "type": "shell",
       "command": "/bin/zsh",
       "args": [
         "-lic",
-        "open 'https://play.google.com/console/'"
+        "open 'https://play.google.com/console/u/0/developers/6841507184175418838/app/4973934119273844695/releases/overview'"
       ],
       "options": {
         "cwd": "/Users/croncallo/repo/MovieApp",
         "env": {
           "TASK_EXPLORER_SHOW": "true",
-          "TASK_EXPLORER_NAME": "ANDROID - Google Play Console",
+          "TASK_EXPLORER_NAME": "ANDROID-BUILDS - Google Play Store",
           "TASK_EXPLORER_ORDER": "390"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "CLOUDFLARE - Last Job Runs Summary",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lic",
+        "open 'https://movieapp-cloudflare.carlo-roncallo.workers.dev/admin/import/last-job-runs-summary'"
+      ],
+      "options": {
+        "cwd": "/Users/croncallo/repo/MovieApp",
+        "env": {
+          "TASK_EXPLORER_SHOW": "true",
+          "TASK_EXPLORER_NAME": "CLOUDFLARE - Last Job Runs Summary",
+          "TASK_EXPLORER_ORDER": "400"
         }
       },
       "presentation": {

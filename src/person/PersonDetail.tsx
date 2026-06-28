@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -14,16 +13,23 @@ import {
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mapPersonMovieCreditToMovie } from '../api/tmdb/services/movieService';
-import { usePersonDetailsQuery } from '../hooks/useMovieSearchQuery';
+import {
+  usePersonDetailsQuery,
+  usePersonMovieCreditsQuery,
+} from '../hooks/useMovieSearchQuery';
 import { ExpandableText } from '../shared/ExpandableText';
+import {
+  DetailResourceError,
+  DetailResourceLoading,
+} from '../shared/DetailResourceState';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 import type {
   movieType,
-  personDetailType,
   personMovieCastCredit,
+  personMovieCredits,
   personMovieCrewCredit,
 } from '../types/movie/MovieTypes';
 import type {
@@ -45,15 +51,17 @@ export function PersonDetail({
 }: PersonDetailProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { data: person, isLoading, isError, error } =
-    usePersonDetailsQuery(personId);
+  const personQuery = usePersonDetailsQuery(personId);
+  const movieCreditsQuery = usePersonMovieCreditsQuery(personId);
+  const person = personQuery.data;
   const filmography = useMemo(
-    () => buildFilmography(person),
-    [person]
+    () => buildFilmography(movieCreditsQuery.data),
+    [movieCreditsQuery.data],
   );
   const carouselItems = useMemo(
-    () => filmography.filter(item => getMovieImagePath(item.movie)).slice(0, 24),
-    [filmography]
+    () =>
+      filmography.filter(item => getMovieImagePath(item.movie)).slice(0, 24),
+    [filmography],
   );
   const carouselCardWidth = Math.min(width - scaleSize(40), scaleSize(360));
   const carouselCardGap = scaleSize(12);
@@ -70,10 +78,18 @@ export function PersonDetail({
           accessibilityRole="button"
           accessibilityLabel="Back one page"
         >
-          <Ionicons name="chevron-back" size={scaleSize(34)} color={colors.textPrimary} />
+          <Ionicons
+            name="chevron-back"
+            size={scaleSize(34)}
+            color={colors.textPrimary}
+          />
         </Pressable>
         <View style={styles.headerTitleBlock}>
-          <Text allowFontScaling={false} numberOfLines={1} style={styles.headerTitle}>
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            style={styles.headerTitle}
+          >
             {title}
           </Text>
         </View>
@@ -83,25 +99,27 @@ export function PersonDetail({
           accessibilityRole="button"
           accessibilityLabel="Close all detail pages"
         >
-          <Ionicons name="close" size={scaleSize(30)} color={colors.textPrimary} />
+          <Ionicons
+            name="close"
+            size={scaleSize(30)}
+            color={colors.textPrimary}
+          />
         </Pressable>
       </View>
 
-      {isLoading ? (
+      {personQuery.isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-          <Text allowFontScaling={false} style={styles.message}>
-            Loading person...
-          </Text>
+          <DetailResourceLoading message="Loading person..." />
         </View>
-      ) : isError ? (
+      ) : personQuery.isError ? (
         <View style={styles.centered}>
-          <Text allowFontScaling={false} style={styles.errorTitle}>
-            Error loading person
-          </Text>
-          <Text allowFontScaling={false} style={styles.message}>
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </Text>
+          <DetailResourceError
+            error={personQuery.error}
+            isRetrying={personQuery.isFetching}
+            message="Person details could not be loaded."
+            onRetry={personQuery.refetch}
+            title="Person details are temporarily unavailable"
+          />
         </View>
       ) : person ? (
         <ScrollView
@@ -118,10 +136,19 @@ export function PersonDetail({
               <Text allowFontScaling={false} style={styles.personName}>
                 {person.name}
               </Text>
-              <DetailLine label="Known For" value={person.known_for_department} />
-              <DetailLine label="Born" value={formatDateText(person.birthday)} />
+              <DetailLine
+                label="Known For"
+                value={person.known_for_department}
+              />
+              <DetailLine
+                label="Born"
+                value={formatDateText(person.birthday)}
+              />
               {person.deathday ? (
-                <DetailLine label="Died" value={formatDateText(person.deathday)} />
+                <DetailLine
+                  label="Died"
+                  value={formatDateText(person.deathday)}
+                />
               ) : null}
               <DetailLine label="Birthplace" value={person.place_of_birth} />
             </View>
@@ -136,96 +163,145 @@ export function PersonDetail({
             />
           ) : null}
 
-          {carouselItems.length > 0 ? (
+          {movieCreditsQuery.isLoading ? (
+            <DetailResourceLoading compact message="Loading movie history..." />
+          ) : movieCreditsQuery.isError ? (
+            <DetailResourceError
+              compact
+              error={movieCreditsQuery.error}
+              isRetrying={movieCreditsQuery.isFetching}
+              message="Movie history could not be loaded."
+              onRetry={movieCreditsQuery.refetch}
+              title="Movie history is temporarily unavailable"
+            />
+          ) : (
             <>
+              {carouselItems.length > 0 ? (
+                <>
+                  <Text allowFontScaling={false} style={styles.sectionTitle}>
+                    Movie History
+                  </Text>
+                  <FlatList
+                    horizontal
+                    data={carouselItems}
+                    keyExtractor={item => `carousel-${item.key}`}
+                    showsHorizontalScrollIndicator={false}
+                    decelerationRate="fast"
+                    snapToAlignment="start"
+                    snapToInterval={carouselSnapInterval}
+                    disableIntervalMomentum
+                    contentContainerStyle={styles.carouselContent}
+                    getItemLayout={(_, index) => ({
+                      length: carouselSnapInterval,
+                      offset: carouselSnapInterval * index,
+                      index,
+                    })}
+                    renderItem={({ item }) => (
+                      <Pressable
+                        onPress={() => onMoviePress(item.movie)}
+                        style={[
+                          styles.carouselCard,
+                          {
+                            width: carouselCardWidth,
+                            marginRight: carouselCardGap,
+                          },
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open ${item.title}`}
+                      >
+                        <Image
+                          source={getMoviePosterSource(item.movie)}
+                          style={styles.carouselPoster}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.carouselTextBlock}>
+                          <Text
+                            allowFontScaling={false}
+                            numberOfLines={1}
+                            style={styles.carouselTitle}
+                          >
+                            {item.title}
+                          </Text>
+                          <Text
+                            allowFontScaling={false}
+                            numberOfLines={2}
+                            style={styles.carouselRole}
+                          >
+                            {item.roleLabel}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    )}
+                  />
+                </>
+              ) : null}
+
               <Text allowFontScaling={false} style={styles.sectionTitle}>
-                Movie History
+                Filmography
               </Text>
-              <FlatList
-                horizontal
-                data={carouselItems}
-                keyExtractor={item => `carousel-${item.key}`}
-                showsHorizontalScrollIndicator={false}
-                decelerationRate="fast"
-                snapToAlignment="start"
-                snapToInterval={carouselSnapInterval}
-                disableIntervalMomentum
-                contentContainerStyle={styles.carouselContent}
-                getItemLayout={(_, index) => ({
-                  length: carouselSnapInterval,
-                  offset: carouselSnapInterval * index,
-                  index,
-                })}
-                renderItem={({ item }) => (
+              {filmography.length === 0 ? (
+                <Text allowFontScaling={false} style={styles.emptyFilmography}>
+                  No movie history is available.
+                </Text>
+              ) : (
+                filmography.map(item => (
                   <Pressable
+                    key={item.key}
                     onPress={() => onMoviePress(item.movie)}
-                    style={[
-                      styles.carouselCard,
-                      {
-                        width: carouselCardWidth,
-                        marginRight: carouselCardGap,
-                      },
-                    ]}
+                    style={styles.filmographyRow}
                     accessibilityRole="button"
                     accessibilityLabel={`Open ${item.title}`}
                   >
                     <Image
                       source={getMoviePosterSource(item.movie)}
-                      style={styles.carouselPoster}
+                      style={styles.filmographyPoster}
                       resizeMode="cover"
                     />
-                    <View style={styles.carouselTextBlock}>
-                      <Text allowFontScaling={false} numberOfLines={1} style={styles.carouselTitle}>
+                    <View style={styles.filmographyTextBlock}>
+                      <Text
+                        allowFontScaling={false}
+                        numberOfLines={2}
+                        style={styles.filmographyTitle}
+                      >
                         {item.title}
                       </Text>
-                      <Text allowFontScaling={false} numberOfLines={2} style={styles.carouselRole}>
+                      <Text
+                        allowFontScaling={false}
+                        style={styles.filmographyMeta}
+                      >
+                        {item.year}
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        numberOfLines={2}
+                        style={styles.filmographyRole}
+                      >
                         {item.roleLabel}
                       </Text>
                     </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={scaleSize(22)}
+                      color={colors.textSecondary}
+                    />
                   </Pressable>
-                )}
-              />
+                ))
+              )}
             </>
-          ) : null}
-
-          <Text allowFontScaling={false} style={styles.sectionTitle}>
-            Filmography
-          </Text>
-          {filmography.map(item => (
-            <Pressable
-              key={item.key}
-              onPress={() => onMoviePress(item.movie)}
-              style={styles.filmographyRow}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${item.title}`}
-            >
-              <Image
-                source={getMoviePosterSource(item.movie)}
-                style={styles.filmographyPoster}
-                resizeMode="cover"
-              />
-              <View style={styles.filmographyTextBlock}>
-                <Text allowFontScaling={false} numberOfLines={2} style={styles.filmographyTitle}>
-                  {item.title}
-                </Text>
-                <Text allowFontScaling={false} style={styles.filmographyMeta}>
-                  {item.year}
-                </Text>
-                <Text allowFontScaling={false} numberOfLines={2} style={styles.filmographyRole}>
-                  {item.roleLabel}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={scaleSize(22)} color={colors.textSecondary} />
-            </Pressable>
-          ))}
-
+          )}
         </ScrollView>
       ) : null}
     </View>
   );
 }
 
-function DetailLine({ label, value }: { label: string; value?: string | null }) {
+function DetailLine({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
   if (!value) {
     return null;
   }
@@ -238,41 +314,45 @@ function DetailLine({ label, value }: { label: string; value?: string | null }) 
   );
 }
 
-function buildFilmography(person: personDetailType | undefined): FilmographyItem[] {
-  if (!person?.movie_credits) {
+function buildFilmography(
+  movieCredits: personMovieCredits | undefined,
+): FilmographyItem[] {
+  if (!movieCredits) {
     return [];
   }
 
   const groupedItems = new Map<number, FilmographyGroup>();
 
-  person.movie_credits.cast.forEach(credit => {
+  movieCredits.cast.forEach(credit => {
     addCreditToFilmographyGroup(
       groupedItems,
       credit,
-      credit.character || 'Character not listed'
+      credit.character || 'Character not listed',
     );
   });
 
-  person.movie_credits.crew.forEach(credit => {
+  movieCredits.crew.forEach(credit => {
     addCreditToFilmographyGroup(groupedItems, credit, credit.job || 'Crew');
   });
 
-  return Array.from(groupedItems.values()).map(group => ({
-    ...group,
-    roleLabel: group.roles.join(', '),
-  })).sort((left, right) => {
-    if (right.releaseDate !== left.releaseDate) {
-      return right.releaseDate.localeCompare(left.releaseDate);
-    }
+  return Array.from(groupedItems.values())
+    .map(group => ({
+      ...group,
+      roleLabel: group.roles.join(', '),
+    }))
+    .sort((left, right) => {
+      if (right.releaseDate !== left.releaseDate) {
+        return right.releaseDate.localeCompare(left.releaseDate);
+      }
 
-    return right.popularity - left.popularity;
-  });
+      return right.popularity - left.popularity;
+    });
 }
 
 function addCreditToFilmographyGroup(
   groupedItems: Map<number, FilmographyGroup>,
   credit: personMovieCastCredit | personMovieCrewCredit,
-  roleLabel: string
+  roleLabel: string,
 ): void {
   const existingGroup = groupedItems.get(credit.id);
 
@@ -302,7 +382,9 @@ function addRoleLabel(roles: string[], roleLabel: string) {
   }
 }
 
-function getProfileSource(profilePath: string | null | undefined): ImageSourcePropType {
+function getProfileSource(
+  profilePath: string | null | undefined,
+): ImageSourcePropType {
   return profilePath
     ? { uri: `${TMDB_IMAGE_BASE_URL}/w500${profilePath}` }
     : IMAGE_PERSON_NOT_FOUND;
@@ -311,9 +393,7 @@ function getProfileSource(profilePath: string | null | undefined): ImageSourcePr
 function getMoviePosterSource(movie: movieType): ImageSourcePropType {
   const imageUri = getMovieImageUri(movie);
 
-  return imageUri
-    ? { uri: imageUri }
-    : IMAGE_MOVIE_NOT_FOUND;
+  return imageUri ? { uri: imageUri } : IMAGE_MOVIE_NOT_FOUND;
 }
 
 function getYear(releaseDate: string) {
@@ -380,16 +460,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: scaleSize(24),
-  },
-  message: {
-    ...typography.feedbackBody,
-    marginTop: scaleSize(10),
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  errorTitle: {
-    ...typography.feedbackTitle,
-    color: colors.brandText,
   },
   profilePanel: {
     flexDirection: 'row',
@@ -495,5 +565,11 @@ const styles = StyleSheet.create({
     ...typography.summaryBody,
     color: colors.textPrimary,
     marginTop: scaleSize(2),
+  },
+  emptyFilmography: {
+    ...typography.summaryBody,
+    color: colors.textSecondary,
+    marginHorizontal: scaleSize(18),
+    marginBottom: scaleSize(20),
   },
 });

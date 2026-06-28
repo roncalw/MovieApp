@@ -17,8 +17,12 @@ import {
   fetchMoviesByGenre,
   fetchMovieSearchResults,
   fetchMovie,
+  fetchMovieExternalIds,
   fetchPerson,
+  fetchPersonMovieCredits,
   fetchMovieListImdbRating,
+  fetchMovieVideos,
+  fetchMovieWatchProviders,
   fetchMoviesByTitle,
 } from '../api/tmdb/services/movieService';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
@@ -88,15 +92,12 @@ import type { MovieSearchParams } from '../types/search/movieSearchParams';
   - then TanStack Query knows it may need to run a new paged search request
 */
 
-export function useMovieSearchQuery(
-  params: MovieSearchParams,
-  enabled = true
-) {
+export function useMovieSearchQuery(params: MovieSearchParams, enabled = true) {
   return useInfiniteQuery({
     queryKey: ['movieSearch', params],
     queryFn: ({ pageParam }) => fetchMovieSearchResults(params, pageParam),
     initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       const nextCursor = (lastPage as CursorMovieSearchPage).nextCursor;
 
       return nextCursor ?? undefined;
@@ -118,9 +119,10 @@ export function useMovieSearchQuery(
       or
       useMovieDetailsQuery(null)
 
-  - queryKey: ['movieDetails', movieId]
-    - this cache key is for one specific movie details request
-    - the movie id is included so each movie gets its own cache entry
+  - queryKey: ['movieCoreDetails', movieId]
+    - this cache key is only for the core movie, credits, and release dates
+    - using a new key prevents TanStack Query from reusing an older cached result
+      produced by the retired all-in-one TMDB request
 
   - queryFn: () => fetchMovie(movieId as number)
     - this calls the single-movie detail service instead of the search-results service
@@ -132,8 +134,41 @@ export function useMovieSearchQuery(
 */
 export function useMovieDetailsQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieDetails', movieId],
+    queryKey: ['movieCoreDetails', movieId],
     queryFn: () => fetchMovie(movieId as number),
+    staleTime: 1000 * 60 * 5,
+    enabled: movieId !== null,
+  });
+}
+
+/*
+  These independent queries restore the legacy MovieApp request boundaries.
+  React invokes all of these hooks during the same render, so TMDB can process
+  the resources concurrently. A failure in one resource no longer changes the
+  success state or cached value of the other resources.
+*/
+export function useMovieVideosQuery(movieId: number | null) {
+  return useQuery({
+    queryKey: ['movieVideos', movieId],
+    queryFn: () => fetchMovieVideos(movieId as number),
+    staleTime: 1000 * 60 * 5,
+    enabled: movieId !== null,
+  });
+}
+
+export function useMovieExternalIdsQuery(movieId: number | null) {
+  return useQuery({
+    queryKey: ['movieExternalIds', movieId],
+    queryFn: () => fetchMovieExternalIds(movieId as number),
+    staleTime: 1000 * 60 * 5,
+    enabled: movieId !== null,
+  });
+}
+
+export function useMovieWatchProvidersQuery(movieId: number | null) {
+  return useQuery({
+    queryKey: ['movieWatchProviders', movieId],
+    queryFn: () => fetchMovieWatchProviders(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
   });
@@ -150,8 +185,17 @@ export function useMovieListImdbRatingQuery(movieId: number | null) {
 
 export function usePersonDetailsQuery(personId: number | null) {
   return useQuery({
-    queryKey: ['personDetails', personId],
+    queryKey: ['personCoreDetails', personId],
     queryFn: () => fetchPerson(personId as number),
+    staleTime: 1000 * 60 * 5,
+    enabled: personId !== null,
+  });
+}
+
+export function usePersonMovieCreditsQuery(personId: number | null) {
+  return useQuery({
+    queryKey: ['personMovieCredits', personId],
+    queryFn: () => fetchPersonMovieCredits(personId as number),
     staleTime: 1000 * 60 * 5,
     enabled: personId !== null,
   });
@@ -164,7 +208,7 @@ export function useMovieTitleSearchQuery(title: string, enabled = true) {
     queryKey: ['movieTitleSearch', title.trim()],
     queryFn: ({ pageParam }) => fetchMoviesByTitle(normalizedTitle, pageParam),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     staleTime: 1000 * 60 * 5,
     enabled: enabled && normalizedTitle.length > 0,
@@ -221,7 +265,7 @@ export function useUpcomingMoviesQuery() {
 */
 export function useHomeGenreMoviesQuery(
   rowKey: string,
-  genreId: HomeMovieGenreId
+  genreId: HomeMovieGenreId,
 ) {
   return useQuery({
     queryKey: ['homeGenreMovies', rowKey, genreId],

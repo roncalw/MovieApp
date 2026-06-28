@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -14,6 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { colors } from '../styles/colors';
 import { scaleSize } from '../styles/scale';
 import { typography } from '../styles/typography';
+import { ScrollFriendlyTapTarget } from './ScrollFriendlyTapTarget';
 
 type ExpandableTextProps = {
   text: string;
@@ -66,14 +66,16 @@ export function ExpandableText({
     return null;
   }
 
+  const toggleExpanded = () => {
+    setIsExpanded(currentValue => !currentValue);
+  };
+
   return (
-    <Pressable
-      accessibilityRole={shouldOfferToggle ? 'button' : undefined}
-      accessibilityLabel={
-        shouldOfferToggle ? (isExpanded ? lessLabel : moreLabel) : undefined
-      }
+    <ScrollFriendlyTapTarget
+      accessibilityLabel={isExpanded ? lessLabel : moreLabel}
+      accessibilityState={{ expanded: isExpanded }}
       disabled={!shouldOfferToggle}
-      onPress={() => setIsExpanded(currentValue => !currentValue)}
+      onPress={toggleExpanded}
       style={containerStyle}
     >
       <Text
@@ -100,7 +102,7 @@ export function ExpandableText({
           />
         </View>
       ) : null}
-    </Pressable>
+    </ScrollFriendlyTapTarget>
   );
 }
 

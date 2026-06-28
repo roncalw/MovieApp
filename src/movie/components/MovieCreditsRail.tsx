@@ -14,11 +14,11 @@ import React, { useMemo } from 'react';
 import {
   FlatList,
   Image,
-  Pressable,
   Text,
   View,
   type ListRenderItem,
 } from 'react-native';
+import { ScrollFriendlyTapTarget } from '../../shared/ScrollFriendlyTapTarget';
 import type {
   CreditPerson,
   CreditRailProps,
@@ -71,11 +71,10 @@ function CreditCard({
   const subtitle = getCreditSubtitleText(person.roleLabels);
 
   return (
-    <Pressable
+    <ScrollFriendlyTapTarget
+      accessibilityLabel={`Open ${person.name}`}
       onPress={() => onPersonPress?.(person.id, person.name)}
       style={styles.creditCard}
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${person.name}`}
     >
       <Image
         source={getProfileSource(person.profile_path)}
@@ -100,7 +99,7 @@ function CreditCard({
           {subtitle}
         </Text>
       </View>
-    </Pressable>
+    </ScrollFriendlyTapTarget>
   );
 }
 

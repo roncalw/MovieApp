@@ -167,19 +167,4 @@ export const movieDetailStyles = StyleSheet.create({
     letterSpacing: 0,
     textDecorationLine: 'underline',
   },
-  feedbackPanel: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: scaleSize(24),
-  },
-  message: {
-    ...typography.feedbackBody,
-    marginTop: scaleSize(10),
-    textAlign: 'center',
-    color: colors.textSecondary,
-  },
-  errorText: {
-    ...typography.feedbackTitle,
-    color: colors.brandText,
-  },
 });

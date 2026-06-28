@@ -12,7 +12,6 @@ Purpose:
 */
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Linking,
   Platform,
   Pressable,
@@ -25,9 +24,16 @@ import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useMovieDetailsQuery,
+  useMovieExternalIdsQuery,
   useMovieListImdbRatingQuery,
+  useMovieVideosQuery,
+  useMovieWatchProvidersQuery,
 } from '../hooks/useMovieSearchQuery';
 import { ExpandableText } from '../shared/ExpandableText';
+import {
+  DetailResourceError,
+  DetailResourceLoading,
+} from '../shared/DetailResourceState';
 import type {
   movieGenres,
   movieTrailerVideo,
@@ -54,14 +60,34 @@ export function MovieDetail({
   const insets = useSafeAreaInsets();
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
-  const {
-    data: movieDetails,
-    isLoading,
-    isError,
-    error,
-  } = useMovieDetailsQuery(movieId);
+  const movieQuery = useMovieDetailsQuery(movieId);
+  const videosQuery = useMovieVideosQuery(movieId);
+  const externalIdsQuery = useMovieExternalIdsQuery(movieId);
+  const watchProvidersQuery = useMovieWatchProvidersQuery(movieId);
   const { data: movieListImdbRating } = useMovieListImdbRatingQuery(movieId);
 
+  /*
+    Keep the existing screen/component contract while sourcing each nested TMDB
+    resource independently. The object below is assembled only in memory; no
+    combined append_to_response request is sent over the network.
+  */
+  const movieDetails = useMemo(
+    () =>
+      movieQuery.data
+        ? {
+            ...movieQuery.data,
+            videos: videosQuery.data,
+            external_ids: externalIdsQuery.data,
+            'watch/providers': watchProvidersQuery.data,
+          }
+        : undefined,
+    [
+      externalIdsQuery.data,
+      movieQuery.data,
+      videosQuery.data,
+      watchProvidersQuery.data,
+    ],
+  );
   const displayMovie = movieDetails ?? initialMovie ?? null;
   const {
     handleImdbScrapeResult,
@@ -77,7 +103,7 @@ export function MovieDetail({
   });
   const preferredTrailer = useMemo(
     () => getPreferredYouTubeTrailer(movieDetails?.videos?.results ?? []),
-    [movieDetails?.videos?.results]
+    [movieDetails?.videos?.results],
   );
   const handleOpenTrailer = useCallback(() => {
     if (preferredTrailer) {
@@ -90,7 +116,9 @@ export function MovieDetail({
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.nativeTopSpacer, { height: nativeTopSpacerHeight }]} />
+      <View
+        style={[styles.nativeTopSpacer, { height: nativeTopSpacerHeight }]}
+      />
 
       <ScrollView
         style={styles.detailScroll}
@@ -105,10 +133,14 @@ export function MovieDetail({
           onRetryImdbRating={handleRetryImdbRating}
         />
 
-        {isLoading ? (
+        {movieQuery.isLoading ? (
           <LoadingState />
-        ) : isError ? (
-          <ErrorState error={error} />
+        ) : movieQuery.isError ? (
+          <ErrorState
+            error={movieQuery.error}
+            isRetrying={movieQuery.isFetching}
+            onRetry={movieQuery.refetch}
+          />
         ) : movieDetails ? (
           <LoadedMovieDetail
             movie={movieDetails}
@@ -116,6 +148,19 @@ export function MovieDetail({
             trailer={preferredTrailer}
             onTrailerPress={handleOpenTrailer}
             onPersonPress={onPersonPress}
+            videosError={videosQuery.error}
+            videosFailed={videosQuery.isError}
+            videosRetrying={videosQuery.isFetching}
+            onRetryVideos={videosQuery.refetch}
+            externalIdsError={externalIdsQuery.error}
+            externalIdsFailed={externalIdsQuery.isError}
+            externalIdsRetrying={externalIdsQuery.isFetching}
+            onRetryExternalIds={externalIdsQuery.refetch}
+            watchProvidersError={watchProvidersQuery.error}
+            watchProvidersFailed={watchProvidersQuery.isError}
+            watchProvidersLoading={watchProvidersQuery.isLoading}
+            watchProvidersRetrying={watchProvidersQuery.isFetching}
+            onRetryWatchProviders={watchProvidersQuery.refetch}
           />
         ) : null}
       </ScrollView>
@@ -138,24 +183,46 @@ function LoadedMovieDetail({
   trailer,
   onTrailerPress,
   onPersonPress,
+  videosError,
+  videosFailed,
+  videosRetrying,
+  onRetryVideos,
+  externalIdsError,
+  externalIdsFailed,
+  externalIdsRetrying,
+  onRetryExternalIds,
+  watchProvidersError,
+  watchProvidersFailed,
+  watchProvidersLoading,
+  watchProvidersRetrying,
+  onRetryWatchProviders,
 }: {
   movie: movieType;
   imdbRating: number | null;
   trailer: movieTrailerVideo | null;
   onTrailerPress: () => void;
   onPersonPress?: (personId: number, initialPersonName?: string) => void;
+  videosError: unknown;
+  videosFailed: boolean;
+  videosRetrying: boolean;
+  onRetryVideos: () => void;
+  externalIdsError: unknown;
+  externalIdsFailed: boolean;
+  externalIdsRetrying: boolean;
+  onRetryExternalIds: () => void;
+  watchProvidersError: unknown;
+  watchProvidersFailed: boolean;
+  watchProvidersLoading: boolean;
+  watchProvidersRetrying: boolean;
+  onRetryWatchProviders: () => void;
 }) {
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
   const imdbReviewsUrl = getImdbReviewsUrl(movie.external_ids?.imdb_id);
   const cast = movie.credits?.cast ?? [];
   const crew = movie.credits?.crew ?? [];
-  const {
-    handleFavoritePress,
-    handleSeenPress,
-    isFavorite,
-    isSeen,
-  } = useMovieUserListActions(movie);
+  const { handleFavoritePress, handleSeenPress, isFavorite, isSeen } =
+    useMovieUserListActions(movie);
 
   return (
     <>
@@ -165,7 +232,9 @@ function LoadedMovieDetail({
             onPress={handleFavoritePress}
             style={styles.heartButton}
             accessibilityRole="button"
-            accessibilityLabel={isFavorite ? 'Remove favorite' : 'Save favorite'}
+            accessibilityLabel={
+              isFavorite ? 'Remove favorite' : 'Save favorite'
+            }
           >
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
@@ -176,12 +245,11 @@ function LoadedMovieDetail({
 
           <Pressable
             onPress={handleSeenPress}
-            style={[
-              styles.seenButton,
-              isSeen ? styles.seenButtonActive : null,
-            ]}
+            style={[styles.seenButton, isSeen ? styles.seenButtonActive : null]}
             accessibilityRole="button"
-            accessibilityLabel={isSeen ? 'Remove from seen movies' : 'Mark as seen'}
+            accessibilityLabel={
+              isSeen ? 'Remove from seen movies' : 'Mark as seen'
+            }
           >
             <Text
               allowFontScaling={false}
@@ -244,9 +312,46 @@ function LoadedMovieDetail({
         {imdbReviewsUrl ? <ReviewsLink url={imdbReviewsUrl} /> : null}
       </View>
 
-      <MovieCreditsRail title="Cast" people={cast} onPersonPress={onPersonPress} />
-      <MovieCreditsRail title="Crew" people={crew} onPersonPress={onPersonPress} />
-      <MovieDetailInfoSections movie={movie} />
+      {videosFailed ? (
+        <DetailResourceError
+          compact
+          error={videosError}
+          isRetrying={videosRetrying}
+          message="Trailer information could not be loaded."
+          onRetry={onRetryVideos}
+          title="Trailer temporarily unavailable"
+        />
+      ) : null}
+
+      {externalIdsFailed ? (
+        <DetailResourceError
+          compact
+          error={externalIdsError}
+          isRetrying={externalIdsRetrying}
+          message="The IMDb review link could not be loaded."
+          onRetry={onRetryExternalIds}
+          title="IMDb review link temporarily unavailable"
+        />
+      ) : null}
+
+      <MovieCreditsRail
+        title="Cast"
+        people={cast}
+        onPersonPress={onPersonPress}
+      />
+      <MovieCreditsRail
+        title="Crew"
+        people={crew}
+        onPersonPress={onPersonPress}
+      />
+      <MovieDetailInfoSections
+        movie={movie}
+        watchProvidersError={watchProvidersError}
+        watchProvidersFailed={watchProvidersFailed}
+        watchProvidersLoading={watchProvidersLoading}
+        watchProvidersRetrying={watchProvidersRetrying}
+        onRetryWatchProviders={onRetryWatchProviders}
+      />
     </>
   );
 }
@@ -273,28 +378,26 @@ function ReviewsLink({ url }: { url: string }) {
 }
 
 function LoadingState() {
-  return (
-    <View style={styles.feedbackPanel}>
-      <ActivityIndicator size="large" />
-      <Text allowFontScaling={false} style={styles.message}>
-        Loading movie details...
-      </Text>
-    </View>
-  );
+  return <DetailResourceLoading message="Loading movie details..." />;
 }
 
-function ErrorState({ error }: { error: unknown }) {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-
+function ErrorState({
+  error,
+  isRetrying,
+  onRetry,
+}: {
+  error: unknown;
+  isRetrying: boolean;
+  onRetry: () => void;
+}) {
   return (
-    <View style={styles.feedbackPanel}>
-      <Text allowFontScaling={false} style={styles.errorText}>
-        Error loading movie details
-      </Text>
-      <Text allowFontScaling={false} style={styles.message}>
-        {message}
-      </Text>
-    </View>
+    <DetailResourceError
+      error={error}
+      isRetrying={isRetrying}
+      message="Movie details could not be loaded."
+      onRetry={onRetry}
+      title="Movie details are temporarily unavailable"
+    />
   );
 }
 
@@ -315,12 +418,15 @@ function GenreList({ genres }: { genres: movieGenres[] }) {
 }
 
 function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
-  const starRating = imdbRating === null ? 0 : Math.max(0, Math.min(5, imdbRating / 2));
+  const starRating =
+    imdbRating === null ? 0 : Math.max(0, Math.min(5, imdbRating / 2));
 
   return (
     <View
       style={styles.starRow}
-      accessibilityLabel={`Movie rating ${starRating.toFixed(1)} out of 5 stars`}
+      accessibilityLabel={`Movie rating ${starRating.toFixed(
+        1,
+      )} out of 5 stars`}
     >
       {[0, 1, 2, 3, 4].map(starIndex => {
         const fillAmount = starRating - starIndex;
@@ -328,8 +434,8 @@ function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
           fillAmount >= 0.75
             ? 'star'
             : fillAmount >= 0.25
-              ? 'star-half'
-              : 'star-outline';
+            ? 'star-half'
+            : 'star-outline';
 
         return (
           <Ionicons
@@ -337,7 +443,9 @@ function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
             name={iconName}
             size={scaleSize(28)}
             color={
-              iconName === 'star-outline' ? colors.disabledText : colors.starFilled
+              iconName === 'star-outline'
+                ? colors.disabledText
+                : colors.starFilled
             }
             style={iconName === 'star-outline' ? styles.emptyStar : null}
           />
@@ -349,10 +457,10 @@ function MovieStarRating({ imdbRating }: { imdbRating: number | null }) {
 
 function getUsCertification(movie: movieType) {
   const usRelease = movie.release_dates?.results?.find(
-    releaseCountry => releaseCountry.iso_3166_1 === 'US'
+    releaseCountry => releaseCountry.iso_3166_1 === 'US',
   );
   const releaseDetailWithCertification = usRelease?.release_dates?.find(
-    releaseDetail => releaseDetail.certification
+    releaseDetail => releaseDetail.certification,
   );
 
   return releaseDetailWithCertification?.certification ?? '';
@@ -383,7 +491,7 @@ function getImdbReviewsUrl(imdbId: string | undefined) {
 
 function getPreferredYouTubeTrailer(videos: movieTrailerVideo[]) {
   const youtubeTrailers = videos.filter(
-    video => video.site === 'YouTube' && video.type === 'Trailer' && video.key
+    video => video.site === 'YouTube' && video.type === 'Trailer' && video.key,
   );
   const officialTrailer = youtubeTrailers.find(video => video.official);
 

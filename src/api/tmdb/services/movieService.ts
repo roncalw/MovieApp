@@ -13,8 +13,12 @@ import { tmdbClient } from '../client';
 import { CONFIG } from '../config';
 import { ENDPOINTS } from '../endpoints';
 import type {
+  movieExternalIDs,
   movieType,
+  movieVideos,
+  movieWatchProvidersType,
   personDetailType,
+  personMovieCredits,
   personMovieCastCredit,
   personMovieCrewCredit,
 } from '../../../types/movie/MovieTypes';
@@ -61,7 +65,7 @@ function buildLegacyTmdbPath(endpoint: string, queryString = '') {
 
 async function fetchHomeMovieList(
   label: string,
-  path: string
+  path: string,
 ): Promise<MovieListResponse> {
   /*
     WHY HOME USES tmdbClient:
@@ -88,7 +92,7 @@ function logHomeTmdbError(
   label: string,
   path: string,
   error: unknown,
-  stage: string
+  stage: string,
 ) {
   /*
     DEVELOPMENT DIAGNOSTIC:
@@ -177,11 +181,11 @@ export async function fetchUpcomingMovies(): Promise<movieType[]> {
     Discover ordering exactly like the legacy app did.
 */
 export async function fetchMoviesByGenre(
-  genreId: HomeMovieGenreId
+  genreId: HomeMovieGenreId,
 ): Promise<movieType[]> {
   const path = buildLegacyTmdbPath(
     ENDPOINTS.MOVIE_SEARCH,
-    `with_genres=${genreId}`
+    `with_genres=${genreId}`,
   );
   const data = await fetchHomeMovieList(`genre-${genreId}`, path);
 
@@ -214,16 +218,16 @@ export async function fetchMoviesByGenre(
 */
 export async function fetchMovieSearchResults(
   params: MovieSearchParams,
-  cursor: string | null
+  cursor: string | null,
 ): Promise<CloudflareMovieSearchResults> {
   return fetchCloudflareMovieSearchResults(params, cursor);
 }
 
 export async function fetchMovieListImdbRating(
-  movieId: number
+  movieId: number,
 ): Promise<CloudflareMovieListImdbRating> {
   const response = await fetch(
-    `${CLOUDFLARE_MOVIE_LIST_BASE_URL}/${movieId}/imdb-rating`
+    `${CLOUDFLARE_MOVIE_LIST_BASE_URL}/${movieId}/imdb-rating`,
   );
 
   if (!response.ok) {
@@ -235,7 +239,7 @@ export async function fetchMovieListImdbRating(
 
 export async function fetchMoviesByTitle(
   title: string,
-  page: number
+  page: number,
 ): Promise<MovieTitleSearchResults> {
   const normalizedTitle = title.trim();
 
@@ -255,7 +259,7 @@ export async function fetchMoviesByTitle(
   });
   const path = buildLegacyTmdbPath(
     ENDPOINTS.SEARCH_MOVIES_BY_TITLE,
-    queryString.toString()
+    queryString.toString(),
   );
   const data = await fetchHomeMovieList('title-search', path);
 
@@ -278,7 +282,7 @@ export async function fetchMoviesByTitle(
 */
 export async function fetchCloudflareMovieSearchResults(
   params: MovieSearchParams,
-  cursor: string | null
+  cursor: string | null,
 ): Promise<CloudflareMovieSearchResults> {
   const {
     movieRatings,
@@ -331,7 +335,7 @@ export async function fetchCloudflareMovieSearchResults(
   if (movieSortBy) {
     searchParams.set(
       'sort',
-      movieSortBy === 'vote_average.desc' ? 'imdb' : 'popularity'
+      movieSortBy === 'vote_average.desc' ? 'imdb' : 'popularity',
     );
   }
 
@@ -349,7 +353,7 @@ export async function fetchCloudflareMovieSearchResults(
     - Empty filters are skipped so the search screen can start with only the date range filled in
   */
   const response = await fetch(
-    `${CLOUDFLARE_MOVIE_SEARCH_URL}?${searchParams.toString()}`
+    `${CLOUDFLARE_MOVIE_SEARCH_URL}?${searchParams.toString()}`,
   );
 
   if (!response.ok) {
@@ -373,12 +377,14 @@ function allStreamersAreSelected(streamerIds: string[]) {
 
   const selectedIds = new Set(streamerIds);
 
-  return ALL_STREAMER_PROVIDER_IDS.every((providerId) =>
-    selectedIds.has(providerId)
+  return ALL_STREAMER_PROVIDER_IDS.every(providerId =>
+    selectedIds.has(providerId),
   );
 }
 
-function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType {
+function mapCloudflareMovieToMovie(
+  movie: CloudflareMovieSearchItem,
+): movieType {
   return {
     id: movie.tmdb_id,
     adult: false,
@@ -415,47 +421,101 @@ function mapCloudflareMovieToMovie(movie: CloudflareMovieSearchItem): movieType 
 }
 
 /*
-============================================================= fetchMovie ======================================================
+======================================================== Movie Detail Resources ================================================
 
-  - id: number
-    - this function receives one movie id number
-    - this is called by passing the selected movie id, like:
-      fetchMovie(550)
-    - that id gets inserted into the URL so TMDB knows which single movie to return
+  WHY MOVIE DETAIL USES FOUR REQUESTS:
+  - The legacy MovieApp loaded these resources independently and concurrently.
+  - TMDB can return an HTTP 200 response whose large append_to_response bundle is
+    missing one or more nested resources. Splitting the requests prevents one
+    incomplete bundle from silently removing cast, streaming, trailers, and IDs.
+  - Separate TanStack Query keys let the app retry and cache each resource without
+    discarding the movie information that already loaded successfully.
 
-  - : Promise<MovieDetailsResponse>
-    - this function resolves later to one full movie detail object
-    - unlike the search and popular functions, this returns one movie instead of a movie array
+  REQUEST OWNERSHIP:
+  - fetchMovie owns the core movie, cast, crew, and release certifications.
+  - fetchMovieVideos owns trailer metadata.
+  - fetchMovieExternalIds owns the IMDb identifier used by the Reviews link.
+  - fetchMovieWatchProviders owns US subscription, ad-supported, and rental data.
 
-  - `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers,videos,external_ids`
-    - `${id}` inserts the selected movie id into the path
-    - `append_to_response=credits,release_dates,watch/providers,videos,external_ids` tells TMDB to include those extra detail sections in the same response
-    - this lets the app get the movie details, credits, release dates, US streaming provider data, trailer video metadata, and IMDb id in one request
-
-  - return response.data
-    - TMDB returns one full JSON object for this endpoint
-    - response.data is that full movie detail response
+  Every request below goes directly to api.themoviedb.org through tmdbClient.
+  None of these functions uses the MovieApp Cloudflare Worker.
 */
 export async function fetchMovie(id: number): Promise<MovieDetailsResponse> {
-  const response = await tmdbClient.get<MovieDetailsResponse>(
-    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,watch/providers,videos,external_ids`
+  return fetchTmdbDetailResource<MovieDetailsResponse>(
+    'movie-core',
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates`,
   );
-
-  return response.data;
 }
 
-export async function fetchPerson(
-  personId: number
-): Promise<personDetailType> {
-  const response = await tmdbClient.get<personDetailType>(
-    `${ENDPOINTS.PERSON_DETAILS}/${personId}?${CONFIG.apiKey}&append_to_response=movie_credits,images,external_ids`
+export async function fetchMovieVideos(id: number): Promise<movieVideos> {
+  return fetchTmdbDetailResource<movieVideos>(
+    'movie-videos',
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}/videos?${CONFIG.apiKey}`,
   );
+}
 
-  return response.data;
+export async function fetchMovieExternalIds(
+  id: number,
+): Promise<movieExternalIDs> {
+  return fetchTmdbDetailResource<movieExternalIDs>(
+    'movie-external-ids',
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}/external_ids?${CONFIG.apiKey}`,
+  );
+}
+
+export async function fetchMovieWatchProviders(
+  id: number,
+): Promise<movieWatchProvidersType> {
+  return fetchTmdbDetailResource<movieWatchProvidersType>(
+    'movie-watch-providers',
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}/watch/providers?${CONFIG.apiKey}`,
+  );
+}
+
+/*
+  Actor profiles follow the same isolation rule as movie details.
+
+  The profile page currently displays fields from /person/{id} and filmography
+  from /person/{id}/movie_credits. It does not use the larger images or
+  external_ids responses, so the app no longer downloads those unused payloads.
+*/
+export async function fetchPerson(personId: number): Promise<personDetailType> {
+  return fetchTmdbDetailResource<personDetailType>(
+    'person-core',
+    `${ENDPOINTS.PERSON_DETAILS}/${personId}?${CONFIG.apiKey}`,
+  );
+}
+
+export async function fetchPersonMovieCredits(
+  personId: number,
+): Promise<personMovieCredits> {
+  return fetchTmdbDetailResource<personMovieCredits>(
+    'person-movie-credits',
+    `${ENDPOINTS.PERSON_DETAILS}/${personId}/movie_credits?${CONFIG.apiKey}`,
+  );
+}
+
+async function fetchTmdbDetailResource<T>(
+  label: string,
+  path: string,
+): Promise<T> {
+  try {
+    const response = await tmdbClient.get<T>(path);
+
+    return response.data;
+  } catch (error) {
+    if (__DEV__) {
+      // Keep technical diagnostics in development logs instead of displaying
+      // Axios messages such as "Request failed with status code 502" to users.
+      console.error('[TMDB detail request failed]', { label, error });
+    }
+
+    throw error;
+  }
 }
 
 export function mapPersonMovieCreditToMovie(
-  credit: personMovieCastCredit | personMovieCrewCredit
+  credit: personMovieCastCredit | personMovieCrewCredit,
 ): movieType {
   return {
     id: credit.id,

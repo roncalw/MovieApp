@@ -1,5 +1,5 @@
 /**
- * Non-interactive Movie Detail information sections.
+ * Movie Detail information sections.
  *
  * Imported by:
  * - src/movie/MovieDetail.tsx
@@ -8,7 +8,8 @@
  * 1. LoadedMovieDetail passes the fully loaded TMDB movie object here.
  * 2. This component formats budget, revenue, runtime, streaming providers,
  *    production companies, production countries, and attribution logos.
- * 3. It does not navigate or update state; it only renders detail-page facts.
+ * 3. Streaming providers come from their own TMDB request, so this component
+ *    distinguishes loading, temporary failure, and a successful empty result.
  */
 import React from 'react';
 import { Image, Text, View } from 'react-native';
@@ -20,6 +21,10 @@ import type {
   streamTypes,
 } from '../../types/movie/MovieTypes';
 import type { DetailInfoRowProps } from '../../types/movie/movieDetailTypes';
+import {
+  DetailResourceError,
+  DetailResourceLoading,
+} from '../../shared/DetailResourceState';
 import { imageAssets } from '../../styles/assets';
 import { movieDetailInfoSectionStyles as styles } from '../../styles/movie/movieDetailInfoSectionStyles';
 
@@ -31,7 +36,21 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
 });
 
-export function MovieDetailInfoSections({ movie }: { movie: movieType }) {
+export function MovieDetailInfoSections({
+  movie,
+  onRetryWatchProviders,
+  watchProvidersError,
+  watchProvidersFailed,
+  watchProvidersLoading,
+  watchProvidersRetrying,
+}: {
+  movie: movieType;
+  onRetryWatchProviders: () => void;
+  watchProvidersError: unknown;
+  watchProvidersFailed: boolean;
+  watchProvidersLoading: boolean;
+  watchProvidersRetrying: boolean;
+}) {
   const productionCompanies = movie.production_companies ?? [];
   const productionCountries = movie.production_countries ?? [];
   const usWatchProviders = movie['watch/providers']?.results?.US;
@@ -50,7 +69,14 @@ export function MovieDetailInfoSections({ movie }: { movie: movieType }) {
         />
       </View>
 
-      <StreamingSection providers={usWatchProviders} />
+      <StreamingSection
+        error={watchProvidersError}
+        failed={watchProvidersFailed}
+        isLoading={watchProvidersLoading}
+        isRetrying={watchProvidersRetrying}
+        onRetry={onRetryWatchProviders}
+        providers={usWatchProviders}
+      />
 
       {productionCompanies.length > 0 ? (
         <>
@@ -79,22 +105,54 @@ export function MovieDetailInfoSections({ movie }: { movie: movieType }) {
   );
 }
 
-function StreamingSection({ providers }: { providers?: streamTypes }) {
+function StreamingSection({
+  error,
+  failed,
+  isLoading,
+  isRetrying,
+  onRetry,
+  providers,
+}: {
+  error: unknown;
+  failed: boolean;
+  isLoading: boolean;
+  isRetrying: boolean;
+  onRetry: () => void;
+  providers?: streamTypes;
+}) {
   return (
     <>
       <Text allowFontScaling={false} style={styles.sectionLabel}>
         Streaming on ...
       </Text>
 
-      <WatchProviderCategory
-        label="Free (With Ads):"
-        providers={providers?.ads}
-      />
-      <WatchProviderCategory
-        label="Subscription:"
-        providers={providers?.flatrate}
-      />
-      <WatchProviderCategory label="Rent:" providers={providers?.rent} />
+      {failed ? (
+        <DetailResourceError
+          compact
+          error={error}
+          isRetrying={isRetrying}
+          message="Streaming information could not be loaded."
+          onRetry={onRetry}
+          title="Streaming information is temporarily unavailable"
+        />
+      ) : isLoading ? (
+        <DetailResourceLoading
+          compact
+          message="Loading streaming information..."
+        />
+      ) : (
+        <>
+          <WatchProviderCategory
+            label="Free (With Ads):"
+            providers={providers?.ads}
+          />
+          <WatchProviderCategory
+            label="Subscription:"
+            providers={providers?.flatrate}
+          />
+          <WatchProviderCategory label="Rent:" providers={providers?.rent} />
+        </>
+      )}
     </>
   );
 }
@@ -170,7 +228,11 @@ function CompanyRow({ company }: { company: production_company }) {
   );
 }
 
-function ProductionCountries({ countries }: { countries: production_country[] }) {
+function ProductionCountries({
+  countries,
+}: {
+  countries: production_country[];
+}) {
   return (
     <View style={styles.productionCountriesPanel}>
       {countries.map(country => (
@@ -226,7 +288,9 @@ function LegacyFooter() {
 }
 
 function getLogoSource(logoPath: string | null | undefined) {
-  return logoPath ? { uri: buildImageUrl('w500', logoPath) } : imageAssets.missingMovie;
+  return logoPath
+    ? { uri: buildImageUrl('w500', logoPath) }
+    : imageAssets.missingMovie;
 }
 
 function buildImageUrl(size: 'w500', path: string) {
@@ -234,7 +298,9 @@ function buildImageUrl(size: 'w500', path: string) {
 }
 
 function formatCurrency(value: number | undefined) {
-  return value && value > 0 ? currencyFormatter.format(value) : 'Data not available.';
+  return value && value > 0
+    ? currencyFormatter.format(value)
+    : 'Data not available.';
 }
 
 function formatRuntime(runtime: number | undefined) {
