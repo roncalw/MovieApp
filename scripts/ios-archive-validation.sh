@@ -389,10 +389,6 @@ validate_framework_dsym() {
   dsym_name="$framework_name.framework.dSYM"
   archive_dsym="$ARCHIVE_DSYM_DIR/$dsym_name"
 
-  echo "Checking framework: $framework_name.framework"
-  echo "  Binary: $binary_path"
-  echo "  Archive dSYM: $archive_dsym"
-
   if [[ ! -f "$binary_path" ]]; then
     echo "Skipped $framework_name.framework because no framework binary was found."
     echo
@@ -414,8 +410,12 @@ validate_framework_dsym() {
 
   issue_count=$((issue_count + 1))
 
-  echo "$dsym_name is $issue. Version: $(framework_version_label "$framework_name" "$framework_dir")"
-  echo "Maven dSYM URL(s): $(maven_urls_for_message "$framework_name")"
+  echo "Missing dSYM for framework: $framework_name.framework"
+  echo "  Binary: $binary_path"
+  echo "  Expected archive dSYM: $archive_dsym"
+  echo "  Issue: $dsym_name is $issue."
+  echo "  Version: $(framework_version_label "$framework_name" "$framework_dir")"
+  echo "  Maven dSYM URL(s): $(maven_urls_for_message "$framework_name")"
   printf "Install this dSYM into the archive now? [y/N] "
   read -r answer || answer=""
 
@@ -480,19 +480,7 @@ echo "dSYM cache folder:"
 echo "  $DSYM_CACHE_ROOT"
 echo
 
-echo "React Native dSYM version mapping:"
-echo "  React Native version: $REACT_NATIVE_VERSION"
-echo "  Cache folder: $DSYM_CACHE_ROOT/React/$REACT_NATIVE_CACHE_VERSION"
-echo "  Maven core URL: $REACT_ARTIFACT_URL"
-echo "  Maven dependencies URL: $REACT_NATIVE_DEPENDENCIES_ARTIFACT_URL"
-echo
-echo "Hermes dSYM version mapping:"
-echo "  Hermes version: $HERMES_VERSION"
-echo "  Cache folder: $DSYM_CACHE_ROOT/Hermes/$HERMES_VERSION"
-echo "  Maven URL: $HERMES_ARTIFACT_URL"
-echo
-
-echo "Discovering embedded frameworks from:"
+echo "Searching for missing dSYMs based on all frameworks from:"
 echo "  $APP_BUNDLE"
 echo
 
