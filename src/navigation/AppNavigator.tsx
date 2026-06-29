@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MovieSearchScreen } from '../search/advanced/MovieSearchScreen';
 import { HomeScreen } from '../home/HomeScreen';
 import { MovieFavoritesScreen } from '../drawer/MovieFavoritesScreen';
@@ -10,6 +11,7 @@ import { SettingsScreen } from '../drawer/SettingsScreen';
 import { TellAFriendScreen } from '../drawer/TellAFriendScreen';
 import { PrivacyPolicyScreen } from '../drawer/PrivacyPolicyScreen';
 import { AppDrawerContent } from '../drawer/AppDrawerContent';
+import { MovieDetailScreen, PersonDetailScreen } from './DetailScreens';
 import {
   advancedSearchDrawerOptions,
   drawerScreenOptions,
@@ -21,58 +23,80 @@ import {
   settingsDrawerOptions,
   tellAFriendDrawerOptions,
 } from './drawerNavigationOptions';
-import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
+import type {
+  AppDrawerParamList,
+  AppRootStackParamList,
+} from '../types/navigation/navigationTypes';
 
 const Drawer = createDrawerNavigator<AppDrawerParamList>();
+const RootStack = createNativeStackNavigator<AppRootStackParamList>();
 
 export function AppNavigator() {
   return (
     <NavigationContainer>
-      <Drawer.Navigator
-        drawerContent={props => <AppDrawerContent {...props} />}
-        screenOptions={drawerScreenOptions}
+      <RootStack.Navigator
+        id="AppRootStack"
+        initialRouteName="DrawerRoot"
+        screenOptions={{
+          animation: 'slide_from_right',
+          freezeOnBlur: true,
+          headerShown: false,
+        }}
       >
-        <Drawer.Screen
-          name="Home"
-          component={HomeScreen}
-          options={homeDrawerOptions}
-        />
-        <Drawer.Screen
-          name="MovieFavorites"
-          component={MovieFavoritesScreen}
-          options={movieFavoritesDrawerOptions}
-        />
-        <Drawer.Screen
-          name="IHaveSeen"
-          component={MovieSeenScreen}
-          options={movieSeenDrawerOptions}
-        />
-        <Drawer.Screen
-          name="AdvancedSearch"
-          component={MovieSearchScreen}
-          options={advancedSearchDrawerOptions}
-        />
-        <Drawer.Screen
-          name="SearchByMovieTitle"
-          component={SearchByMovieTitleScreen}
-          options={searchByMovieTitleDrawerOptions}
-        />
-        <Drawer.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={settingsDrawerOptions}
-        />
-        <Drawer.Screen
-          name="TellAFriend"
-          component={TellAFriendScreen}
-          options={tellAFriendDrawerOptions}
-        />
-        <Drawer.Screen
-          name="PrivacyPolicy"
-          component={PrivacyPolicyScreen}
-          options={privacyPolicyDrawerOptions}
-        />
-      </Drawer.Navigator>
+        <RootStack.Screen name="DrawerRoot" component={AppDrawerNavigator} />
+        <RootStack.Screen name="MovieDetail" component={MovieDetailScreen} />
+        <RootStack.Screen name="PersonDetail" component={PersonDetailScreen} />
+      </RootStack.Navigator>
     </NavigationContainer>
+  );
+}
+
+function AppDrawerNavigator() {
+  return (
+    <Drawer.Navigator
+      drawerContent={props => <AppDrawerContent {...props} />}
+      screenOptions={drawerScreenOptions}
+    >
+      <Drawer.Screen
+        name="Home"
+        component={HomeScreen}
+        options={homeDrawerOptions}
+      />
+      <Drawer.Screen
+        name="MovieFavorites"
+        component={MovieFavoritesScreen}
+        options={movieFavoritesDrawerOptions}
+      />
+      <Drawer.Screen
+        name="IHaveSeen"
+        component={MovieSeenScreen}
+        options={movieSeenDrawerOptions}
+      />
+      <Drawer.Screen
+        name="AdvancedSearch"
+        component={MovieSearchScreen}
+        options={advancedSearchDrawerOptions}
+      />
+      <Drawer.Screen
+        name="SearchByMovieTitle"
+        component={SearchByMovieTitleScreen}
+        options={searchByMovieTitleDrawerOptions}
+      />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={settingsDrawerOptions}
+      />
+      <Drawer.Screen
+        name="TellAFriend"
+        component={TellAFriendScreen}
+        options={tellAFriendDrawerOptions}
+      />
+      <Drawer.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={privacyPolicyDrawerOptions}
+      />
+    </Drawer.Navigator>
   );
 }

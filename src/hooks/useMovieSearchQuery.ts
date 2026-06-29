@@ -10,7 +10,11 @@ Purpose:
    * Defines the TanStack Query hooks that screens call to request movie data without doing direct API work themselves, including 
      movie search results, one movie's detail data, person details, and the Home page movie rows.
 */
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
 import {
   fetchPopularMovies,
   fetchUpcomingMovies,
@@ -134,10 +138,16 @@ export function useMovieSearchQuery(params: MovieSearchParams, enabled = true) {
 */
 export function useMovieDetailsQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieCoreDetails', movieId],
-    queryFn: () => fetchMovie(movieId as number),
-    staleTime: 1000 * 60 * 5,
+    ...getMovieDetailsQueryOptions(movieId as number),
     enabled: movieId !== null,
+  });
+}
+
+export function getMovieDetailsQueryOptions(movieId: number) {
+  return queryOptions({
+    queryKey: ['movieCoreDetails', movieId],
+    queryFn: () => fetchMovie(movieId),
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -185,10 +195,16 @@ export function useMovieListImdbRatingQuery(movieId: number | null) {
 
 export function usePersonDetailsQuery(personId: number | null) {
   return useQuery({
-    queryKey: ['personCoreDetails', personId],
-    queryFn: () => fetchPerson(personId as number),
-    staleTime: 1000 * 60 * 5,
+    ...getPersonDetailsQueryOptions(personId as number),
     enabled: personId !== null,
+  });
+}
+
+export function getPersonDetailsQueryOptions(personId: number) {
+  return queryOptions({
+    queryKey: ['personCoreDetails', personId],
+    queryFn: () => fetchPerson(personId),
+    staleTime: 1000 * 60 * 5,
   });
 }
 

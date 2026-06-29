@@ -8,6 +8,8 @@
  */
 
 import type { IoniconsIconName } from '@react-native-vector-icons/ionicons/static';
+import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { movieType } from '../movie/MovieTypes';
 
 export type AppDrawerParamList = {
   Home: undefined;
@@ -22,6 +24,25 @@ export type AppDrawerParamList = {
   Settings: undefined;
   TellAFriend: undefined;
   PrivacyPolicy: undefined;
+};
+
+/**
+ * Routes owned by the root native stack.
+ *
+ * The drawer is one native-stack screen. Movie and person details are separate
+ * native-stack screens above it, so opening details no longer forces the Home,
+ * Search, Favorites, or Seen screen to redraw itself as an overlay host.
+ */
+export type AppRootStackParamList = {
+  DrawerRoot: NavigatorScreenParams<AppDrawerParamList> | undefined;
+  MovieDetail: {
+    movieId: number;
+    initialMovie?: movieType | null;
+  };
+  PersonDetail: {
+    personId: number;
+    initialPersonName?: string;
+  };
 };
 
 export type SecondaryDrawerRoute = {

@@ -29,56 +29,43 @@ export function SubHeaderTop({
   onSearchModeLinkPress,
 }: SubHeaderTopProps) {
   const insets = useSafeAreaInsets();
-  const {
-    isDetailOpen,
-    isSubmitDisabled,
-    submitDraftFilters,
-    triggerDetailBack,
-  } = useHeaderMovieSearchContext();
+  const { isSubmitDisabled, submitDraftFilters } =
+    useHeaderMovieSearchContext();
 
   return (
-    <View style={[styles.container, { minHeight: insets.top + scaleSize(118) }]}>
+    <View
+      style={[styles.container, { minHeight: insets.top + scaleSize(118) }]}
+    >
       <HeaderActionRow
         left={
-          isDetailOpen ? (
-            <HeaderNavButton
-              variant="back"
-              anchored={false}
-              onPress={triggerDetailBack}
-              color={colors.movieBackButton}
-            />
-          ) : (
-            <HeaderNavButton
-              variant="menu"
-              anchored={false}
-              onPress={onRequestDrawerOpen}
-            />
-          )
+          <HeaderNavButton
+            variant="menu"
+            anchored={false}
+            onPress={onRequestDrawerOpen}
+          />
         }
         center={
           <Text allowFontScaling={false} style={styles.title}>
-            {isDetailOpen ? 'Movie Details' : title}
+            {title}
           </Text>
         }
-        rightStyle={isDetailOpen ? undefined : styles.submitSlot}
+        rightStyle={styles.submitSlot}
         right={
-          isDetailOpen ? null : (
-            <Pressable
-              disabled={isSubmitDisabled}
-              onPress={submitDraftFilters}
-              style={[
-                styles.rightAction,
-                isSubmitDisabled && styles.rightActionDisabled,
-              ]}
-            >
-              <Text allowFontScaling={false} style={styles.rightActionText}>
-                Submit
-              </Text>
-            </Pressable>
-          )
+          <Pressable
+            disabled={isSubmitDisabled}
+            onPress={submitDraftFilters}
+            style={[
+              styles.rightAction,
+              isSubmitDisabled && styles.rightActionDisabled,
+            ]}
+          >
+            <Text allowFontScaling={false} style={styles.rightActionText}>
+              Submit
+            </Text>
+          </Pressable>
         }
       />
-      {!isDetailOpen && searchModeLinkLabel && onSearchModeLinkPress ? (
+      {searchModeLinkLabel && onSearchModeLinkPress ? (
         <Pressable
           onPress={onSearchModeLinkPress}
           style={[

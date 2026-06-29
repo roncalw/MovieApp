@@ -1,12 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
-import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  DrawerActions,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { MovieResults } from '../search/results/MovieResults';
-import { DetailStackOverlay } from '../movie/DetailStackOverlay';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
-import { useDetailStack } from '../hooks/useDetailStack';
+import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
 import { hydrateMoviesWithCurrentImdbRatings } from '../utils/storage/movieListRatingHydration';
 import {
@@ -23,25 +26,16 @@ export function StoredMovieListScreen({
   storageKey,
 }: StoredMovieListScreenProps) {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  const { openMovieDetail } = useDetailNavigation();
   const [movies, setMovies] = useState<movieType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const {
-    detailStack,
-    isDetailStackOpen,
-    pushMovie,
-    pushPerson,
-    popDetail,
-    closeAllDetails,
-  } = useDetailStack();
-  const isDetailOpen = isDetailStackOpen;
-
   const loadMovies = useCallback(async () => {
     setIsLoading(true);
 
     try {
       const storedMovies = await getStoredMovieList(storageKey);
       const hydratedMovies = await hydrateMoviesWithCurrentImdbRatings(
-        storedMovies.map(storedMovieToMovieType)
+        storedMovies.map(storedMovieToMovieType),
       );
 
       setMovies(hydratedMovies);
@@ -55,20 +49,9 @@ export function StoredMovieListScreen({
 
   useFocusEffect(
     useCallback(() => {
-      closeAllDetails();
       loadMovies();
-    }, [closeAllDetails, loadMovies])
+    }, [loadMovies]),
   );
-
-  function handlePopDetail() {
-    popDetail();
-    loadMovies();
-  }
-
-  function handleCloseAllDetails() {
-    closeAllDetails();
-    loadMovies();
-  }
 
   function handleOpenTitleSearch() {
     navigation.navigate('SearchByMovieTitle', {
@@ -79,78 +62,56 @@ export function StoredMovieListScreen({
 
   return (
     <View style={styles.screen}>
-      {isDetailOpen ? null : (
-        <View style={styles.header}>
-          <HeaderActionRow
-            left={
-              <HeaderNavButton
-                variant="menu"
-                anchored={false}
-                onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-              />
-            }
-            center={
-              <Text
-                allowFontScaling={false}
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={styles.title}
-              >
-                {title}
-              </Text>
-            }
-            right={
-              <HeaderNavButton
-                variant="search"
-                anchored={false}
-                onPress={handleOpenTitleSearch}
-              />
-            }
-          />
-        </View>
-      )}
-
-      <View style={styles.contentStack}>
-        <View
-          pointerEvents={isDetailOpen ? 'none' : 'auto'}
-          accessibilityElementsHidden={isDetailOpen}
-          importantForAccessibility={
-            isDetailOpen ? 'no-hide-descendants' : 'auto'
-          }
-          style={[
-            styles.listContent,
-            isDetailOpen ? styles.listContentHidden : null,
-          ]}
-        >
-          {isLoading ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" />
-              <Text allowFontScaling={false} style={styles.message}>
-                Loading movies...
-              </Text>
-            </View>
-          ) : movies.length > 0 ? (
-            <MovieResults
-              movies={movies}
-              cardVariant="posterRating"
-              onMoviePress={pushMovie}
+      <View style={styles.header}>
+        <HeaderActionRow
+          left={
+            <HeaderNavButton
+              variant="menu"
+              anchored={false}
+              onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
             />
-          ) : (
-            <View style={styles.centered}>
-              <Text allowFontScaling={false} style={styles.message}>
-                {emptyMessage}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <DetailStackOverlay
-          detailStack={detailStack}
-          onPopDetail={handlePopDetail}
-          onCloseAllDetails={handleCloseAllDetails}
-          onPushMovie={pushMovie}
-          onPushPerson={pushPerson}
+          }
+          center={
+            <Text
+              allowFontScaling={false}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={styles.title}
+            >
+              {title}
+            </Text>
+          }
+          right={
+            <HeaderNavButton
+              variant="search"
+              anchored={false}
+              onPress={handleOpenTitleSearch}
+            />
+          }
         />
+      </View>
+
+      <View style={styles.listContent}>
+        {isLoading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" />
+            <Text allowFontScaling={false} style={styles.message}>
+              Loading movies...
+            </Text>
+          </View>
+        ) : movies.length > 0 ? (
+          <MovieResults
+            movies={movies}
+            cardVariant="posterRating"
+            onMoviePress={openMovieDetail}
+          />
+        ) : (
+          <View style={styles.centered}>
+            <Text allowFontScaling={false} style={styles.message}>
+              {emptyMessage}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

@@ -12,12 +12,9 @@ Purpose:
 */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import {
-  HeaderMovieSearchContext,
-} from './HeaderMovieSearchContext';
+import { HeaderMovieSearchContext } from './HeaderMovieSearchContext';
 import { SubHeaderMovieSearchFields } from './SubHeaderMovieSearchFields';
 import { SubHeaderTop } from './SubHeaderTop';
-import { headerMovieSearchStyles as styles } from '../../styles/search/headerMovieSearchStyles';
 import type {
   HeaderMovieSearchContextValue,
   HeaderMovieSearchProps,
@@ -29,8 +26,6 @@ export function HeaderMovieSearch({
   loadedPages,
   totalPages,
   excludeSeenMovies,
-  isDetailOpen,
-  onRequestDetailBack,
   onRequestDrawerOpen,
   onRequestTitleSearch,
   onToggleExcludeSeenMovies,
@@ -58,20 +53,16 @@ export function HeaderMovieSearch({
       excludeSeenMovies,
       onToggleExcludeSeenMovies,
       isSubmitDisabled,
-      isDetailOpen,
       onValidityChange: setIsSubmitDisabled,
       registerSubmitHandler,
       submitDraftFilters,
-      triggerDetailBack: onRequestDetailBack,
     }),
     [
       appliedParams,
       excludeSeenMovies,
-      isDetailOpen,
       isSubmitDisabled,
       loadedPages,
       onDisplayedFiltersDirtyChange,
-      onRequestDetailBack,
       onToggleExcludeSeenMovies,
       onSubmitFilters,
       registerSubmitHandler,
@@ -85,10 +76,12 @@ export function HeaderMovieSearch({
       <SubHeaderTop
         title={title}
         onRequestDrawerOpen={onRequestDrawerOpen}
-        searchModeLinkLabel={onRequestTitleSearch ? 'Search by Title' : undefined}
+        searchModeLinkLabel={
+          onRequestTitleSearch ? 'Search by Title' : undefined
+        }
         onSearchModeLinkPress={onRequestTitleSearch}
       />
-      <View style={isDetailOpen ? styles.filtersHidden : null}>
+      <View>
         <SubHeaderMovieSearchFields />
       </View>
     </HeaderMovieSearchContext.Provider>

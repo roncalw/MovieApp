@@ -12,7 +12,11 @@ Purpose:
 */
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import {
+  DrawerActions,
+  useIsFocused,
+  useNavigation,
+} from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import {
   useHomeGenreMoviesQuery,
@@ -23,14 +27,15 @@ import { HomeHeroCarousel } from './HomeHeroCarousel';
 import { HomeMoviePosterRow } from './HomeMoviePosterRow';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
-import { DetailStackOverlay } from '../movie/DetailStackOverlay';
-import { useDetailStack } from '../hooks/useDetailStack';
+import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 
 export function HomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  const isFocused = useIsFocused();
+  const { openMovieDetail } = useDetailNavigation();
   const upcomingMoviesQuery = useUpcomingMoviesQuery();
   const popularMoviesQuery = usePopularMoviesQuery();
   const familyMoviesQuery = useHomeGenreMoviesQuery('familyMovies', 10751);
@@ -41,16 +46,8 @@ export function HomeScreen() {
   const musicMoviesQuery = useHomeGenreMoviesQuery('musicMovies', 10402);
   const documentaryMoviesQuery = useHomeGenreMoviesQuery(
     'documentaryMovies',
-    99
+    99,
   );
-  const {
-    detailStack,
-    isDetailStackOpen,
-    pushMovie,
-    pushPerson,
-    popDetail,
-    closeAllDetails,
-  } = useDetailStack();
   const moviePosterRows = [
     { title: 'Popular Movies', query: popularMoviesQuery },
     { title: 'Family Movies', query: familyMoviesQuery },
@@ -72,71 +69,49 @@ export function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentStack}>
-        <View
-          pointerEvents={isDetailStackOpen ? 'none' : 'auto'}
-          accessibilityElementsHidden={isDetailStackOpen}
-          importantForAccessibility={
-            isDetailStackOpen ? 'no-hide-descendants' : 'auto'
-          }
-          style={[
-            styles.homeContent,
-            isDetailStackOpen ? styles.homeContentHidden : null,
-          ]}
-        >
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <View style={styles.heroStage}>
-              <HomeHeroCarousel
-                movies={upcomingMoviesQuery.data}
-                isLoading={upcomingMoviesQuery.isLoading}
-                isError={upcomingMoviesQuery.isError}
-                error={upcomingMoviesQuery.error}
-                isAutoPlayPaused={isDetailStackOpen}
-                onMoviePress={pushMovie}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.heroStage}>
+          <HomeHeroCarousel
+            movies={upcomingMoviesQuery.data}
+            isLoading={upcomingMoviesQuery.isLoading}
+            isError={upcomingMoviesQuery.isError}
+            error={upcomingMoviesQuery.error}
+            isAutoPlayPaused={!isFocused}
+            onMoviePress={openMovieDetail}
+          />
+          <HeaderActionRow
+            left={
+              <HeaderNavButton
+                variant="menu"
+                anchored={false}
+                onPress={handleOpenDrawer}
               />
-              <HeaderActionRow
-                left={
-                  <HeaderNavButton
-                    variant="menu"
-                    anchored={false}
-                    onPress={handleOpenDrawer}
-                  />
-                }
-                right={
-                  <HeaderNavButton
-                    variant="search"
-                    anchored={false}
-                    onPress={handleOpenTitleSearch}
-                    color={colors.actionOnPrimary}
-                  />
-                }
+            }
+            right={
+              <HeaderNavButton
+                variant="search"
+                anchored={false}
+                onPress={handleOpenTitleSearch}
+                color={colors.actionOnPrimary}
               />
-            </View>
-
-            {moviePosterRows.map(row => (
-              <HomeMoviePosterRow
-                key={row.title}
-                title={row.title}
-                movies={row.query.data}
-                isLoading={row.query.isLoading}
-                isError={row.query.isError}
-                onMoviePress={pushMovie}
-              />
-            ))}
-          </ScrollView>
+            }
+          />
         </View>
 
-        <DetailStackOverlay
-          detailStack={detailStack}
-          onPopDetail={popDetail}
-          onCloseAllDetails={closeAllDetails}
-          onPushMovie={pushMovie}
-          onPushPerson={pushPerson}
-        />
-      </View>
+        {moviePosterRows.map(row => (
+          <HomeMoviePosterRow
+            key={row.title}
+            title={row.title}
+            movies={row.query.data}
+            isLoading={row.query.isLoading}
+            isError={row.query.isError}
+            onMoviePress={openMovieDetail}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -145,15 +120,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  contentStack: {
-    flex: 1,
-  },
-  homeContent: {
-    flex: 1,
-  },
-  homeContentHidden: {
-    opacity: 0,
   },
   scrollView: {
     flex: 1,

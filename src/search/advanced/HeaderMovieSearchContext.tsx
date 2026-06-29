@@ -21,7 +21,7 @@ Purpose:
 
   HOW THIS RELATES TO MOVIE SEARCH:
   - HeaderMovieSearch uses these tools to share header-only values like
-    submitDraftFilters, isSubmitDisabled, and triggerDetailBack with
+    submitDraftFilters and isSubmitDisabled with
     SubHeaderTop and SubHeaderMovieSearchFields
 */
 import { createContext, useContext } from 'react';
@@ -89,7 +89,7 @@ export function useHeaderMovieSearchContext() {
   */
   if (!contextValue) {
     throw new Error(
-      'useHeaderMovieSearchContext must be used inside HeaderMovieSearch.'
+      'useHeaderMovieSearchContext must be used inside HeaderMovieSearch.',
     );
   }
 

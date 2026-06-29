@@ -5,8 +5,8 @@
  * - src/search/advanced/MovieSearchScreen.tsx
  *
  * Next step path:
- * - MovieSearchScreen renders HeaderMovieSearch, MovieResults, and
- *   DetailStackOverlay as the main search user flow.
+ * - MovieSearchScreen renders HeaderMovieSearch and MovieResults. Selecting a
+ *   result opens the root native-stack Movie Detail screen.
  */
 import { StyleSheet } from 'react-native';
 import { colors } from '../colors';
@@ -18,17 +18,8 @@ export const movieSearchScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  contentStack: {
-    flex: 1,
-  },
   searchContent: {
     flex: 1,
-  },
-  searchContentHidden: {
-    opacity: 0,
-  },
-  headerHidden: {
-    display: 'none',
   },
   centered: {
     flex: 1,

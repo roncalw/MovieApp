@@ -13,6 +13,7 @@
  */
 import React from 'react';
 import { Image, Text, View } from 'react-native';
+import { useMovieWatchProvidersQuery } from '../../hooks/useMovieSearchQuery';
 import type {
   movieType,
   movieWatchProviderType,
@@ -37,23 +38,16 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 export function MovieDetailInfoSections({
+  movieId,
   movie,
-  onRetryWatchProviders,
-  watchProvidersError,
-  watchProvidersFailed,
-  watchProvidersLoading,
-  watchProvidersRetrying,
 }: {
+  movieId: number;
   movie: movieType;
-  onRetryWatchProviders: () => void;
-  watchProvidersError: unknown;
-  watchProvidersFailed: boolean;
-  watchProvidersLoading: boolean;
-  watchProvidersRetrying: boolean;
 }) {
+  const watchProvidersQuery = useMovieWatchProvidersQuery(movieId);
   const productionCompanies = movie.production_companies ?? [];
   const productionCountries = movie.production_countries ?? [];
-  const usWatchProviders = movie['watch/providers']?.results?.US;
+  const usWatchProviders = watchProvidersQuery.data?.results?.US;
 
   return (
     <>
@@ -70,11 +64,11 @@ export function MovieDetailInfoSections({
       </View>
 
       <StreamingSection
-        error={watchProvidersError}
-        failed={watchProvidersFailed}
-        isLoading={watchProvidersLoading}
-        isRetrying={watchProvidersRetrying}
-        onRetry={onRetryWatchProviders}
+        error={watchProvidersQuery.error}
+        failed={watchProvidersQuery.isError}
+        isLoading={watchProvidersQuery.isLoading}
+        isRetrying={watchProvidersQuery.isFetching}
+        onRetry={watchProvidersQuery.refetch}
         providers={usWatchProviders}
       />
 

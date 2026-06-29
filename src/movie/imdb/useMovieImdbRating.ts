@@ -15,7 +15,6 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import type { movieType } from '../../types/movie/MovieTypes';
 import type { ImdbScrapeRequest } from '../../types/movie/movieDetailTypes';
 import type {
   CloudflareMovieListImdbRating,
@@ -24,15 +23,17 @@ import type {
 } from '../../types/tmdb/tmdbApiTypes';
 
 export function useMovieImdbRating({
-  movieDetails,
+  imdbId,
   movieId,
   movieListImdbRating,
 }: {
-  movieDetails: movieType | undefined;
+  imdbId?: string;
   movieId: number;
   movieListImdbRating: CloudflareMovieListImdbRating | undefined;
 }) {
-  const [scrapedImdbRating, setScrapedImdbRating] = useState<number | null>(null);
+  const [scrapedImdbRating, setScrapedImdbRating] = useState<number | null>(
+    null,
+  );
   const [imdbRefreshStatus, setImdbRefreshStatus] =
     useState<ImdbWebsiteRatingScrapeStatus | null>(null);
   const [isScrapingImdbRating, setIsScrapingImdbRating] = useState(false);
@@ -61,12 +62,10 @@ export function useMovieImdbRating({
       setIsScrapingImdbRating(false);
       setImdbScrapeRequest(null);
     },
-    []
+    [],
   );
 
   const handleRetryImdbRating = useCallback(() => {
-    const imdbId = movieDetails?.external_ids?.imdb_id;
-
     if (!imdbId) {
       return;
     }
@@ -77,7 +76,7 @@ export function useMovieImdbRating({
       imdbId,
       requestKey: Date.now(),
     });
-  }, [movieDetails?.external_ids?.imdb_id]);
+  }, [imdbId]);
 
   return {
     handleImdbScrapeResult,

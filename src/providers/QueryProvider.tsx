@@ -11,6 +11,7 @@ Purpose:
 */
 import React, { PropsWithChildren } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getQueryRetryDelay, shouldRetryQuery } from '../api/queryRetryPolicy';
 
 /*
   QueryClient is the central TanStack Query engine.
@@ -25,7 +26,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
   - If QueryClient were recreated repeatedly, cache stability would be lost
   - A single QueryClient lets every movie query hook talk to the same warehouse system
 */
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: shouldRetryQuery,
+      retryDelay: getQueryRetryDelay,
+    },
+  },
+});
 
 /*
   PropsWithChildren is a React utility type.
@@ -79,8 +87,6 @@ export function QueryProvider({ children }: PropsWithChildren) {
       - This is the warehouse control system
       - It powers the warehouse manager for anything nested inside it
     */
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }

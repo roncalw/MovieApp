@@ -35,14 +35,8 @@ export const drawerScreenStyles = StyleSheet.create({
     color: colors.brandText,
     textAlign: 'center',
   },
-  contentStack: {
-    flex: 1,
-  },
   listContent: {
     flex: 1,
-  },
-  listContentHidden: {
-    opacity: 0,
   },
   centered: {
     flex: 1,

@@ -7,10 +7,10 @@ Imported by:
 Next step path:
    * /MovieApp/src/hooks/useMovieSearchQuery.ts
 Purpose:
-   * Shows the selected movie detail view inside the existing Home/Search overlay, using the legacy Movie Detail layout as the
-     visual reference while keeping unfinished actions such as favorites inactive.
+   * Shows the selected movie on its own native-stack screen while keeping each secondary resource scoped to the small feature
+     that consumes it.
 */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   Linking,
   Platform,
@@ -22,33 +22,29 @@ import {
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  useMovieDetailsQuery,
-  useMovieExternalIdsQuery,
-  useMovieListImdbRatingQuery,
-  useMovieVideosQuery,
-  useMovieWatchProvidersQuery,
-} from '../hooks/useMovieSearchQuery';
+import { useMovieDetailsQuery } from '../hooks/useMovieSearchQuery';
 import { ExpandableText } from '../shared/ExpandableText';
 import {
   DetailResourceError,
   DetailResourceLoading,
 } from '../shared/DetailResourceState';
-import type {
-  movieGenres,
-  movieTrailerVideo,
-  movieType,
-} from '../types/movie/MovieTypes';
+import type { movieGenres, movieType } from '../types/movie/MovieTypes';
 import type { MovieDetailProps } from '../types/movie/movieDetailTypes';
 import { colors } from '../styles/colors';
 import { scaleSize } from '../styles/scale';
 import { movieDetailStyles as styles } from '../styles/movie/movieDetailStyles';
 import { MovieCreditsRail } from './components/MovieCreditsRail';
 import { MovieDetailInfoSections } from './components/MovieDetailInfoSections';
-import { MovieHero } from './components/MovieHero';
-import { MovieTrailerModal } from './components/MovieTrailerModal';
-import { RenderedImdbRatingScraper } from './imdb/RenderedImdbRatingScraper';
-import { useMovieImdbRating } from './imdb/useMovieImdbRating';
+import {
+  MovieTrailerButton,
+  MovieTrailerFeedback,
+  MovieTrailerProvider,
+} from './components/MovieTrailerFeature';
+import {
+  MovieImdbHero,
+  MovieImdbProvider,
+  useMovieImdbFeature,
+} from './imdb/MovieImdbProvider';
 import { useMovieUserListActions } from './useMovieUserListActions';
 
 export function MovieDetail({
@@ -58,174 +54,64 @@ export function MovieDetail({
   onPersonPress,
 }: MovieDetailProps) {
   const insets = useSafeAreaInsets();
-  const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
   const movieQuery = useMovieDetailsQuery(movieId);
-  const videosQuery = useMovieVideosQuery(movieId);
-  const externalIdsQuery = useMovieExternalIdsQuery(movieId);
-  const watchProvidersQuery = useMovieWatchProvidersQuery(movieId);
-  const { data: movieListImdbRating } = useMovieListImdbRatingQuery(movieId);
 
-  /*
-    Keep the existing screen/component contract while sourcing each nested TMDB
-    resource independently. The object below is assembled only in memory; no
-    combined append_to_response request is sent over the network.
-  */
-  const movieDetails = useMemo(
-    () =>
-      movieQuery.data
-        ? {
-            ...movieQuery.data,
-            videos: videosQuery.data,
-            external_ids: externalIdsQuery.data,
-            'watch/providers': watchProvidersQuery.data,
-          }
-        : undefined,
-    [
-      externalIdsQuery.data,
-      movieQuery.data,
-      videosQuery.data,
-      watchProvidersQuery.data,
-    ],
-  );
+  const movieDetails = movieQuery.data;
   const displayMovie = movieDetails ?? initialMovie ?? null;
-  const {
-    handleImdbScrapeResult,
-    handleRetryImdbRating,
-    imdbRating,
-    imdbRefreshStatus,
-    imdbScrapeRequest,
-    isScrapingImdbRating,
-  } = useMovieImdbRating({
-    movieDetails,
-    movieId,
-    movieListImdbRating,
-  });
-  const preferredTrailer = useMemo(
-    () => getPreferredYouTubeTrailer(movieDetails?.videos?.results ?? []),
-    [movieDetails?.videos?.results],
-  );
-  const handleOpenTrailer = useCallback(() => {
-    if (preferredTrailer) {
-      setActiveTrailerKey(preferredTrailer.key);
-    }
-  }, [preferredTrailer]);
-  const handleCloseTrailer = useCallback(() => {
-    setActiveTrailerKey(null);
-  }, []);
 
   return (
-    <View style={styles.screen}>
-      <View
-        style={[styles.nativeTopSpacer, { height: nativeTopSpacerHeight }]}
-      />
-
-      <ScrollView
-        style={styles.detailScroll}
-        contentContainerStyle={styles.detailContent}
-      >
-        <MovieHero
-          movie={displayMovie}
-          imdbRating={imdbRating}
-          imdbRefreshStatus={imdbRefreshStatus}
-          isImdbRatingLoading={isScrapingImdbRating}
-          onBackPress={onBackPress}
-          onRetryImdbRating={handleRetryImdbRating}
+    <MovieImdbProvider movieId={movieId}>
+      <View style={styles.screen}>
+        <View
+          style={[styles.nativeTopSpacer, { height: nativeTopSpacerHeight }]}
         />
 
-        {movieQuery.isLoading ? (
-          <LoadingState />
-        ) : movieQuery.isError ? (
-          <ErrorState
-            error={movieQuery.error}
-            isRetrying={movieQuery.isFetching}
-            onRetry={movieQuery.refetch}
-          />
-        ) : movieDetails ? (
-          <LoadedMovieDetail
-            movie={movieDetails}
-            imdbRating={imdbRating}
-            trailer={preferredTrailer}
-            onTrailerPress={handleOpenTrailer}
-            onPersonPress={onPersonPress}
-            videosError={videosQuery.error}
-            videosFailed={videosQuery.isError}
-            videosRetrying={videosQuery.isFetching}
-            onRetryVideos={videosQuery.refetch}
-            externalIdsError={externalIdsQuery.error}
-            externalIdsFailed={externalIdsQuery.isError}
-            externalIdsRetrying={externalIdsQuery.isFetching}
-            onRetryExternalIds={externalIdsQuery.refetch}
-            watchProvidersError={watchProvidersQuery.error}
-            watchProvidersFailed={watchProvidersQuery.isError}
-            watchProvidersLoading={watchProvidersQuery.isLoading}
-            watchProvidersRetrying={watchProvidersQuery.isFetching}
-            onRetryWatchProviders={watchProvidersQuery.refetch}
-          />
-        ) : null}
-      </ScrollView>
+        <ScrollView
+          style={styles.detailScroll}
+          contentContainerStyle={styles.detailContent}
+        >
+          <MovieImdbHero movie={displayMovie} onBackPress={onBackPress} />
 
-      <MovieTrailerModal
-        trailerKey={activeTrailerKey}
-        onClose={handleCloseTrailer}
-      />
-      <RenderedImdbRatingScraper
-        scrapeRequest={imdbScrapeRequest}
-        onResult={handleImdbScrapeResult}
-      />
-    </View>
+          {movieQuery.isLoading ? (
+            <LoadingState />
+          ) : movieQuery.isError ? (
+            <ErrorState
+              error={movieQuery.error}
+              isRetrying={movieQuery.isFetching}
+              onRetry={movieQuery.refetch}
+            />
+          ) : movieDetails ? (
+            <LoadedMovieDetail
+              movieId={movieId}
+              movie={movieDetails}
+              onPersonPress={onPersonPress}
+            />
+          ) : null}
+        </ScrollView>
+      </View>
+    </MovieImdbProvider>
   );
 }
 
 function LoadedMovieDetail({
+  movieId,
   movie,
-  imdbRating,
-  trailer,
-  onTrailerPress,
   onPersonPress,
-  videosError,
-  videosFailed,
-  videosRetrying,
-  onRetryVideos,
-  externalIdsError,
-  externalIdsFailed,
-  externalIdsRetrying,
-  onRetryExternalIds,
-  watchProvidersError,
-  watchProvidersFailed,
-  watchProvidersLoading,
-  watchProvidersRetrying,
-  onRetryWatchProviders,
 }: {
+  movieId: number;
   movie: movieType;
-  imdbRating: number | null;
-  trailer: movieTrailerVideo | null;
-  onTrailerPress: () => void;
   onPersonPress?: (personId: number, initialPersonName?: string) => void;
-  videosError: unknown;
-  videosFailed: boolean;
-  videosRetrying: boolean;
-  onRetryVideos: () => void;
-  externalIdsError: unknown;
-  externalIdsFailed: boolean;
-  externalIdsRetrying: boolean;
-  onRetryExternalIds: () => void;
-  watchProvidersError: unknown;
-  watchProvidersFailed: boolean;
-  watchProvidersLoading: boolean;
-  watchProvidersRetrying: boolean;
-  onRetryWatchProviders: () => void;
 }) {
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
-  const imdbReviewsUrl = getImdbReviewsUrl(movie.external_ids?.imdb_id);
   const cast = movie.credits?.cast ?? [];
   const crew = movie.credits?.crew ?? [];
   const { handleFavoritePress, handleSeenPress, isFavorite, isSeen } =
     useMovieUserListActions(movie);
 
   return (
-    <>
+    <MovieTrailerProvider movieId={movieId}>
       <View style={styles.summaryCard}>
         <View style={styles.actionIconRow}>
           <Pressable
@@ -262,22 +148,7 @@ function LoadedMovieDetail({
             </Text>
           </Pressable>
 
-          {trailer ? (
-            <Pressable
-              onPress={onTrailerPress}
-              style={styles.trailerPlayButton}
-              accessibilityRole="button"
-              accessibilityLabel={`Play trailer: ${trailer.name}`}
-            >
-              <View style={styles.trailerPlayCircle}>
-                <Ionicons
-                  name="caret-forward"
-                  size={scaleSize(26)}
-                  color={colors.actionOnPrimary}
-                />
-              </View>
-            </Pressable>
-          ) : null}
+          <MovieTrailerButton />
         </View>
 
         <Text
@@ -290,7 +161,7 @@ function LoadedMovieDetail({
         </Text>
 
         <GenreList genres={movie.genres ?? []} />
-        <MovieStarRating imdbRating={imdbRating} />
+        <MovieImdbStarRating />
 
         <ExpandableText
           text={movie.overview || 'Overview is not available.'}
@@ -309,30 +180,10 @@ function LoadedMovieDetail({
           Release Date: {releaseDate}
         </Text>
 
-        {imdbReviewsUrl ? <ReviewsLink url={imdbReviewsUrl} /> : null}
+        <MovieImdbReviews />
       </View>
 
-      {videosFailed ? (
-        <DetailResourceError
-          compact
-          error={videosError}
-          isRetrying={videosRetrying}
-          message="Trailer information could not be loaded."
-          onRetry={onRetryVideos}
-          title="Trailer temporarily unavailable"
-        />
-      ) : null}
-
-      {externalIdsFailed ? (
-        <DetailResourceError
-          compact
-          error={externalIdsError}
-          isRetrying={externalIdsRetrying}
-          message="The IMDb review link could not be loaded."
-          onRetry={onRetryExternalIds}
-          title="IMDb review link temporarily unavailable"
-        />
-      ) : null}
+      <MovieTrailerFeedback />
 
       <MovieCreditsRail
         title="Cast"
@@ -344,15 +195,8 @@ function LoadedMovieDetail({
         people={crew}
         onPersonPress={onPersonPress}
       />
-      <MovieDetailInfoSections
-        movie={movie}
-        watchProvidersError={watchProvidersError}
-        watchProvidersFailed={watchProvidersFailed}
-        watchProvidersLoading={watchProvidersLoading}
-        watchProvidersRetrying={watchProvidersRetrying}
-        onRetryWatchProviders={onRetryWatchProviders}
-      />
-    </>
+      <MovieDetailInfoSections movieId={movieId} movie={movie} />
+    </MovieTrailerProvider>
   );
 }
 
@@ -375,6 +219,39 @@ function ReviewsLink({ url }: { url: string }) {
       </Text>
     </Pressable>
   );
+}
+
+function MovieImdbStarRating() {
+  const { imdbRating } = useMovieImdbFeature();
+
+  return <MovieStarRating imdbRating={imdbRating} />;
+}
+
+function MovieImdbReviews() {
+  const {
+    externalIdsError,
+    externalIdsFailed,
+    externalIdsRetrying,
+    imdbId,
+    onRetryExternalIds,
+  } = useMovieImdbFeature();
+
+  if (externalIdsFailed) {
+    return (
+      <DetailResourceError
+        compact
+        error={externalIdsError}
+        isRetrying={externalIdsRetrying}
+        message="The IMDb review link could not be loaded."
+        onRetry={onRetryExternalIds}
+        title="IMDb review link temporarily unavailable"
+      />
+    );
+  }
+
+  const imdbReviewsUrl = getImdbReviewsUrl(imdbId);
+
+  return imdbReviewsUrl ? <ReviewsLink url={imdbReviewsUrl} /> : null;
 }
 
 function LoadingState() {
@@ -487,15 +364,6 @@ function formatReleaseDate(releaseDate: string | undefined) {
 
 function getImdbReviewsUrl(imdbId: string | undefined) {
   return imdbId ? `https://www.imdb.com/title/${imdbId}/reviews/` : null;
-}
-
-function getPreferredYouTubeTrailer(videos: movieTrailerVideo[]) {
-  const youtubeTrailers = videos.filter(
-    video => video.site === 'YouTube' && video.type === 'Trailer' && video.key,
-  );
-  const officialTrailer = youtubeTrailers.find(video => video.official);
-
-  return officialTrailer ?? youtubeTrailers[0] ?? null;
 }
 
 /*

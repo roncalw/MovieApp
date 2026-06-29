@@ -22,10 +22,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useMovieSearchQuery } from '../../hooks/useMovieSearchQuery';
 import { HeaderMovieSearch } from './HeaderMovieSearch';
 import { MovieResults } from '../results/MovieResults';
-import { DetailStackOverlay } from '../../movie/DetailStackOverlay';
 import type { MovieSearchParams } from '../../types/search/movieSearchParams';
 import { movieSearchScreenStyles as styles } from '../../styles/search/movieSearchScreenStyles';
-import { useDetailStack } from '../../hooks/useDetailStack';
+import { useDetailNavigation } from '../../hooks/useDetailNavigation';
 import {
   getDefaultBeginDate,
   getDefaultEndDate,
@@ -53,18 +52,11 @@ export function MovieSearchScreen() {
   const defaultEndDate = getDefaultEndDate();
   const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  const { openMovieDetail } = useDetailNavigation();
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
     useState(false);
-  const {
-    detailStack,
-    isDetailStackOpen,
-    pushMovie,
-    pushPerson,
-    popDetail,
-    closeAllDetails,
-  } = useDetailStack();
   const [excludeSeenMovies, setExcludeSeenMovies] = useState(false);
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
@@ -80,7 +72,6 @@ export function MovieSearchScreen() {
     hasSubmittedSearch && !hasDisplayedFilterChanges;
 
   function handleApplyFilters(nextParams: MovieSearchParams) {
-    closeAllDetails();
     refreshSeenMovieIds();
     setHasDisplayedFilterChanges(false);
     setSubmittedParams(nextParams);
@@ -104,18 +95,8 @@ export function MovieSearchScreen() {
   useFocusEffect(
     useCallback(() => {
       refreshSeenMovieIds();
-    }, [refreshSeenMovieIds])
+    }, [refreshSeenMovieIds]),
   );
-
-  const handlePopDetail = useCallback(() => {
-    popDetail();
-    refreshSeenMovieIds();
-  }, [popDetail, refreshSeenMovieIds]);
-
-  const handleCloseAllDetails = useCallback(() => {
-    closeAllDetails();
-    refreshSeenMovieIds();
-  }, [closeAllDetails, refreshSeenMovieIds]);
 
   useEffect(() => {
     if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
@@ -170,10 +151,7 @@ export function MovieSearchScreen() {
   const totalPages = hasActiveSubmittedSearch
     ? data?.pages[0]?.totalPages ?? null
     : 0;
-  const isDetailOpen = isDetailStackOpen;
-
   const resetSearchScreen = useCallback(() => {
-    closeAllDetails();
     queryClient.removeQueries({
       queryKey: ['movieSearch'],
     });
@@ -190,13 +168,7 @@ export function MovieSearchScreen() {
     });
     setHasDisplayedFilterChanges(false);
     setHasSubmittedSearch(false);
-  }, [closeAllDetails, defaultBeginDate, defaultEndDate, queryClient]);
-
-  useFocusEffect(
-    useCallback(() => {
-      return resetSearchScreen;
-    }, [resetSearchScreen])
-  );
+  }, [defaultBeginDate, defaultEndDate, queryClient]);
 
   useEffect(() => {
     const shouldFetchMoreFilteredResults =
@@ -267,7 +239,10 @@ export function MovieSearchScreen() {
             accessibilityRole="button"
             accessibilityLabel="Return to movie search filters"
           >
-            <Text allowFontScaling={false} style={styles.errorPrimaryButtonText}>
+            <Text
+              allowFontScaling={false}
+              style={styles.errorPrimaryButtonText}
+            >
               Try Again
             </Text>
           </Pressable>
@@ -291,20 +266,13 @@ export function MovieSearchScreen() {
 
   return (
     <View style={styles.container}>
-      <View
-        pointerEvents={isDetailOpen ? 'none' : 'auto'}
-        accessibilityElementsHidden={isDetailOpen}
-        importantForAccessibility={isDetailOpen ? 'no-hide-descendants' : 'auto'}
-        style={isDetailOpen ? styles.headerHidden : null}
-      >
+      <View>
         <HeaderMovieSearch
           title="Movie Search"
           appliedParams={submittedParams}
           loadedPages={loadedPages}
           totalPages={totalPages}
           excludeSeenMovies={excludeSeenMovies}
-          isDetailOpen={false}
-          onRequestDetailBack={handlePopDetail}
           onRequestDrawerOpen={() =>
             navigation.dispatch(DrawerActions.openDrawer())
           }
@@ -319,36 +287,14 @@ export function MovieSearchScreen() {
         />
       </View>
 
-      <View style={styles.contentStack}>
-        <View
-          pointerEvents={isDetailOpen ? 'none' : 'auto'}
-          accessibilityElementsHidden={isDetailOpen}
-          importantForAccessibility={
-            isDetailOpen ? 'no-hide-descendants' : 'auto'
-          }
-          style={[
-            styles.searchContent,
-            isDetailOpen ? styles.searchContentHidden : null,
-          ]}
-        >
-          <MovieResults
-            movies={visibleMovies}
-            cardVariant="posterRating"
-            onMoviePress={pushMovie}
-            onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
-            hasNextPage={hasActiveSubmittedSearch && hasNextPage}
-            isFetchingNextPage={
-              hasActiveSubmittedSearch && isFetchingNextPage
-            }
-          />
-        </View>
-
-        <DetailStackOverlay
-          detailStack={detailStack}
-          onPopDetail={handlePopDetail}
-          onCloseAllDetails={handleCloseAllDetails}
-          onPushMovie={pushMovie}
-          onPushPerson={pushPerson}
+      <View style={styles.searchContent}>
+        <MovieResults
+          movies={visibleMovies}
+          cardVariant="posterRating"
+          onMoviePress={openMovieDetail}
+          onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
+          hasNextPage={hasActiveSubmittedSearch && hasNextPage}
+          isFetchingNextPage={hasActiveSubmittedSearch && isFetchingNextPage}
         />
       </View>
     </View>
