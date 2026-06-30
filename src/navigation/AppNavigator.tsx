@@ -39,7 +39,6 @@ export function AppNavigator() {
         initialRouteName="DrawerRoot"
         screenOptions={{
           animation: 'slide_from_right',
-          freezeOnBlur: true,
           headerShown: false,
         }}
       >
