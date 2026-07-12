@@ -36,6 +36,7 @@ import {
 import type { AppDrawerParamList } from '../../types/navigation/navigationTypes';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
+const DEFAULT_EXCLUDE_SEEN_MOVIES = false;
 
 /*
   WHAT THIS SCREEN DOES:
@@ -57,7 +58,9 @@ export function MovieSearchScreen() {
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
     useState(false);
-  const [excludeSeenMovies, setExcludeSeenMovies] = useState(false);
+  const [excludeSeenMovies, setExcludeSeenMovies] = useState(
+    DEFAULT_EXCLUDE_SEEN_MOVIES
+  );
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
     movieRatings: '',
@@ -155,7 +158,7 @@ export function MovieSearchScreen() {
     queryClient.removeQueries({
       queryKey: ['movieSearch'],
     });
-    setExcludeSeenMovies(false);
+    setExcludeSeenMovies(DEFAULT_EXCLUDE_SEEN_MOVIES);
     setSeenMovieIds(new Set());
     setSubmittedParams({
       movieRatings: '',

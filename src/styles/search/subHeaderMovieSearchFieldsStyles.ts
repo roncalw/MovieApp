@@ -38,13 +38,14 @@ export const subHeaderMovieSearchFieldsStyles = StyleSheet.create({
   excludeSeenToggleText: {
     fontSize: scaleSize(12),
     lineHeight: scaleSize(13),
-    color: colors.searchMutedText,
+    color: colors.brandTextLight,
     fontStyle: 'italic',
+    fontWeight: typography.summaryBody.fontWeight,
     textAlign: 'center',
   },
   excludeSeenToggleTextActive: {
-    color: colors.brandText,
-    fontWeight: '700',
+    color: colors.brandTextLight,
+    fontWeight: typography.summaryBody.fontWeight,
   },
   yearFieldsRow: {
     flexDirection: 'row',

@@ -70,6 +70,8 @@ export function RatingField({ value, onChange }: RatingFieldProps) {
                   label={item.label}
                   selected={draftValue.includes(item.id)}
                   onPress={() => toggleDraftValue(item.id)}
+                  reversedSelectionAppearance
+                  subtleBorder
                 />
               ))}
             </View>

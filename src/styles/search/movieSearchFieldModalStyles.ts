@@ -14,6 +14,7 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '../colors';
 import { scaleSize } from '../scale';
+import { typography } from '../typography';
 
 export const movieSearchFieldModalStyles = StyleSheet.create({
   selectionChipGroup: {
@@ -54,27 +55,26 @@ export const movieSearchFieldModalStyles = StyleSheet.create({
     paddingHorizontal: scaleSize(8),
   },
   radioOuter: {
-    width: scaleSize(28),
-    height: scaleSize(28),
-    borderRadius: scaleSize(14),
-    borderWidth: scaleSize(2),
-    borderColor: colors.chipBorder,
+    width: typography.summaryBody.lineHeight,
+    height: typography.summaryBody.lineHeight,
+    borderRadius: scaleSize(10),
+    borderWidth: 1.5,
+    borderColor: colors.brandText,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: scaleSize(14),
     backgroundColor: 'transparent',
   },
   radioInner: {
-    width: scaleSize(14),
-    height: scaleSize(14),
-    borderRadius: scaleSize(7),
-    backgroundColor: colors.chipBackgroundSelected,
+    width: scaleSize(10),
+    height: scaleSize(10),
+    borderRadius: scaleSize(5),
+    backgroundColor: colors.brandTextLight,
   },
   sortOptionText: {
+    ...typography.summaryBody,
     flex: 1,
-    color: colors.actionPrimary,
-    fontSize: scaleSize(16),
-    lineHeight: scaleSize(20),
+    color: colors.brandText,
   },
   streamerTileGroup: {
     width: '100%',

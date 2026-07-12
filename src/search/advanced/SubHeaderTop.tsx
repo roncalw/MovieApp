@@ -34,7 +34,7 @@ export function SubHeaderTop({
 
   return (
     <View
-      style={[styles.container, { minHeight: insets.top + scaleSize(118) }]}
+      style={[styles.container, { minHeight: insets.top + scaleSize(108) }]}
     >
       <HeaderActionRow
         left={

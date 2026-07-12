@@ -39,6 +39,8 @@ export const subHeaderTopStyles = StyleSheet.create({
     minWidth: scaleSize(94),
     paddingHorizontal: scaleSize(14),
     paddingVertical: scaleSize(8),
+    borderWidth: 1,
+    borderColor: colors.searchAccent,
     borderRadius: 999,
     backgroundColor: colors.brandTintSurface,
     alignItems: 'center',

@@ -10,7 +10,13 @@ Purpose:
      header context.
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  PanResponder,
+  type PanResponderGestureState,
+} from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { GenreField } from './fields/GenreField';
 import { RatingField } from './fields/RatingField';
@@ -35,6 +41,19 @@ import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
 
 function getSortedValueSignature(values: string[]) {
   return [...values].sort().join('|');
+}
+
+const FILTER_SWIPE_UP_MIN_DISTANCE = 35;
+const FILTER_SWIPE_UP_VERTICAL_DOMINANCE = 1.5;
+
+function isFilterSwipeUpGesture(gestureState: PanResponderGestureState) {
+  const verticalDistance = Math.abs(gestureState.dy);
+  const horizontalDistance = Math.abs(gestureState.dx);
+
+  return (
+    gestureState.dy <= -FILTER_SWIPE_UP_MIN_DISTANCE &&
+    verticalDistance > horizontalDistance * FILTER_SWIPE_UP_VERTICAL_DOMINANCE
+  );
 }
 
 export function SubHeaderMovieSearchFields() {
@@ -63,6 +82,24 @@ export function SubHeaderMovieSearchFields() {
     getInitialSortValue(appliedParams.movieSortBy, appliedParams.movieVoteCount)
   );
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const excludeSeenToggleLabel = excludeSeenMovies
+    ? 'Exclude movies you have seen? Yes'
+    : 'Exclude movies you have seen? No';
+  const filterSwipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gestureState) =>
+          isFilterSwipeUpGesture(gestureState),
+        onMoveShouldSetPanResponderCapture: (_event, gestureState) =>
+          isFilterSwipeUpGesture(gestureState),
+        onPanResponderRelease: (_event, gestureState) => {
+          if (isFilterSwipeUpGesture(gestureState)) {
+            setIsFiltersVisible(false);
+          }
+        },
+      }),
+    []
+  );
 
   const searchYears = useMemo(() => buildSearchYearOptions(), []);
   const appliedGenreSignature = useMemo(
@@ -225,7 +262,7 @@ export function SubHeaderMovieSearchFields() {
       </Pressable>
 
       {!isFiltersVisible ? null : (
-        <>
+        <View {...filterSwipeResponder.panHandlers}>
           <Pressable
             onPress={onToggleExcludeSeenMovies}
             style={styles.excludeSeenToggle}
@@ -239,7 +276,7 @@ export function SubHeaderMovieSearchFields() {
                 excludeSeenMovies ? styles.excludeSeenToggleTextActive : null,
               ]}
             >
-              Exclude Movies I Have Seen
+              {excludeSeenToggleLabel}
             </Text>
           </Pressable>
 
@@ -300,7 +337,7 @@ export function SubHeaderMovieSearchFields() {
               onChange={(nextValue) => setSelectedSortValue(nextValue)}
             />
           </View>
-        </>
+        </View>
       )}
     </View>
   );

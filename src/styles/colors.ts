@@ -37,6 +37,7 @@ export const colors = {
   borderSubtle: '#ddd',
   disabledText: '#8C8C8C',
   favoriteActive: 'red',
+  brandTextLight: 'rgb(158, 58, 58)',
   brandTintSurface: '#F8EBCE',
   trailerPlayBackground: '#4481FC',
   starFilled: 'gold',
