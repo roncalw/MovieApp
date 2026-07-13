@@ -7,6 +7,23 @@
  */
 
 import type { movieType } from '../movie/MovieTypes';
+import type { MovieSearchParams } from '../search/movieSearchParams';
+
+export type HomeAdvancedSearchSectionId =
+  | 'popular'
+  | 'family'
+  | 'comedy'
+  | 'drama'
+  | 'crime'
+  | 'horror'
+  | 'music'
+  | 'documentary';
+
+export type HomeAdvancedSearchSectionConfig = {
+  id: HomeAdvancedSearchSectionId;
+  title: string;
+  advancedSearchParams: Partial<MovieSearchParams>;
+};
 
 export type HomeHeroCarouselProps = {
   movies: movieType[] | undefined;
@@ -23,4 +40,5 @@ export type HomeMoviePosterRowProps = {
   isLoading: boolean;
   isError: boolean;
   onMoviePress: (movie: movieType) => void;
+  onTitlePress?: () => void;
 };

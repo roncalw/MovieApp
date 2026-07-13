@@ -9,13 +9,19 @@
 
 import type { IoniconsIconName } from '@react-native-vector-icons/ionicons/static';
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { HomeAdvancedSearchSectionId } from '../home/homeTypes';
 import type { movieType } from '../movie/MovieTypes';
 
 export type AppDrawerParamList = {
   Home: undefined;
   MovieFavorites: undefined;
   IHaveSeen: undefined;
-  AdvancedSearch: undefined;
+  AdvancedSearch:
+    | {
+        homeSectionId?: HomeAdvancedSearchSectionId;
+        presetRequestId?: string;
+      }
+    | undefined;
   SearchByMovieTitle:
     | {
         returnTo?: 'Home' | 'AdvancedSearch' | 'MovieFavorites' | 'IHaveSeen';

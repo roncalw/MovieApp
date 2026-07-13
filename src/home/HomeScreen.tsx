@@ -25,11 +25,13 @@ import {
 } from '../hooks/useMovieSearchQuery';
 import { HomeHeroCarousel } from './HomeHeroCarousel';
 import { HomeMoviePosterRow } from './HomeMoviePosterRow';
+import { HOME_ADVANCED_SEARCH_SECTIONS } from './homeAdvancedSearchSections';
 import { HeaderActionRow } from '../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
+import type { HomeAdvancedSearchSectionId } from '../types/home/homeTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 
 export function HomeScreen() {
@@ -48,16 +50,19 @@ export function HomeScreen() {
     'documentaryMovies',
     99,
   );
-  const moviePosterRows = [
-    { title: 'Popular Movies', query: popularMoviesQuery },
-    { title: 'Family Movies', query: familyMoviesQuery },
-    { title: 'Comedy Movies', query: comedyMoviesQuery },
-    { title: 'Drama Movies', query: dramaMoviesQuery },
-    { title: 'Crime Movies', query: crimeMoviesQuery },
-    { title: 'Horror Movies', query: horrorMoviesQuery },
-    { title: 'Music Movies', query: musicMoviesQuery },
-    { title: 'Documentary Movies', query: documentaryMoviesQuery },
-  ];
+  const moviePosterRows = HOME_ADVANCED_SEARCH_SECTIONS.map(section => ({
+    ...section,
+    query: {
+      popular: popularMoviesQuery,
+      family: familyMoviesQuery,
+      comedy: comedyMoviesQuery,
+      drama: dramaMoviesQuery,
+      crime: crimeMoviesQuery,
+      horror: horrorMoviesQuery,
+      music: musicMoviesQuery,
+      documentary: documentaryMoviesQuery,
+    }[section.id],
+  }));
 
   function handleOpenDrawer() {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -65,6 +70,15 @@ export function HomeScreen() {
 
   function handleOpenTitleSearch() {
     navigation.navigate('SearchByMovieTitle', { returnTo: 'Home' });
+  }
+
+  function handleOpenAdvancedSearchSection(
+    homeSectionId: HomeAdvancedSearchSectionId,
+  ) {
+    navigation.navigate('AdvancedSearch', {
+      homeSectionId,
+      presetRequestId: `${homeSectionId}:${Date.now()}`,
+    });
   }
 
   return (
@@ -109,6 +123,7 @@ export function HomeScreen() {
             isLoading={row.query.isLoading}
             isError={row.query.isError}
             onMoviePress={openMovieDetail}
+            onTitlePress={() => handleOpenAdvancedSearchSection(row.id)}
           />
         ))}
       </ScrollView>

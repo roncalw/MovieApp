@@ -10,10 +10,12 @@ Purpose:
    * Renders the movie search page, lets the parent header coordinate its two subheaders, and owns the screen-level switch
      between search results mode and movie-detail mode.
 */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import {
   DrawerActions,
+  type RouteProp,
+  useRoute,
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
@@ -33,10 +35,42 @@ import {
   getStoredMovieIds,
   MOVIE_SEEN_STORAGE_KEY,
 } from '../../utils/storage/movieUserListsStorage';
+import { getHomeAdvancedSearchSection } from '../../home/homeAdvancedSearchSections';
 import type { AppDrawerParamList } from '../../types/navigation/navigationTypes';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const DEFAULT_EXCLUDE_SEEN_MOVIES = false;
+
+function buildDefaultMovieSearchParams(
+  beginDate: string,
+  endDate: string,
+): MovieSearchParams {
+  return {
+    movieRatings: '',
+    beginDate,
+    endDate,
+    movieGenres: [],
+    movieStreamers: [],
+    movieVoteCount: '',
+    movieSortBy: '',
+  };
+}
+
+function mergeMovieSearchParams(
+  currentParams: MovieSearchParams,
+  nextParams: Partial<MovieSearchParams>,
+): MovieSearchParams {
+  return {
+    ...currentParams,
+    ...nextParams,
+    movieGenres: nextParams.movieGenres
+      ? [...nextParams.movieGenres]
+      : [...currentParams.movieGenres],
+    movieStreamers: nextParams.movieStreamers
+      ? [...nextParams.movieStreamers]
+      : [...currentParams.movieStreamers],
+  };
+}
 
 /*
   WHAT THIS SCREEN DOES:
@@ -53,7 +87,9 @@ export function MovieSearchScreen() {
   const defaultEndDate = getDefaultEndDate();
   const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  const route = useRoute<RouteProp<AppDrawerParamList, 'AdvancedSearch'>>();
   const { openMovieDetail } = useDetailNavigation();
+  const appliedPresetRequestIdRef = useRef<string | null>(null);
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
@@ -62,24 +98,11 @@ export function MovieSearchScreen() {
     DEFAULT_EXCLUDE_SEEN_MOVIES
   );
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
-  const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>({
-    movieRatings: '',
-    beginDate: defaultBeginDate,
-    endDate: defaultEndDate,
-    movieGenres: [],
-    movieStreamers: [],
-    movieVoteCount: '',
-    movieSortBy: '',
-  });
+  const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>(() =>
+    buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate)
+  );
   const hasActiveSubmittedSearch =
     hasSubmittedSearch && !hasDisplayedFilterChanges;
-
-  function handleApplyFilters(nextParams: MovieSearchParams) {
-    refreshSeenMovieIds();
-    setHasDisplayedFilterChanges(false);
-    setSubmittedParams(nextParams);
-    setHasSubmittedSearch(true);
-  }
 
   function handleToggleExcludeSeenMovies() {
     setExcludeSeenMovies(currentValue => !currentValue);
@@ -100,6 +123,51 @@ export function MovieSearchScreen() {
       refreshSeenMovieIds();
     }, [refreshSeenMovieIds]),
   );
+
+  const submitSearchParams = useCallback(
+    (nextParams: MovieSearchParams) => {
+      refreshSeenMovieIds();
+      setHasDisplayedFilterChanges(false);
+      setSubmittedParams(nextParams);
+      setHasSubmittedSearch(true);
+    },
+    [refreshSeenMovieIds],
+  );
+
+  function handleApplyFilters(nextParams: MovieSearchParams) {
+    submitSearchParams(nextParams);
+  }
+
+  useEffect(() => {
+    const homeSectionId = route.params?.homeSectionId;
+    const presetRequestId = route.params?.presetRequestId;
+
+    if (
+      !homeSectionId ||
+      !presetRequestId ||
+      appliedPresetRequestIdRef.current === presetRequestId
+    ) {
+      return;
+    }
+
+    const homeSection = getHomeAdvancedSearchSection(homeSectionId);
+    if (!homeSection) {
+      return;
+    }
+
+    appliedPresetRequestIdRef.current = presetRequestId;
+    submitSearchParams(
+      mergeMovieSearchParams(
+        submittedParams,
+        homeSection.advancedSearchParams,
+      ),
+    );
+  }, [
+    route.params?.homeSectionId,
+    route.params?.presetRequestId,
+    submitSearchParams,
+    submittedParams,
+  ]);
 
   useEffect(() => {
     if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
@@ -160,15 +228,9 @@ export function MovieSearchScreen() {
     });
     setExcludeSeenMovies(DEFAULT_EXCLUDE_SEEN_MOVIES);
     setSeenMovieIds(new Set());
-    setSubmittedParams({
-      movieRatings: '',
-      beginDate: defaultBeginDate,
-      endDate: defaultEndDate,
-      movieGenres: [],
-      movieStreamers: [],
-      movieVoteCount: '',
-      movieSortBy: '',
-    });
+    setSubmittedParams(
+      buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
+    );
     setHasDisplayedFilterChanges(false);
     setHasSubmittedSearch(false);
   }, [defaultBeginDate, defaultEndDate, queryClient]);

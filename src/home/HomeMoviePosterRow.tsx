@@ -12,11 +12,12 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  View,
   Pressable,
   StyleSheet,
   Text,
-  View,
 } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
 import type { HomeMoviePosterRowProps } from '../types/home/homeTypes';
 import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
@@ -29,14 +30,27 @@ export function HomeMoviePosterRow({
   isLoading,
   isError,
   onMoviePress,
+  onTitlePress,
 }: HomeMoviePosterRowProps) {
   const posterMovies = movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [];
 
   return (
     <View style={styles.rowSection}>
-      <Text allowFontScaling={false} style={styles.rowTitle}>
-        {title}
-      </Text>
+      <Pressable
+        onPress={onTitlePress}
+        style={styles.rowTitleLink}
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${title} in Advanced Search`}
+      >
+        <Text allowFontScaling={false} style={styles.rowTitle}>
+          {title}
+        </Text>
+        <Ionicons
+          name="chevron-forward"
+          size={scaleSize(18)}
+          color={colors.brandText}
+        />
+      </Pressable>
 
       {isLoading ? (
         <View style={styles.rowStatus}>
@@ -92,9 +106,15 @@ const styles = StyleSheet.create({
     ...typography.pageTitle,
     fontSize: scaleSize(20),
     lineHeight: scaleSize(26),
+    color: colors.brandText,
+  },
+  rowTitleLink: {
+    alignSelf: 'flex-start',
+    minHeight: scaleSize(34),
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: scaleSize(10),
     paddingBottom: scaleSize(5),
-    color: colors.textPrimary,
   },
   posterListContent: {
     paddingHorizontal: scaleSize(5),
