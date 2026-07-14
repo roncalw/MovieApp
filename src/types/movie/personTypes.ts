@@ -17,6 +17,44 @@ export type PersonDetailProps = {
   onMoviePress: (movie: movieType) => void;
 };
 
+export type PersonFamilyDate = {
+  value: string;
+  precision: 'year' | 'month' | 'day';
+};
+
+export type PersonFamilySpouse = {
+  wikidataId: string;
+  name: string;
+  status: 'current' | 'former';
+  startDate: PersonFamilyDate | null;
+  endDate: PersonFamilyDate | null;
+};
+
+export type PersonFamilyChild = {
+  wikidataId: string;
+  name: string | null;
+};
+
+/**
+ * Normalized family data returned by MovieApp's stateless Cloudflare endpoint.
+ * The endpoint reads Wikidata and caches the response, but never stores these
+ * relationships in the MovieApp database.
+ */
+export type PersonFamilyResponse = {
+  wikidataId: string;
+  spouses: PersonFamilySpouse[];
+  children: PersonFamilyChild[];
+  numberOfChildren: number | null;
+  sourceUrl: string;
+  fetchedAt: string;
+  cacheMaxAgeSeconds: number;
+};
+
+export type PersonFamilyDisplayRow = {
+  label: string;
+  value: string;
+};
+
 export type FilmographyItem = {
   key: string;
   movie: movieType;

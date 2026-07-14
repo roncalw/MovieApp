@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePersonDetailsQuery } from '../hooks/useMovieSearchQuery';
+import {
+  usePersonDetailsQuery,
+  usePersonFamilyQuery,
+} from '../hooks/useMovieSearchQuery';
 import { ExpandableText } from '../shared/ExpandableText';
 import {
   DetailResourceError,
@@ -20,6 +23,7 @@ import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 import type { PersonDetailProps } from '../types/movie/personTypes';
+import { PersonFamilyDetails } from './components/PersonFamilyDetails';
 import { PersonFilmographySection } from './components/PersonFilmographySection';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
@@ -35,6 +39,8 @@ export function PersonDetail({
   const insets = useSafeAreaInsets();
   const personQuery = usePersonDetailsQuery(personId);
   const person = personQuery.data;
+  const wikidataId = person?.external_ids?.wikidata_id ?? null;
+  const familyQuery = usePersonFamilyQuery(wikidataId);
   const title = person?.name ?? initialPersonName ?? 'Person Detail';
 
   return (
@@ -106,10 +112,6 @@ export function PersonDetail({
                 {person.name}
               </Text>
               <DetailLine
-                label="Known For"
-                value={person.known_for_department}
-              />
-              <DetailLine
                 label="Born"
                 value={formatDateText(person.birthday)}
               />
@@ -120,17 +122,25 @@ export function PersonDetail({
                 />
               ) : null}
               <DetailLine label="Birthplace" value={person.place_of_birth} />
+              <PersonFamilyDetails
+                family={familyQuery.data}
+                hasWikidataId={wikidataId !== null}
+                isError={familyQuery.isError}
+                isLoading={familyQuery.isLoading}
+              />
             </View>
           </View>
 
-          {person.biography ? (
-            <ExpandableText
-              text={person.biography}
-              collapsedLines={8}
-              containerStyle={styles.biographyBlock}
-              textStyle={styles.biography}
-            />
-          ) : null}
+          <View style={styles.biographyBlock}>
+            <DetailLine label="Known for" value={person.known_for_department} />
+            {person.biography ? (
+              <ExpandableText
+                text={person.biography}
+                collapsedLines={8}
+                textStyle={styles.biography}
+              />
+            ) : null}
+          </View>
 
           <PersonFilmographySection
             personId={personId}

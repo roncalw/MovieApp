@@ -475,14 +475,14 @@ export async function fetchMovieWatchProviders(
 /*
   Actor profiles follow the same isolation rule as movie details.
 
-  The profile page currently displays fields from /person/{id} and filmography
-  from /person/{id}/movie_credits. It does not use the larger images or
-  external_ids responses, so the app no longer downloads those unused payloads.
+  The profile page displays fields from /person/{id} and filmography from
+  /person/{id}/movie_credits. external_ids is appended to the core request so
+  the profile can use TMDB's Wikidata ID without making a second TMDB request.
 */
 export async function fetchPerson(personId: number): Promise<personDetailType> {
   return fetchTmdbDetailResource<personDetailType>(
     'person-core',
-    `${ENDPOINTS.PERSON_DETAILS}/${personId}?${CONFIG.apiKey}`,
+    `${ENDPOINTS.PERSON_DETAILS}/${personId}?${CONFIG.apiKey}&append_to_response=external_ids`,
   );
 }
 

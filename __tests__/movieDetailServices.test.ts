@@ -58,12 +58,8 @@ describe('TMDB detail service boundaries', () => {
     ]);
 
     expect(mockedGet.mock.calls.map(([path]) => path)).toEqual([
-      `/person/${personId}?${CONFIG.apiKey}`,
+      `/person/${personId}?${CONFIG.apiKey}&append_to_response=external_ids`,
       `/person/${personId}/movie_credits?${CONFIG.apiKey}`,
     ]);
-
-    expect(mockedGet.mock.calls.map(([path]) => String(path))).not.toEqual(
-      expect.arrayContaining([expect.stringContaining('append_to_response=')]),
-    );
   });
 });

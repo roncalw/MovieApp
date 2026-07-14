@@ -29,6 +29,7 @@ import {
   fetchMovieWatchProviders,
   fetchMoviesByTitle,
 } from '../api/tmdb/services/movieService';
+import { fetchPersonFamily } from '../api/cloudflare/personFamilyService';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
 import type { CursorMovieSearchPage } from '../types/search/movieQueryTypes';
 import type { MovieSearchParams } from '../types/search/movieSearchParams';
@@ -205,6 +206,17 @@ export function getPersonDetailsQueryOptions(personId: number) {
     queryKey: ['personCoreDetails', personId],
     queryFn: () => fetchPerson(personId),
     staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function usePersonFamilyQuery(wikidataId: string | null) {
+  const normalizedWikidataId = wikidataId?.trim().toUpperCase() ?? null;
+
+  return useQuery({
+    queryKey: ['personFamily', normalizedWikidataId],
+    queryFn: () => fetchPersonFamily(normalizedWikidataId as string),
+    staleTime: 1000 * 60 * 60 * 24 * 7,
+    enabled: normalizedWikidataId !== null,
   });
 }
 

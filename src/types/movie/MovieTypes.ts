@@ -34,7 +34,7 @@ export type movieCrewProfile = {
   known_for_department: string;
   name: string;
   original_name: string;
-  profile_path: string;
+  profile_path: string | null;
   job: string;
 };
 
@@ -163,7 +163,7 @@ export type personImages = {
 };
 
 export type personExternalIDs = {
-  id: number;
+  id?: number;
   freebase_mid: string | null;
   freebase_id: string | null;
   imdb_id: string | null;

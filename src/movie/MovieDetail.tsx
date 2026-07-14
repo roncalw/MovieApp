@@ -10,7 +10,7 @@ Purpose:
    * Shows the selected movie on its own native-stack screen while keeping each secondary resource scoped to the small feature
      that consumes it.
 */
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Linking,
   Platform,
@@ -35,6 +35,7 @@ import { scaleSize } from '../styles/scale';
 import { movieDetailStyles as styles } from '../styles/movie/movieDetailStyles';
 import { MovieCreditsRail } from './components/MovieCreditsRail';
 import { MovieDetailInfoSections } from './components/MovieDetailInfoSections';
+import { sortMovieDetailCrew } from './sortMovieDetailCrew';
 import {
   MovieTrailerButton,
   MovieTrailerFeedback,
@@ -106,7 +107,10 @@ function LoadedMovieDetail({
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
   const cast = movie.credits?.cast ?? [];
-  const crew = movie.credits?.crew ?? [];
+  const crew = useMemo(
+    () => sortMovieDetailCrew(movie.credits?.crew ?? []),
+    [movie.credits?.crew],
+  );
   const { handleFavoritePress, handleSeenPress, isFavorite, isSeen } =
     useMovieUserListActions(movie);
 
