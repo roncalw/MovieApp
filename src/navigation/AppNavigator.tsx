@@ -11,6 +11,10 @@ import { SettingsScreen } from '../drawer/SettingsScreen';
 import { TellAFriendScreen } from '../drawer/TellAFriendScreen';
 import { PrivacyPolicyScreen } from '../drawer/PrivacyPolicyScreen';
 import { AppDrawerContent } from '../drawer/AppDrawerContent';
+import {
+  SearchPageResetCoordinatorProvider,
+  useSearchPageResetCoordinator,
+} from '../search/shared/SearchPageResetCoordinator';
 import { MovieDetailScreen, PersonDetailScreen } from './DetailScreens';
 import {
   advancedSearchDrawerOptions,
@@ -52,8 +56,27 @@ export function AppNavigator() {
 
 function AppDrawerNavigator() {
   return (
+    <SearchPageResetCoordinatorProvider>
+      <AppDrawerNavigatorContent />
+    </SearchPageResetCoordinatorProvider>
+  );
+}
+
+function AppDrawerNavigatorContent() {
+  const { resetSearchPageForDrawerNavigation } =
+    useSearchPageResetCoordinator();
+
+  return (
     <Drawer.Navigator
       drawerContent={props => <AppDrawerContent {...props} />}
+      screenListeners={({ navigation, route }) => ({
+        drawerItemPress: () => {
+          const drawerState = navigation.getState();
+          const currentRouteName = drawerState.routes[drawerState.index]?.name;
+
+          resetSearchPageForDrawerNavigation(currentRouteName, route.name);
+        },
+      })}
       screenOptions={drawerScreenOptions}
     >
       <Drawer.Screen

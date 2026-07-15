@@ -32,7 +32,8 @@ export function HomeMoviePosterRow({
   onMoviePress,
   onTitlePress,
 }: HomeMoviePosterRowProps) {
-  const posterMovies = movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [];
+  const posterMovies =
+    movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [];
 
   return (
     <View style={styles.rowSection}>
@@ -69,6 +70,8 @@ export function HomeMoviePosterRow({
           data={posterMovies}
           keyExtractor={item => item.id.toString()}
           horizontal
+          directionalLockEnabled
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.posterListContent}
           renderItem={({ item }) => {

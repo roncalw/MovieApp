@@ -33,6 +33,7 @@ import { fetchPersonFamily } from '../api/cloudflare/personFamilyService';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
 import type { CursorMovieSearchPage } from '../types/search/movieQueryTypes';
 import type { MovieSearchParams } from '../types/search/movieSearchParams';
+import { queryKeys } from '../query/queryKeys';
 
 /*
 ======================================================== useMovieSearchQuery ===================================================
@@ -74,8 +75,9 @@ import type { MovieSearchParams } from '../types/search/movieSearchParams';
       error
       fetchNextPage
 
-  - queryKey: ['movieSearch', params]
+  - queryKey: queryKeys.movieSearch(params)
     - this is the cache identity for this query
+    - the shared query-key factory returns ['movieSearch', params]
     - TanStack Query uses it to know whether this exact search was already fetched before
     - if the params change, the query key changes too, so TanStack knows this is a different search
 
@@ -99,7 +101,7 @@ import type { MovieSearchParams } from '../types/search/movieSearchParams';
 
 export function useMovieSearchQuery(params: MovieSearchParams, enabled = true) {
   return useInfiniteQuery({
-    queryKey: ['movieSearch', params],
+    queryKey: queryKeys.movieSearch(params),
     queryFn: ({ pageParam }) => fetchMovieSearchResults(params, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: lastPage => {
@@ -124,8 +126,9 @@ export function useMovieSearchQuery(params: MovieSearchParams, enabled = true) {
       or
       useMovieDetailsQuery(null)
 
-  - queryKey: ['movieCoreDetails', movieId]
+  - queryKey: queryKeys.movieCoreDetails(movieId)
     - this cache key is only for the core movie, credits, and release dates
+    - the shared query-key factory keeps refresh and cache reads on this same key
     - using a new key prevents TanStack Query from reusing an older cached result
       produced by the retired all-in-one TMDB request
 
@@ -146,7 +149,7 @@ export function useMovieDetailsQuery(movieId: number | null) {
 
 export function getMovieDetailsQueryOptions(movieId: number) {
   return queryOptions({
-    queryKey: ['movieCoreDetails', movieId],
+    queryKey: queryKeys.movieCoreDetails(movieId),
     queryFn: () => fetchMovie(movieId),
     staleTime: 1000 * 60 * 5,
   });
@@ -160,7 +163,7 @@ export function getMovieDetailsQueryOptions(movieId: number) {
 */
 export function useMovieVideosQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieVideos', movieId],
+    queryKey: queryKeys.movieVideos(movieId),
     queryFn: () => fetchMovieVideos(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
@@ -169,7 +172,7 @@ export function useMovieVideosQuery(movieId: number | null) {
 
 export function useMovieExternalIdsQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieExternalIds', movieId],
+    queryKey: queryKeys.movieExternalIds(movieId),
     queryFn: () => fetchMovieExternalIds(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
@@ -178,7 +181,7 @@ export function useMovieExternalIdsQuery(movieId: number | null) {
 
 export function useMovieWatchProvidersQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieWatchProviders', movieId],
+    queryKey: queryKeys.movieWatchProviders(movieId),
     queryFn: () => fetchMovieWatchProviders(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
@@ -187,7 +190,7 @@ export function useMovieWatchProvidersQuery(movieId: number | null) {
 
 export function useMovieListImdbRatingQuery(movieId: number | null) {
   return useQuery({
-    queryKey: ['movieListImdbRating', movieId],
+    queryKey: queryKeys.movieListImdbRating(movieId),
     queryFn: () => fetchMovieListImdbRating(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
@@ -203,7 +206,7 @@ export function usePersonDetailsQuery(personId: number | null) {
 
 export function getPersonDetailsQueryOptions(personId: number) {
   return queryOptions({
-    queryKey: ['personCoreDetails', personId],
+    queryKey: queryKeys.personCoreDetails(personId),
     queryFn: () => fetchPerson(personId),
     staleTime: 1000 * 60 * 5,
   });
@@ -213,7 +216,7 @@ export function usePersonFamilyQuery(wikidataId: string | null) {
   const normalizedWikidataId = wikidataId?.trim().toUpperCase() ?? null;
 
   return useQuery({
-    queryKey: ['personFamily', normalizedWikidataId],
+    queryKey: queryKeys.personFamily(normalizedWikidataId),
     queryFn: () => fetchPersonFamily(normalizedWikidataId as string),
     staleTime: 1000 * 60 * 60 * 24 * 7,
     enabled: normalizedWikidataId !== null,
@@ -222,7 +225,7 @@ export function usePersonFamilyQuery(wikidataId: string | null) {
 
 export function usePersonMovieCreditsQuery(personId: number | null) {
   return useQuery({
-    queryKey: ['personMovieCredits', personId],
+    queryKey: queryKeys.personMovieCredits(personId),
     queryFn: () => fetchPersonMovieCredits(personId as number),
     staleTime: 1000 * 60 * 5,
     enabled: personId !== null,
@@ -233,7 +236,7 @@ export function useMovieTitleSearchQuery(title: string, enabled = true) {
   const normalizedTitle = title.trim();
 
   return useInfiniteQuery({
-    queryKey: ['movieTitleSearch', title.trim()],
+    queryKey: queryKeys.movieTitleSearch(normalizedTitle),
     queryFn: ({ pageParam }) => fetchMoviesByTitle(normalizedTitle, pageParam),
     initialPageParam: 1,
     getNextPageParam: lastPage =>
@@ -249,7 +252,7 @@ export function useMovieTitleSearchQuery(title: string, enabled = true) {
   WHAT IS NEW IN THIS HOOK THAT WAS NOT ALREADY EXPLAINED ABOVE:
   - this hook does not need params
     - it always requests the same popular-movies endpoint
-    - that is why the query key can stay as just ['popularMovies']
+    - that is why queryKeys.popularMovies stays as just ['popularMovies']
 
   - queryFn: fetchPopularMovies
     - this hook can pass the service function directly
@@ -261,7 +264,7 @@ export function useMovieTitleSearchQuery(title: string, enabled = true) {
 */
 export function usePopularMoviesQuery() {
   return useQuery({
-    queryKey: ['popularMovies'],
+    queryKey: queryKeys.popularMovies,
     queryFn: fetchPopularMovies,
     staleTime: 1000 * 60 * 5,
   });
@@ -277,7 +280,7 @@ export function usePopularMoviesQuery() {
 */
 export function useUpcomingMoviesQuery() {
   return useQuery({
-    queryKey: ['upcomingMovies'],
+    queryKey: queryKeys.upcomingMovies,
     queryFn: fetchUpcomingMovies,
     staleTime: 1000 * 60 * 5,
   });
@@ -296,7 +299,7 @@ export function useHomeGenreMoviesQuery(
   genreId: HomeMovieGenreId,
 ) {
   return useQuery({
-    queryKey: ['homeGenreMovies', rowKey, genreId],
+    queryKey: queryKeys.homeGenreMovies(rowKey, genreId),
     queryFn: () => fetchMoviesByGenre(genreId),
     staleTime: 1000 * 60 * 5,
   });

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {
@@ -18,7 +17,6 @@ import {
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQueryClient } from '@tanstack/react-query';
 import { MovieResults } from '../results/MovieResults';
 import { HeaderActionRow } from '../../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../../shared/header/HeaderNavButton';
@@ -30,10 +28,14 @@ import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
 import type { AppDrawerParamList } from '../../types/navigation/navigationTypes';
+import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
+import { useSearchPageReset } from '../shared/useSearchPageReset';
+import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
+import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
+import { queryKeys } from '../../query/queryKeys';
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const { openMovieDetail } = useDetailNavigation();
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
@@ -54,6 +56,18 @@ export function SearchByMovieTitleScreen() {
   );
   const { moviesWithRatings, resetRatingHydrationState } =
     useTitleSearchRatings(titleSearchMovies);
+  const resetLocalSearchState = useCallback(() => {
+    setDraftTitle('');
+    setSubmittedTitle('');
+    resetRatingHydrationState();
+  }, [resetRatingHydrationState]);
+  const resetSearchPage = useSearchPageReset({
+    queryKey: queryKeys.movieTitleSearchRoot,
+    resetLocalState: resetLocalSearchState,
+  });
+  const pageRefresh = usePageRefresh(resetSearchPage);
+
+  useRegisterSearchPageReset('SearchByMovieTitle', resetSearchPage);
 
   function handleOpenAdvancedSearch() {
     navigation.navigate('AdvancedSearch');
@@ -66,174 +80,157 @@ export function SearchByMovieTitleScreen() {
   function handleSubmitSearch() {
     const nextSubmittedTitle = draftTitle.trim();
 
+    Keyboard.dismiss();
     resetRatingHydrationState();
     setSubmittedTitle(nextSubmittedTitle);
   }
 
-  const handleClearTitle = useCallback(() => {
-    queryClient.removeQueries({
-      queryKey: ['movieTitleSearch'],
-    });
-    setDraftTitle('');
-    setSubmittedTitle('');
-    resetRatingHydrationState();
-  }, [queryClient, resetRatingHydrationState]);
+  const handleClearTitle = resetSearchPage;
   const isLoadingResults = isLoading;
-
-  return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.screen}>
-        <View
-          style={[styles.header, { paddingTop: insets.top + scaleSize(122) }]}
+  const searchFeedback = isLoadingResults ? (
+    <View style={styles.centered}>
+      <ActivityIndicator size="large" />
+      <Text allowFontScaling={false} style={styles.message}>
+        Loading movies...
+      </Text>
+    </View>
+  ) : isError ? (
+    <View style={styles.centered}>
+      <Text allowFontScaling={false} style={styles.errorText}>
+        Error loading movies
+      </Text>
+      <Text allowFontScaling={false} style={styles.message}>
+        {error instanceof Error ? error.message : 'Unknown error'}
+      </Text>
+      <View style={styles.errorActions}>
+        <Pressable
+          onPress={handleClearTitle}
+          style={styles.errorPrimaryButton}
+          accessibilityRole="button"
+          accessibilityLabel="Return to movie title search"
         >
-          <HeaderActionRow
-            left={
-              <HeaderNavButton
-                variant="back"
-                anchored={false}
-                onPress={handleBackPress}
-              />
-            }
-            center={
-              <Text
-                allowFontScaling={false}
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={styles.title}
-              >
-                Search by Movie Title
-              </Text>
-            }
-          />
-          <Pressable
-            onPress={handleOpenAdvancedSearch}
-            style={[
-              styles.searchModeLink,
-              { top: getHeaderNavSecondaryTop(insets.top) },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Open Advanced Search"
+          <Text allowFontScaling={false} style={styles.errorPrimaryButtonText}>
+            Try Again
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={handleBackPress}
+          style={styles.errorSecondaryButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Text
+            allowFontScaling={false}
+            style={styles.errorSecondaryButtonText}
           >
-            <Text allowFontScaling={false} style={styles.searchModeLinkText}>
-              Advanced Search
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={scaleSize(15)}
-              color={colors.brandText}
-            />
-          </Pressable>
+            Back
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  ) : null;
+  const searchHeader = (
+    <View style={[styles.header, { paddingTop: insets.top + scaleSize(122) }]}>
+      <HeaderActionRow
+        left={
+          <HeaderNavButton
+            variant="back"
+            anchored={false}
+            onPress={handleBackPress}
+          />
+        }
+        center={
+          <Text
+            allowFontScaling={false}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            style={styles.title}
+          >
+            Search by Movie Title
+          </Text>
+        }
+      />
+      <Pressable
+        onPress={handleOpenAdvancedSearch}
+        style={[
+          styles.searchModeLink,
+          { top: getHeaderNavSecondaryTop(insets.top) },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Open Advanced Search"
+      >
+        <Text allowFontScaling={false} style={styles.searchModeLinkText}>
+          Advanced Search
+        </Text>
+        <Ionicons
+          name="chevron-forward"
+          size={scaleSize(15)}
+          color={colors.brandText}
+        />
+      </Pressable>
 
-          <View style={styles.searchRow}>
-            <View style={styles.searchInputFrame}>
-              <TextInput
-                value={draftTitle}
-                onChangeText={setDraftTitle}
-                onSubmitEditing={handleSubmitSearch}
-                returnKeyType="search"
-                placeholder="Search by Movie Title"
-                placeholderTextColor={colors.textSecondary}
-                style={styles.searchInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {draftTitle.length > 0 ? (
-                <Pressable
-                  onPress={handleClearTitle}
-                  style={styles.clearSearchButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear movie title search"
-                >
-                  <Ionicons
-                    name="close-circle"
-                    size={scaleSize(20)}
-                    color={colors.textSecondary}
-                  />
-                </Pressable>
-              ) : null}
-            </View>
+      <View style={styles.searchRow}>
+        <View style={styles.searchInputFrame}>
+          <TextInput
+            value={draftTitle}
+            onChangeText={setDraftTitle}
+            onSubmitEditing={handleSubmitSearch}
+            returnKeyType="search"
+            placeholder="Search by Movie Title"
+            placeholderTextColor={colors.textSecondary}
+            style={styles.searchInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {draftTitle.length > 0 ? (
             <Pressable
-              onPress={handleSubmitSearch}
-              style={styles.searchButton}
+              onPress={handleClearTitle}
+              style={styles.clearSearchButton}
               accessibilityRole="button"
-              accessibilityLabel="Search by movie title"
+              accessibilityLabel="Clear movie title search"
             >
               <Ionicons
-                name="search-outline"
-                size={scaleSize(30)}
-                color="#000000"
+                name="close-circle"
+                size={scaleSize(20)}
+                color={colors.textSecondary}
               />
             </Pressable>
-          </View>
+          ) : null}
         </View>
-
-        <View style={styles.resultsContent}>
-          {isLoadingResults ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" />
-              <Text allowFontScaling={false} style={styles.message}>
-                Loading movies...
-              </Text>
-            </View>
-          ) : isError ? (
-            <View style={styles.centered}>
-              <Text allowFontScaling={false} style={styles.errorText}>
-                Error loading movies
-              </Text>
-              <Text allowFontScaling={false} style={styles.message}>
-                {error instanceof Error ? error.message : 'Unknown error'}
-              </Text>
-              <View style={styles.errorActions}>
-                <Pressable
-                  onPress={handleClearTitle}
-                  style={styles.errorPrimaryButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Return to movie title search"
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.errorPrimaryButtonText}
-                  >
-                    Try Again
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleBackPress}
-                  style={styles.errorSecondaryButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Go back"
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.errorSecondaryButtonText}
-                  >
-                    Back
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          ) : (
-            <MovieResults
-              movies={moviesWithRatings}
-              cardVariant="posterRating"
-              showRatingBadge
-              onMoviePress={openMovieDetail}
-              onEndReached={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-            />
-          )}
-        </View>
+        <Pressable
+          onPress={handleSubmitSearch}
+          style={styles.searchButton}
+          accessibilityRole="button"
+          accessibilityLabel="Search by movie title"
+        >
+          <Ionicons
+            name="search-outline"
+            size={scaleSize(30)}
+            color="#000000"
+          />
+        </Pressable>
       </View>
-    </TouchableWithoutFeedback>
+    </View>
+  );
+
+  return (
+    <RefreshableSearchScreenLayout topSection={searchHeader} {...pageRefresh}>
+      {searchFeedback ?? (
+        <MovieResults
+          movies={moviesWithRatings}
+          cardVariant="posterRating"
+          showRatingBadge
+          onMoviePress={openMovieDetail}
+          onEndReached={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+        />
+      )}
+    </RefreshableSearchScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   header: {
     paddingHorizontal: scaleSize(16),
     paddingBottom: scaleSize(18),
@@ -292,9 +289,6 @@ const styles = StyleSheet.create({
     minHeight: scaleSize(50),
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  resultsContent: {
-    flex: 1,
   },
   centered: {
     flex: 1,

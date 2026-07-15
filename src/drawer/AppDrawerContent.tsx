@@ -13,14 +13,7 @@
  */
 
 import React from 'react';
-import {
-  Image,
-  Platform,
-  Pressable,
-  Share,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Platform, Pressable, Share, Text, View } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
@@ -31,6 +24,7 @@ import { imageAssets } from '../styles/assets';
 import { colors } from '../styles/colors';
 import { scaleSize } from '../styles/scale';
 import { appDrawerContentStyles as styles } from '../styles/drawer/appDrawerContentStyles';
+import { useSearchPageResetCoordinator } from '../search/shared/SearchPageResetCoordinator';
 import type {
   SecondaryDrawerLinkProps,
   SecondaryDrawerRoute,
@@ -78,11 +72,7 @@ function SecondaryDrawerLink({
         pressed ? styles.secondaryDrawerLinkPressed : null,
       ]}
     >
-      <Ionicons
-        name={route.iconName}
-        color={iconColor}
-        size={scaleSize(22)}
-      />
+      <Ionicons name={route.iconName} color={iconColor} size={scaleSize(22)} />
       <Text
         allowFontScaling={false}
         style={[
@@ -126,6 +116,8 @@ async function shareWithFriend() {
 
 export function AppDrawerContent(props: DrawerContentComponentProps) {
   const focusedRouteName = getFocusedRouteName(props);
+  const { resetSearchPageForDrawerNavigation } =
+    useSearchPageResetCoordinator();
 
   return (
     <View style={styles.drawerRoot}>
@@ -161,6 +153,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
                 return;
               }
 
+              resetSearchPageForDrawerNavigation(focusedRouteName, route.name);
               props.navigation.navigate(route.name);
             }}
           />

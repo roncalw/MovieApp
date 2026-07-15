@@ -47,7 +47,7 @@ export function HomeHeroCarousel({
   const heroHeight = Math.round(height * 0.655);
   const heroMovies = useMemo(
     () => movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [],
-    [movies]
+    [movies],
   );
 
   useEffect(() => {
@@ -75,10 +75,10 @@ export function HomeHeroCarousel({
   }, [heroMovies.length, isAutoPlayPaused]);
 
   function handleMomentumScrollEnd(
-    event: NativeSyntheticEvent<NativeScrollEvent>
+    event: NativeSyntheticEvent<NativeScrollEvent>,
   ) {
     currentIndexRef.current = Math.round(
-      event.nativeEvent.contentOffset.x / width
+      event.nativeEvent.contentOffset.x / width,
     );
   }
 
@@ -128,6 +128,8 @@ export function HomeHeroCarousel({
         keyExtractor={item => item.id.toString()}
         horizontal
         pagingEnabled
+        directionalLockEnabled
+        nestedScrollEnabled
         getItemLayout={(_, index) => ({
           length: width,
           offset: width * index,

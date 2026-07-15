@@ -1,10 +1,9 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { WebView } from 'react-native-webview';
-import { HeaderActionRow } from '../shared/header/HeaderActionRow';
-import { HeaderNavButton } from '../shared/header/HeaderNavButton';
+import { DrawerScreenHeader } from '../shared/header/DrawerScreenHeader';
+import { RefreshableWebView } from '../shared/refresh/RefreshableWebView';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
 
@@ -25,30 +24,17 @@ export function PrivacyPolicyScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <HeaderActionRow
-          left={
-            <HeaderNavButton
-              variant="back"
-              anchored={false}
-              onPress={handleBackPress}
+      <View style={styles.webViewFrame}>
+        <RefreshableWebView
+          headerComponent={
+            <DrawerScreenHeader
+              title="Privacy Policy"
+              leftButtonVariant="back"
+              onLeftButtonPress={handleBackPress}
             />
           }
-          center={
-            <Text
-              allowFontScaling={false}
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={styles.title}
-            >
-              Privacy Policy
-            </Text>
-          }
+          source={{ uri: privacyPolicyUrl }}
         />
-      </View>
-
-      <View style={styles.webViewFrame}>
-        <WebView source={{ uri: privacyPolicyUrl }} />
       </View>
     </View>
   );

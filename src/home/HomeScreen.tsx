@@ -10,8 +10,8 @@ Purpose:
    * Recreates the legacy Home entry point with an upcoming-movie hero carousel, TMDB poster rows, and the same
      local movie-detail overlay behavior used by Advanced Search.
 */
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 import {
   DrawerActions,
   useIsFocused,
@@ -33,6 +33,8 @@ import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import type { HomeAdvancedSearchSectionId } from '../types/home/homeTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
+import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
+import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 
 export function HomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
@@ -50,6 +52,15 @@ export function HomeScreen() {
     'documentaryMovies',
     99,
   );
+  const refetchUpcomingMovies = upcomingMoviesQuery.refetch;
+  const refetchPopularMovies = popularMoviesQuery.refetch;
+  const refetchFamilyMovies = familyMoviesQuery.refetch;
+  const refetchComedyMovies = comedyMoviesQuery.refetch;
+  const refetchDramaMovies = dramaMoviesQuery.refetch;
+  const refetchCrimeMovies = crimeMoviesQuery.refetch;
+  const refetchHorrorMovies = horrorMoviesQuery.refetch;
+  const refetchMusicMovies = musicMoviesQuery.refetch;
+  const refetchDocumentaryMovies = documentaryMoviesQuery.refetch;
   const moviePosterRows = HOME_ADVANCED_SEARCH_SECTIONS.map(section => ({
     ...section,
     query: {
@@ -63,6 +74,30 @@ export function HomeScreen() {
       documentary: documentaryMoviesQuery,
     }[section.id],
   }));
+  const refreshHome = useCallback(async () => {
+    await Promise.allSettled([
+      refetchUpcomingMovies(),
+      refetchPopularMovies(),
+      refetchFamilyMovies(),
+      refetchComedyMovies(),
+      refetchDramaMovies(),
+      refetchCrimeMovies(),
+      refetchHorrorMovies(),
+      refetchMusicMovies(),
+      refetchDocumentaryMovies(),
+    ]);
+  }, [
+    refetchComedyMovies,
+    refetchCrimeMovies,
+    refetchDocumentaryMovies,
+    refetchDramaMovies,
+    refetchFamilyMovies,
+    refetchHorrorMovies,
+    refetchMusicMovies,
+    refetchPopularMovies,
+    refetchUpcomingMovies,
+  ]);
+  const pageRefresh = usePageRefresh(refreshHome);
 
   function handleOpenDrawer() {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -83,9 +118,12 @@ export function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <RefreshableScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        directionalLockEnabled
+        nestedScrollEnabled
+        {...pageRefresh}
       >
         <View style={styles.heroStage}>
           <HomeHeroCarousel
@@ -126,7 +164,7 @@ export function HomeScreen() {
             onTitlePress={() => handleOpenAdvancedSearchSection(row.id)}
           />
         ))}
-      </ScrollView>
+      </RefreshableScrollView>
     </View>
   );
 }

@@ -16,27 +16,25 @@ export const drawerScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    minHeight: scaleSize(142),
-    backgroundColor: colors.background,
-  },
-  title: {
-    width: '100%',
-    fontSize: scaleSize(22),
-    lineHeight: scaleSize(28),
-    fontWeight: '400',
-    letterSpacing: 0,
-    color: colors.brandText,
-    textAlign: 'center',
-  },
-  headerTitle: {
-    ...typography.pageTitle,
-    width: '100%',
-    color: colors.brandText,
-    textAlign: 'center',
-  },
   listContent: {
     flex: 1,
+  },
+  utilityScrollContent: {
+    flexGrow: 1,
+  },
+  storedMovieScrollContent: {
+    flexGrow: 1,
+  },
+  storedMovieListHeader: {
+    marginTop: -scaleSize(24),
+    marginHorizontal: -scaleSize(20),
+    marginBottom: scaleSize(24),
+  },
+  storedMovieLoadingStatus: {
+    minHeight: scaleSize(110),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: scaleSize(24),
   },
   centered: {
     flex: 1,

@@ -14,13 +14,6 @@ import { scaleSize } from '../scale';
 import { typography } from '../typography';
 
 export const movieSearchScreenStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  searchContent: {
-    flex: 1,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',

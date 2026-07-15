@@ -12,23 +12,22 @@ Purpose:
      card is tapped.
 */
 import React, { useRef } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import type { movieType } from '../../types/movie/MovieTypes';
 import { MovieCard } from './MovieCard';
 import { scaleSize } from '../../theme/scale';
 import type { MovieResultsProps } from '../../types/search/movieResultsTypes';
+import { AppRefreshControl } from '../../shared/refresh/AppRefreshControl';
 
 export function MovieResults({
   movies,
   ListHeaderComponent,
+  ListHeaderComponentStyle,
   cardVariant = 'summary',
   showRatingBadge = true,
   onMoviePress,
+  onRefresh,
+  refreshing,
   onEndReached,
   hasNextPage = false,
   isFetchingNextPage = false,
@@ -41,6 +40,14 @@ export function MovieResults({
       <FlatList
         key={isPosterGrid ? 'poster-grid' : 'summary-list'}
         ref={listRef}
+        alwaysBounceVertical
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          onRefresh ? (
+            <AppRefreshControl onRefresh={onRefresh} refreshing={refreshing} />
+          ) : undefined
+        }
         data={movies}
         numColumns={isPosterGrid ? 3 : 1}
         keyExtractor={(item: movieType) => item.id.toString()}
@@ -50,6 +57,7 @@ export function MovieResults({
           isPosterGrid ? styles.posterGridContent : null,
         ]}
         ListHeaderComponent={ListHeaderComponent}
+        ListHeaderComponentStyle={ListHeaderComponentStyle}
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={styles.footer}>

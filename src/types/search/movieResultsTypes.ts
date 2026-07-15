@@ -8,6 +8,7 @@
  */
 
 import type React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { movieType } from '../movie/MovieTypes';
 
 export type MovieCardProps = {
@@ -17,13 +18,24 @@ export type MovieCardProps = {
   showRatingBadge?: boolean;
 };
 
+type MovieResultsRefreshProps =
+  | {
+      onRefresh: () => void;
+      refreshing: boolean;
+    }
+  | {
+      onRefresh?: never;
+      refreshing?: never;
+    };
+
 export type MovieResultsProps = {
   movies: movieType[] | undefined;
   ListHeaderComponent?: React.ReactElement | null;
+  ListHeaderComponentStyle?: StyleProp<ViewStyle>;
   cardVariant?: 'summary' | 'posterRating';
   showRatingBadge?: boolean;
   onMoviePress?: (movie: movieType) => void;
   onEndReached?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
-};
+} & MovieResultsRefreshProps;

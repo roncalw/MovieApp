@@ -15,12 +15,12 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StatusBar,
   Text,
   View,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMovieDetailsQuery } from '../hooks/useMovieSearchQuery';
 import { ExpandableText } from '../shared/ExpandableText';
@@ -47,6 +47,9 @@ import {
   useMovieImdbFeature,
 } from './imdb/MovieImdbProvider';
 import { useMovieUserListActions } from './useMovieUserListActions';
+import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
+import { usePageRefresh } from '../shared/refresh/usePageRefresh';
+import { queryKeys } from '../query/queryKeys';
 
 export function MovieDetail({
   movieId,
@@ -56,7 +59,28 @@ export function MovieDetail({
 }: MovieDetailProps) {
   const insets = useSafeAreaInsets();
   const nativeTopSpacerHeight = getNativeTopSpacerHeight(insets.top);
+  const queryClient = useQueryClient();
   const movieQuery = useMovieDetailsQuery(movieId);
+  const refetchMovieDetails = movieQuery.refetch;
+  const refreshMovieDetail = useCallback(async () => {
+    const secondaryQueryKeys = [
+      queryKeys.movieVideos(movieId),
+      queryKeys.movieExternalIds(movieId),
+      queryKeys.movieWatchProviders(movieId),
+      queryKeys.movieListImdbRating(movieId),
+    ];
+
+    await Promise.allSettled([
+      refetchMovieDetails(),
+      ...secondaryQueryKeys.map(queryKey =>
+        queryClient.refetchQueries({
+          queryKey,
+          exact: true,
+        }),
+      ),
+    ]);
+  }, [movieId, queryClient, refetchMovieDetails]);
+  const pageRefresh = usePageRefresh(refreshMovieDetail);
 
   const movieDetails = movieQuery.data;
   const displayMovie = movieDetails ?? initialMovie ?? null;
@@ -68,9 +92,10 @@ export function MovieDetail({
           style={[styles.nativeTopSpacer, { height: nativeTopSpacerHeight }]}
         />
 
-        <ScrollView
+        <RefreshableScrollView
           style={styles.detailScroll}
           contentContainerStyle={styles.detailContent}
+          {...pageRefresh}
         >
           <MovieImdbHero movie={displayMovie} onBackPress={onBackPress} />
 
@@ -89,7 +114,7 @@ export function MovieDetail({
               onPersonPress={onPersonPress}
             />
           ) : null}
-        </ScrollView>
+        </RefreshableScrollView>
       </View>
     </MovieImdbProvider>
   );

@@ -7,7 +7,7 @@ import {
 } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { MovieResults } from '../search/results/MovieResults';
-import { HeaderActionRow } from '../shared/header/HeaderActionRow';
+import { DrawerScreenHeader } from '../shared/header/DrawerScreenHeader';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
@@ -19,6 +19,8 @@ import {
 import type { movieType } from '../types/movie/MovieTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import type { StoredMovieListScreenProps } from '../types/drawer/drawerScreenTypes';
+import { usePageRefresh } from '../shared/refresh/usePageRefresh';
+import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 
 export function StoredMovieListScreen({
   title,
@@ -46,6 +48,7 @@ export function StoredMovieListScreen({
       setIsLoading(false);
     }
   }, [storageKey, title]);
+  const pageRefresh = usePageRefresh(loadMovies);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,59 +63,62 @@ export function StoredMovieListScreen({
     });
   }
 
+  const screenHeader = (
+    <DrawerScreenHeader
+      title={title}
+      leftButtonVariant="menu"
+      onLeftButtonPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+      right={
+        <HeaderNavButton
+          variant="search"
+          anchored={false}
+          onPress={handleOpenTitleSearch}
+        />
+      }
+    />
+  );
+
+  const loadingStatus = isLoading ? (
+    <View style={styles.storedMovieLoadingStatus}>
+      <ActivityIndicator size="large" />
+      <Text allowFontScaling={false} style={styles.message}>
+        Loading movies...
+      </Text>
+    </View>
+  ) : null;
+
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <HeaderActionRow
-          left={
-            <HeaderNavButton
-              variant="menu"
-              anchored={false}
-              onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-            />
+      {movies.length > 0 ? (
+        <MovieResults
+          movies={movies}
+          cardVariant="posterRating"
+          ListHeaderComponent={
+            <>
+              {screenHeader}
+              {loadingStatus}
+            </>
           }
-          center={
-            <Text
-              allowFontScaling={false}
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={styles.title}
-            >
-              {title}
-            </Text>
-          }
-          right={
-            <HeaderNavButton
-              variant="search"
-              anchored={false}
-              onPress={handleOpenTitleSearch}
-            />
-          }
+          ListHeaderComponentStyle={styles.storedMovieListHeader}
+          {...pageRefresh}
+          onMoviePress={openMovieDetail}
         />
-      </View>
-
-      <View style={styles.listContent}>
-        {isLoading ? (
+      ) : (
+        <RefreshableScrollView
+          style={styles.listContent}
+          contentContainerStyle={styles.storedMovieScrollContent}
+          {...pageRefresh}
+        >
+          {screenHeader}
           <View style={styles.centered}>
-            <ActivityIndicator size="large" />
-            <Text allowFontScaling={false} style={styles.message}>
-              Loading movies...
-            </Text>
+            {loadingStatus ?? (
+              <Text allowFontScaling={false} style={styles.message}>
+                {emptyMessage}
+              </Text>
+            )}
           </View>
-        ) : movies.length > 0 ? (
-          <MovieResults
-            movies={movies}
-            cardVariant="posterRating"
-            onMoviePress={openMovieDetail}
-          />
-        ) : (
-          <View style={styles.centered}>
-            <Text allowFontScaling={false} style={styles.message}>
-              {emptyMessage}
-            </Text>
-          </View>
-        )}
-      </View>
+        </RefreshableScrollView>
+      )}
     </View>
   );
 }

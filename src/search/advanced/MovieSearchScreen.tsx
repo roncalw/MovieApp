@@ -7,10 +7,16 @@ Next step path:
    * /MovieApp/src/search/advanced/HeaderMovieSearch.tsx
    * /MovieApp/src/search/results/MovieResults.tsx
 Purpose:
-   * Renders the movie search page, lets the parent header coordinate its two subheaders, and owns the screen-level switch
-     between search results mode and movie-detail mode.
+   * Renders Advanced Search, owns its submitted filter state, and places the
+     filter header and result list in the shared search-page layout.
 */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import {
   DrawerActions,
@@ -37,6 +43,11 @@ import {
 } from '../../utils/storage/movieUserListsStorage';
 import { getHomeAdvancedSearchSection } from '../../home/homeAdvancedSearchSections';
 import type { AppDrawerParamList } from '../../types/navigation/navigationTypes';
+import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
+import { useSearchPageReset } from '../shared/useSearchPageReset';
+import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
+import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
+import { queryKeys } from '../../query/queryKeys';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const DEFAULT_EXCLUDE_SEEN_MOVIES = false;
@@ -95,14 +106,33 @@ export function MovieSearchScreen() {
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
     useState(false);
   const [excludeSeenMovies, setExcludeSeenMovies] = useState(
-    DEFAULT_EXCLUDE_SEEN_MOVIES
+    DEFAULT_EXCLUDE_SEEN_MOVIES,
   );
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
-  const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>(() =>
-    buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate)
+  const [searchSessionKey, setSearchSessionKey] = useState(0);
+  const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>(
+    () => buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
   );
   const hasActiveSubmittedSearch =
     hasSubmittedSearch && !hasDisplayedFilterChanges;
+
+  const resetLocalSearchState = useCallback(() => {
+    setExcludeSeenMovies(DEFAULT_EXCLUDE_SEEN_MOVIES);
+    setSeenMovieIds(new Set());
+    setSubmittedParams(
+      buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
+    );
+    setHasDisplayedFilterChanges(false);
+    setHasSubmittedSearch(false);
+    setSearchSessionKey(currentKey => currentKey + 1);
+  }, [defaultBeginDate, defaultEndDate]);
+  const resetSearchScreen = useSearchPageReset({
+    queryKey: queryKeys.movieSearchRoot,
+    resetLocalState: resetLocalSearchState,
+  });
+  const pageRefresh = usePageRefresh(resetSearchScreen);
+
+  useRegisterSearchPageReset('AdvancedSearch', resetSearchScreen);
 
   function handleToggleExcludeSeenMovies() {
     setExcludeSeenMovies(currentValue => !currentValue);
@@ -157,10 +187,7 @@ export function MovieSearchScreen() {
 
     appliedPresetRequestIdRef.current = presetRequestId;
     submitSearchParams(
-      mergeMovieSearchParams(
-        submittedParams,
-        homeSection.advancedSearchParams,
-      ),
+      mergeMovieSearchParams(submittedParams, homeSection.advancedSearchParams),
     );
   }, [
     route.params?.homeSectionId,
@@ -175,7 +202,7 @@ export function MovieSearchScreen() {
     }
 
     queryClient.removeQueries({
-      queryKey: ['movieSearch', submittedParams],
+      queryKey: queryKeys.movieSearch(submittedParams),
       exact: true,
     });
     setHasSubmittedSearch(false);
@@ -222,19 +249,6 @@ export function MovieSearchScreen() {
   const totalPages = hasActiveSubmittedSearch
     ? data?.pages[0]?.totalPages ?? null
     : 0;
-  const resetSearchScreen = useCallback(() => {
-    queryClient.removeQueries({
-      queryKey: ['movieSearch'],
-    });
-    setExcludeSeenMovies(DEFAULT_EXCLUDE_SEEN_MOVIES);
-    setSeenMovieIds(new Set());
-    setSubmittedParams(
-      buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
-    );
-    setHasDisplayedFilterChanges(false);
-    setHasSubmittedSearch(false);
-  }, [defaultBeginDate, defaultEndDate, queryClient]);
-
   useEffect(() => {
     const shouldFetchMoreFilteredResults =
       hasActiveSubmittedSearch &&
@@ -257,102 +271,77 @@ export function MovieSearchScreen() {
     visibleMovies.length,
   ]);
 
-  /*
-    WHAT THIS DOES:
-    - Shows the loading state during the query
-
-    WHY:
-    - The screen must handle loading explicitly
-  */
-  if (hasActiveSubmittedSearch && isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-        {/*
-          Lock these feedback messages to the shared UI typography so they keep
-          the same intended size instead of picking up extra device font scaling.
-        */}
-        <Text allowFontScaling={false} style={styles.message}>
-          Loading movies...
-        </Text>
-      </View>
-    );
-  }
-
-  /*
-    WHAT THIS DOES:
-    - Shows the error state if the query fails
-
-    WHY:
-    - A failed search should show a clear error instead of failing silently
-  */
-  if (hasActiveSubmittedSearch && isError) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-
-    return (
-      <View style={styles.centered}>
-        <Text allowFontScaling={false} style={styles.errorText}>
-          Error loading movies
-        </Text>
-        <Text allowFontScaling={false} style={styles.message}>
-          {message}
-        </Text>
-        <View style={styles.errorActions}>
-          <Pressable
-            onPress={resetSearchScreen}
-            style={styles.errorPrimaryButton}
-            accessibilityRole="button"
-            accessibilityLabel="Return to movie search filters"
-          >
-            <Text
-              allowFontScaling={false}
-              style={styles.errorPrimaryButtonText}
-            >
-              Try Again
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={resetSearchScreen}
-            style={styles.errorSecondaryButton}
-            accessibilityRole="button"
-            accessibilityLabel="Return to movie search filters"
-          >
-            <Text
-              allowFontScaling={false}
-              style={styles.errorSecondaryButtonText}
-            >
-              Back to Search
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
+  const searchHeader = (
+    <HeaderMovieSearch
+      key={searchSessionKey}
+      title="Movie Search"
+      appliedParams={submittedParams}
+      loadedPages={loadedPages}
+      totalPages={totalPages}
+      excludeSeenMovies={excludeSeenMovies}
+      onRequestDrawerOpen={() =>
+        navigation.dispatch(DrawerActions.openDrawer())
+      }
+      onRequestTitleSearch={() =>
+        navigation.navigate('SearchByMovieTitle', {
+          returnTo: 'AdvancedSearch',
+        })
+      }
+      onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
+      onSubmitFilters={handleApplyFilters}
+      onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
+    />
+  );
+  const searchErrorMessage =
+    error instanceof Error ? error.message : 'Unknown error';
 
   return (
-    <View style={styles.container}>
-      <View>
-        <HeaderMovieSearch
-          title="Movie Search"
-          appliedParams={submittedParams}
-          loadedPages={loadedPages}
-          totalPages={totalPages}
-          excludeSeenMovies={excludeSeenMovies}
-          onRequestDrawerOpen={() =>
-            navigation.dispatch(DrawerActions.openDrawer())
-          }
-          onRequestTitleSearch={() =>
-            navigation.navigate('SearchByMovieTitle', {
-              returnTo: 'AdvancedSearch',
-            })
-          }
-          onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
-          onSubmitFilters={handleApplyFilters}
-          onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
-        />
-      </View>
-
-      <View style={styles.searchContent}>
+    <RefreshableSearchScreenLayout topSection={searchHeader} {...pageRefresh}>
+      {hasActiveSubmittedSearch && isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+          <Text allowFontScaling={false} style={styles.message}>
+            Loading movies...
+          </Text>
+        </View>
+      ) : hasActiveSubmittedSearch && isError ? (
+        <View style={styles.centered}>
+          <Text allowFontScaling={false} style={styles.errorText}>
+            Error loading movies
+          </Text>
+          <Text allowFontScaling={false} style={styles.message}>
+            {searchErrorMessage}
+          </Text>
+          <View style={styles.errorActions}>
+            <Pressable
+              onPress={resetSearchScreen}
+              style={styles.errorPrimaryButton}
+              accessibilityRole="button"
+              accessibilityLabel="Return to movie search filters"
+            >
+              <Text
+                allowFontScaling={false}
+                style={styles.errorPrimaryButtonText}
+              >
+                Try Again
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={resetSearchScreen}
+              style={styles.errorSecondaryButton}
+              accessibilityRole="button"
+              accessibilityLabel="Return to movie search filters"
+            >
+              <Text
+                allowFontScaling={false}
+                style={styles.errorSecondaryButtonText}
+              >
+                Back to Search
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
         <MovieResults
           movies={visibleMovies}
           cardVariant="posterRating"
@@ -361,7 +350,7 @@ export function MovieSearchScreen() {
           hasNextPage={hasActiveSubmittedSearch && hasNextPage}
           isFetchingNextPage={hasActiveSubmittedSearch && isFetchingNextPage}
         />
-      </View>
-    </View>
+      )}
+    </RefreshableSearchScreenLayout>
   );
 }

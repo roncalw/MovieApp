@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
   type ImageSourcePropType,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   usePersonDetailsQuery,
@@ -25,6 +25,9 @@ import { typography } from '../theme/typography';
 import type { PersonDetailProps } from '../types/movie/personTypes';
 import { PersonFamilyDetails } from './components/PersonFamilyDetails';
 import { PersonFilmographySection } from './components/PersonFilmographySection';
+import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
+import { usePageRefresh } from '../shared/refresh/usePageRefresh';
+import { queryKeys } from '../query/queryKeys';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const IMAGE_PERSON_NOT_FOUND = require('../assets/images/MissingPersonPlaceholder.png');
@@ -37,14 +40,38 @@ export function PersonDetail({
   onMoviePress,
 }: PersonDetailProps) {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const personQuery = usePersonDetailsQuery(personId);
   const person = personQuery.data;
   const wikidataId = person?.external_ids?.wikidata_id ?? null;
   const familyQuery = usePersonFamilyQuery(wikidataId);
   const title = person?.name ?? initialPersonName ?? 'Person Detail';
+  const refetchPersonDetails = personQuery.refetch;
+  const refetchPersonFamily = familyQuery.refetch;
+  const refreshPersonDetail = useCallback(async () => {
+    const refreshes: Promise<unknown>[] = [
+      refetchPersonDetails(),
+      queryClient.refetchQueries({
+        queryKey: queryKeys.personMovieCredits(personId),
+        exact: true,
+      }),
+    ];
 
-  return (
-    <View style={styles.screen}>
+    if (wikidataId) {
+      refreshes.push(refetchPersonFamily());
+    }
+
+    await Promise.allSettled(refreshes);
+  }, [
+    personId,
+    queryClient,
+    refetchPersonDetails,
+    refetchPersonFamily,
+    wikidataId,
+  ]);
+  const pageRefresh = usePageRefresh(refreshPersonDetail);
+  const personHeader = (
+    <>
       <View style={[styles.topSpacer, { height: insets.top }]} />
       <View style={styles.header}>
         <Pressable
@@ -81,73 +108,79 @@ export function PersonDetail({
           />
         </Pressable>
       </View>
-
-      {personQuery.isLoading ? (
-        <View style={styles.centered}>
-          <DetailResourceLoading message="Loading person..." />
-        </View>
-      ) : personQuery.isError ? (
-        <View style={styles.centered}>
-          <DetailResourceError
-            error={personQuery.error}
-            isRetrying={personQuery.isFetching}
-            message="Person details could not be loaded."
-            onRetry={personQuery.refetch}
-            title="Person details are temporarily unavailable"
+    </>
+  );
+  const isResourceState = personQuery.isLoading || personQuery.isError;
+  const personContent = personQuery.isLoading ? (
+    <View style={styles.centered}>
+      <DetailResourceLoading message="Loading person..." />
+    </View>
+  ) : personQuery.isError ? (
+    <View style={styles.centered}>
+      <DetailResourceError
+        error={personQuery.error}
+        isRetrying={personQuery.isFetching}
+        message="Person details could not be loaded."
+        onRetry={personQuery.refetch}
+        title="Person details are temporarily unavailable"
+      />
+    </View>
+  ) : person ? (
+    <>
+      <View style={styles.profilePanel}>
+        <Image
+          source={getProfileSource(person.profile_path)}
+          style={styles.profileImage}
+          resizeMode="cover"
+        />
+        <View style={styles.profileTextBlock}>
+          <Text allowFontScaling={false} style={styles.personName}>
+            {person.name}
+          </Text>
+          <DetailLine label="Born" value={formatDateText(person.birthday)} />
+          {person.deathday ? (
+            <DetailLine label="Died" value={formatDateText(person.deathday)} />
+          ) : null}
+          <DetailLine label="Birthplace" value={person.place_of_birth} />
+          <PersonFamilyDetails
+            family={familyQuery.data}
+            hasWikidataId={wikidataId !== null}
+            isError={familyQuery.isError}
+            isLoading={familyQuery.isLoading}
           />
         </View>
-      ) : person ? (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.profilePanel}>
-            <Image
-              source={getProfileSource(person.profile_path)}
-              style={styles.profileImage}
-              resizeMode="cover"
-            />
-            <View style={styles.profileTextBlock}>
-              <Text allowFontScaling={false} style={styles.personName}>
-                {person.name}
-              </Text>
-              <DetailLine
-                label="Born"
-                value={formatDateText(person.birthday)}
-              />
-              {person.deathday ? (
-                <DetailLine
-                  label="Died"
-                  value={formatDateText(person.deathday)}
-                />
-              ) : null}
-              <DetailLine label="Birthplace" value={person.place_of_birth} />
-              <PersonFamilyDetails
-                family={familyQuery.data}
-                hasWikidataId={wikidataId !== null}
-                isError={familyQuery.isError}
-                isLoading={familyQuery.isLoading}
-              />
-            </View>
-          </View>
+      </View>
 
-          <View style={styles.biographyBlock}>
-            <DetailLine label="Known for" value={person.known_for_department} />
-            {person.biography ? (
-              <ExpandableText
-                text={person.biography}
-                collapsedLines={8}
-                textStyle={styles.biography}
-              />
-            ) : null}
-          </View>
-
-          <PersonFilmographySection
-            personId={personId}
-            onMoviePress={onMoviePress}
+      <View style={styles.biographyBlock}>
+        <DetailLine label="Known for" value={person.known_for_department} />
+        {person.biography ? (
+          <ExpandableText
+            text={person.biography}
+            collapsedLines={8}
+            textStyle={styles.biography}
           />
-        </ScrollView>
-      ) : null}
+        ) : null}
+      </View>
+
+      <PersonFilmographySection
+        personId={personId}
+        onMoviePress={onMoviePress}
+      />
+    </>
+  ) : null;
+
+  return (
+    <View style={styles.screen}>
+      <RefreshableScrollView
+        style={styles.scrollView}
+        contentContainerStyle={
+          isResourceState ? styles.stateScrollContent : styles.scrollContent
+        }
+        {...pageRefresh}
+      >
+        {personHeader}
+        {personContent}
+      </RefreshableScrollView>
     </View>
   );
 }
@@ -233,6 +266,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: scaleSize(28),
+  },
+  stateScrollContent: {
+    flexGrow: 1,
   },
   centered: {
     flex: 1,

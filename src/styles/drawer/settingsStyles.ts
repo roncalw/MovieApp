@@ -15,21 +15,14 @@ export const settingsStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    minHeight: scaleSize(142),
-    backgroundColor: colors.background,
+  contentScroll: {
+    flex: 1,
   },
-  title: {
-    width: '100%',
-    fontSize: scaleSize(22),
-    lineHeight: scaleSize(28),
-    fontWeight: '400',
-    letterSpacing: 0,
-    color: colors.brandText,
-    textAlign: 'center',
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: scaleSize(24),
     paddingTop: scaleSize(28),
