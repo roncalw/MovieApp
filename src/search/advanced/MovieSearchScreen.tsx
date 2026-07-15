@@ -50,6 +50,7 @@ import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreen
 import { queryKeys } from '../../query/queryKeys';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
+const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
 const DEFAULT_EXCLUDE_SEEN_MOVIES = false;
 
 function buildDefaultMovieSearchParams(
@@ -101,8 +102,10 @@ export function MovieSearchScreen() {
   const route = useRoute<RouteProp<AppDrawerParamList, 'AdvancedSearch'>>();
   const { openMovieDetail } = useDetailNavigation();
   const appliedPresetRequestIdRef = useRef<string | null>(null);
+  const submitStartedAtRef = useRef(0);
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const [isSearchSubmitting, setIsSearchSubmitting] = useState(false);
   const [hasDisplayedFilterChanges, setHasDisplayedFilterChanges] =
     useState(false);
   const [excludeSeenMovies, setExcludeSeenMovies] = useState(
@@ -124,6 +127,8 @@ export function MovieSearchScreen() {
     );
     setHasDisplayedFilterChanges(false);
     setHasSubmittedSearch(false);
+    setIsSearchSubmitting(false);
+    submitStartedAtRef.current = 0;
     setSearchSessionKey(currentKey => currentKey + 1);
   }, [defaultBeginDate, defaultEndDate]);
   const resetSearchScreen = useSearchPageReset({
@@ -157,6 +162,8 @@ export function MovieSearchScreen() {
   const submitSearchParams = useCallback(
     (nextParams: MovieSearchParams) => {
       refreshSeenMovieIds();
+      submitStartedAtRef.current = Date.now();
+      setIsSearchSubmitting(true);
       setHasDisplayedFilterChanges(false);
       setSubmittedParams(nextParams);
       setHasSubmittedSearch(true);
@@ -249,6 +256,43 @@ export function MovieSearchScreen() {
   const totalPages = hasActiveSubmittedSearch
     ? data?.pages[0]?.totalPages ?? null
     : 0;
+
+  useEffect(() => {
+    if (!isSearchSubmitting) {
+      return;
+    }
+
+    const firstResponseHasArrived = (data?.pages.length ?? 0) > 0;
+    const searchHasFinished =
+      !hasActiveSubmittedSearch || firstResponseHasArrived || isError;
+    if (!searchHasFinished) {
+      return;
+    }
+
+    const disabledDuration = Date.now() - submitStartedAtRef.current;
+    const remainingDisabledDuration = Math.max(
+      0,
+      MINIMUM_SUBMIT_DISABLED_DURATION_MS - disabledDuration,
+    );
+
+    if (remainingDisabledDuration === 0) {
+      setIsSearchSubmitting(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(
+      () => setIsSearchSubmitting(false),
+      remainingDisabledDuration,
+    );
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    data?.pages.length,
+    hasActiveSubmittedSearch,
+    isError,
+    isSearchSubmitting,
+  ]);
+
   useEffect(() => {
     const shouldFetchMoreFilteredResults =
       hasActiveSubmittedSearch &&
@@ -288,6 +332,7 @@ export function MovieSearchScreen() {
         })
       }
       onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
+      isSearchSubmitting={isSearchSubmitting}
       onSubmitFilters={handleApplyFilters}
       onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
     />

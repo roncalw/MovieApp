@@ -19,6 +19,7 @@ export type HeaderMovieSearchProps = {
   onRequestDrawerOpen: () => void;
   onRequestTitleSearch?: () => void;
   onToggleExcludeSeenMovies: () => void;
+  isSearchSubmitting: boolean;
   onSubmitFilters: (params: MovieSearchParams) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
 };

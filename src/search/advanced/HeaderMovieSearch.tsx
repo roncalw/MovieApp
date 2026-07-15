@@ -29,11 +29,13 @@ export function HeaderMovieSearch({
   onRequestDrawerOpen,
   onRequestTitleSearch,
   onToggleExcludeSeenMovies,
+  isSearchSubmitting,
   onSubmitFilters,
   onDisplayedFiltersDirtyChange,
 }: HeaderMovieSearchProps) {
-  const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+  const [isFilterInputInvalid, setIsFilterInputInvalid] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
+  const isSubmitDisabled = isFilterInputInvalid || isSearchSubmitting;
 
   const registerSubmitHandler = useCallback((handler: (() => void) | null) => {
     submitHandlerRef.current = handler;
@@ -53,7 +55,7 @@ export function HeaderMovieSearch({
       excludeSeenMovies,
       onToggleExcludeSeenMovies,
       isSubmitDisabled,
-      onValidityChange: setIsSubmitDisabled,
+      onValidityChange: setIsFilterInputInvalid,
       registerSubmitHandler,
       submitDraftFilters,
     }),

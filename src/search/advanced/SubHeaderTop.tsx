@@ -54,6 +54,9 @@ export function SubHeaderTop({
           <Pressable
             disabled={isSubmitDisabled}
             onPress={submitDraftFilters}
+            accessibilityRole="button"
+            accessibilityLabel="Submit advanced movie search"
+            accessibilityState={{ disabled: isSubmitDisabled }}
             style={[
               styles.rightAction,
               isSubmitDisabled && styles.rightActionDisabled,
