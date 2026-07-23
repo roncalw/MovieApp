@@ -1,15 +1,13 @@
-import React from 'react';
-import { Text } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
 import { HeaderMovieSearchContext } from '../src/search/advanced/HeaderMovieSearchContext';
+import { SubHeaderMovieSearchFields } from '../src/search/advanced/SubHeaderMovieSearchFields';
 import {
   isFilterSwipeUpGesture,
-  SubHeaderMovieSearchFields,
-} from '../src/search/advanced/SubHeaderMovieSearchFields';
-import type {
-  AdvancedFilterSwipeHandlers,
-  HeaderMovieSearchContextValue,
-} from '../src/types/search/movieSearchHeaderTypes';
+  useAdvancedFilterSwipe,
+} from '../src/search/advanced/useAdvancedFilterSwipe';
+import type { HeaderMovieSearchContextValue } from '../src/types/search/movieSearchHeaderTypes';
 
 jest.mock('@react-native-vector-icons/ionicons/static', () => () => null);
 jest.mock('../src/search/advanced/fields/GenreField', () => ({
@@ -28,9 +26,7 @@ jest.mock('../src/search/advanced/fields/YearWheelField', () => ({
   YearWheelField: () => null,
 }));
 
-let registeredFilterSwipeHandlers: AdvancedFilterSwipeHandlers | null = null;
-
-const contextValue: HeaderMovieSearchContextValue = {
+const baseContextValue = {
   appliedParams: {
     movieRatings: '',
     beginDate: '2020-01-01',
@@ -51,15 +47,37 @@ const contextValue: HeaderMovieSearchContextValue = {
   onValidityChange: jest.fn(),
   registerSubmitHandler: jest.fn(),
   submitDraftFilters: jest.fn(),
-  registerFilterSwipeHandlers: handlers => {
-    registeredFilterSwipeHandlers = handlers;
-  },
 };
 
 function touchEvent(pageX: number, pageY: number) {
   return {
     nativeEvent: { pageX, pageY },
   };
+}
+
+function FilterSwipeHarness() {
+  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const hideFilters = useCallback(() => setIsFiltersVisible(false), []);
+  const onToggleFiltersVisibility = useCallback(
+    () => setIsFiltersVisible(currentValue => !currentValue),
+    [],
+  );
+  const { onFilterAreaTouchStart, topSectionTouchHandlers } =
+    useAdvancedFilterSwipe(hideFilters);
+  const contextValue: HeaderMovieSearchContextValue = {
+    ...baseContextValue,
+    isFiltersVisible,
+    onToggleFiltersVisibility,
+    onFilterAreaTouchStart,
+  };
+
+  return (
+    <View testID="advanced-search-top-section" {...topSectionTouchHandlers}>
+      <HeaderMovieSearchContext.Provider value={contextValue}>
+        <SubHeaderMovieSearchFields />
+      </HeaderMovieSearchContext.Provider>
+    </View>
+  );
 }
 
 describe('Advanced Search swipe-to-hide filters', () => {
@@ -73,20 +91,19 @@ describe('Advanced Search swipe-to-hide filters', () => {
   test('hides the visible filters after swiping upward within the fields area', () => {
     let component!: TestRenderer.ReactTestRenderer;
     act(() => {
-      component = TestRenderer.create(
-        <HeaderMovieSearchContext.Provider value={contextValue}>
-          <SubHeaderMovieSearchFields />
-        </HeaderMovieSearchContext.Provider>,
-      );
+      component = TestRenderer.create(<FilterSwipeHarness />);
     });
 
     const fieldsArea = component.root.findByProps({
       testID: 'advanced-search-filter-fields-area',
     });
+    const topSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
 
     act(() => {
       fieldsArea.props.onTouchStart(touchEvent(100, 200));
-      registeredFilterSwipeHandlers?.onMove(touchEvent(102, 150) as never);
+      topSection.props.onTouchMove(touchEvent(102, 150));
     });
 
     const showFilterLabels = component.root.findAll(
@@ -105,21 +122,20 @@ describe('Advanced Search swipe-to-hide filters', () => {
   test('keeps the filters visible for a tap or short upward movement', () => {
     let component!: TestRenderer.ReactTestRenderer;
     act(() => {
-      component = TestRenderer.create(
-        <HeaderMovieSearchContext.Provider value={contextValue}>
-          <SubHeaderMovieSearchFields />
-        </HeaderMovieSearchContext.Provider>,
-      );
+      component = TestRenderer.create(<FilterSwipeHarness />);
     });
 
     const fieldsArea = component.root.findByProps({
       testID: 'advanced-search-filter-fields-area',
     });
+    const topSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
 
     act(() => {
       fieldsArea.props.onTouchStart(touchEvent(100, 200));
-      registeredFilterSwipeHandlers?.onMove(touchEvent(100, 180) as never);
-      registeredFilterSwipeHandlers?.onEnd();
+      topSection.props.onTouchMove(touchEvent(100, 180));
+      topSection.props.onTouchEnd();
     });
 
     const hideFilterLabels = component.root.findAll(

@@ -64,6 +64,9 @@ describe('Home preset submission on Advanced Search', () => {
       onValidityChange: jest.fn(),
       registerSubmitHandler: jest.fn(),
       submitDraftFilters: jest.fn(),
+      isFiltersVisible: true,
+      onToggleFiltersVisibility: jest.fn(),
+      onFilterAreaTouchStart: jest.fn(),
     };
 
     let component!: TestRenderer.ReactTestRenderer;

@@ -17,13 +17,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Pressable,
-  type GestureResponderEvent,
-} from 'react-native';
+import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import {
   DrawerActions,
   type RouteProp,
@@ -54,7 +48,7 @@ import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
-import type { AdvancedFilterSwipeHandlers } from '../../types/search/movieSearchHeaderTypes';
+import { useAdvancedFilterSwipe } from './useAdvancedFilterSwipe';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
@@ -110,9 +104,6 @@ export function MovieSearchScreen() {
   const { openMovieDetail } = useDetailNavigation();
   const appliedPresetRequestIdRef = useRef<string | null>(null);
   const submitStartedAtRef = useRef(0);
-  const filterSwipeHandlersRef = useRef<AdvancedFilterSwipeHandlers | null>(
-    null,
-  );
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [isSearchSubmitting, setIsSearchSubmitting] = useState(false);
@@ -123,6 +114,7 @@ export function MovieSearchScreen() {
   );
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [searchSessionKey, setSearchSessionKey] = useState(0);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
   const [pendingPresetRequestId, setPendingPresetRequestId] = useState<
     string | null
   >(null);
@@ -131,6 +123,21 @@ export function MovieSearchScreen() {
   );
   const hasActiveSubmittedSearch =
     hasSubmittedSearch && !hasDisplayedFilterChanges;
+
+  const hideFilters = useCallback(() => {
+    setIsFiltersVisible(false);
+  }, []);
+
+  const toggleFiltersVisibility = useCallback(() => {
+    setIsFiltersVisible(currentValue => !currentValue);
+  }, []);
+
+  const { onFilterAreaTouchStart, topSectionTouchHandlers } =
+    useAdvancedFilterSwipe(hideFilters);
+
+  useEffect(() => {
+    setIsFiltersVisible(true);
+  }, [submittedParams]);
 
   const resetLocalSearchState = useCallback(() => {
     setExcludeSeenMovies(DEFAULT_EXCLUDE_SEEN_MOVIES);
@@ -142,6 +149,7 @@ export function MovieSearchScreen() {
     setHasDisplayedFilterChanges(false);
     setHasSubmittedSearch(false);
     setIsSearchSubmitting(false);
+    setIsFiltersVisible(true);
     submitStartedAtRef.current = 0;
     setSearchSessionKey(currentKey => currentKey + 1);
   }, [defaultBeginDate, defaultEndDate]);
@@ -150,24 +158,6 @@ export function MovieSearchScreen() {
     resetLocalState: resetLocalSearchState,
   });
   const pageRefresh = usePageRefresh(resetSearchScreen);
-
-  const registerFilterSwipeHandlers = useCallback(
-    (handlers: AdvancedFilterSwipeHandlers | null) => {
-      filterSwipeHandlersRef.current = handlers;
-    },
-    [],
-  );
-
-  const handleTopSectionTouchMove = useCallback(
-    (event: GestureResponderEvent) => {
-      filterSwipeHandlersRef.current?.onMove(event);
-    },
-    [],
-  );
-
-  const handleTopSectionTouchEnd = useCallback(() => {
-    filterSwipeHandlersRef.current?.onEnd();
-  }, []);
 
   useRegisterSearchPageReset('AdvancedSearch', resetSearchScreen);
 
@@ -383,7 +373,9 @@ export function MovieSearchScreen() {
       onSubmitFilters={handleApplyFilters}
       onPresetFiltersReady={handlePresetFiltersReady}
       onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
-      registerFilterSwipeHandlers={registerFilterSwipeHandlers}
+      isFiltersVisible={isFiltersVisible}
+      onToggleFiltersVisibility={toggleFiltersVisibility}
+      onFilterAreaTouchStart={onFilterAreaTouchStart}
     />
   );
   const searchErrorMessage =
@@ -392,11 +384,7 @@ export function MovieSearchScreen() {
   return (
     <RefreshableSearchScreenLayout
       topSection={searchHeader}
-      topSectionTouchHandlers={{
-        onTouchMove: handleTopSectionTouchMove,
-        onTouchEnd: handleTopSectionTouchEnd,
-        onTouchCancel: handleTopSectionTouchEnd,
-      }}
+      topSectionTouchHandlers={topSectionTouchHandlers}
       {...pageRefresh}
     >
       {hasActiveSubmittedSearch && isLoading ? (

@@ -48,6 +48,9 @@ function renderSubmitButton(isSubmitDisabled: boolean) {
     onValidityChange: jest.fn(),
     registerSubmitHandler: jest.fn(),
     submitDraftFilters,
+    isFiltersVisible: true,
+    onToggleFiltersVisibility: jest.fn(),
+    onFilterAreaTouchStart: jest.fn(),
   });
 
   let component!: TestRenderer.ReactTestRenderer;

@@ -16,12 +16,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  type GestureResponderEvent,
-} from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { GenreField } from './fields/GenreField';
 import { RatingField } from './fields/RatingField';
@@ -46,22 +41,6 @@ function getSortedValueSignature(values: string[]) {
   return [...values].sort().join('|');
 }
 
-const FILTER_SWIPE_UP_MIN_DISTANCE = 35;
-const FILTER_SWIPE_UP_VERTICAL_DOMINANCE = 1.5;
-
-export function isFilterSwipeUpGesture(gestureState: {
-  dx: number;
-  dy: number;
-}) {
-  const verticalDistance = Math.abs(gestureState.dy);
-  const horizontalDistance = Math.abs(gestureState.dx);
-
-  return (
-    gestureState.dy <= -FILTER_SWIPE_UP_MIN_DISTANCE &&
-    verticalDistance > horizontalDistance * FILTER_SWIPE_UP_VERTICAL_DOMINANCE
-  );
-}
-
 export function SubHeaderMovieSearchFields() {
   const {
     appliedParams,
@@ -71,7 +50,9 @@ export function SubHeaderMovieSearchFields() {
     onDisplayedFiltersDirtyChange,
     onValidityChange,
     registerSubmitHandler,
-    registerFilterSwipeHandlers,
+    isFiltersVisible,
+    onToggleFiltersVisibility,
+    onFilterAreaTouchStart,
     excludeSeenMovies,
     onToggleExcludeSeenMovies,
   } = useHeaderMovieSearchContext();
@@ -97,65 +78,10 @@ export function SubHeaderMovieSearchFields() {
       appliedParams.movieVoteCount,
     ),
   );
-  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
   const readyPresetRequestIdRef = useRef<string | null>(null);
-  const filterSwipeStartRef = useRef<{ pageX: number; pageY: number } | null>(
-    null,
-  );
   const excludeSeenToggleLabel = excludeSeenMovies
     ? 'Exclude movies you have seen? Yes'
     : 'Exclude movies you have seen? No';
-
-  const rememberFilterSwipeStart = useCallback(
-    (event: GestureResponderEvent) => {
-      filterSwipeStartRef.current = {
-        pageX: event.nativeEvent.pageX,
-        pageY: event.nativeEvent.pageY,
-      };
-    },
-    [],
-  );
-
-  const trackFilterSwipe = useCallback((event: GestureResponderEvent) => {
-    const startPoint = filterSwipeStartRef.current;
-    if (!startPoint) {
-      return;
-    }
-
-    const gestureState = {
-      dx: event.nativeEvent.pageX - startPoint.pageX,
-      dy: event.nativeEvent.pageY - startPoint.pageY,
-    };
-
-    if (isFilterSwipeUpGesture(gestureState)) {
-      filterSwipeStartRef.current = null;
-      setIsFiltersVisible(false);
-    }
-  }, []);
-
-  const clearFilterSwipe = useCallback(() => {
-    filterSwipeStartRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    if (!registerFilterSwipeHandlers) {
-      return;
-    }
-
-    /*
-      The refresh ScrollView owns the live move events. Registering these
-      callbacks lets it forward those events here without taking taps away
-      from the year and filter controls. The starting point is recorded only
-      by the fields View below, so swipes above "Hide Filter" do not collapse
-      the fields.
-    */
-    registerFilterSwipeHandlers({
-      onMove: trackFilterSwipe,
-      onEnd: clearFilterSwipe,
-    });
-
-    return () => registerFilterSwipeHandlers(null);
-  }, [clearFilterSwipe, registerFilterSwipeHandlers, trackFilterSwipe]);
 
   const searchYears = useMemo(() => buildSearchYearOptions(), []);
   const appliedGenreSignature = useMemo(
@@ -191,7 +117,6 @@ export function SubHeaderMovieSearchFields() {
         appliedParams.movieVoteCount,
       ),
     );
-    setIsFiltersVisible(true);
   }, [
     appliedGenreSignature,
     appliedParams.beginDate,
@@ -346,7 +271,7 @@ export function SubHeaderMovieSearchFields() {
   return (
     <View>
       <Pressable
-        onPress={() => setIsFiltersVisible(currentValue => !currentValue)}
+        onPress={onToggleFiltersVisibility}
         style={styles.visibilityToggle}
       >
         {/*
@@ -369,7 +294,7 @@ export function SubHeaderMovieSearchFields() {
       {!isFiltersVisible ? null : (
         <View
           testID="advanced-search-filter-fields-area"
-          onTouchStart={rememberFilterSwipeStart}
+          onTouchStart={onFilterAreaTouchStart}
         >
           <Pressable
             onPress={onToggleExcludeSeenMovies}

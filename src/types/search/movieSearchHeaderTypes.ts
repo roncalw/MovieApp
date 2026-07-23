@@ -11,11 +11,6 @@
 import type { MovieSearchParams } from './movieSearchParams';
 import type { GestureResponderEvent } from 'react-native';
 
-export type AdvancedFilterSwipeHandlers = {
-  onMove: (event: GestureResponderEvent) => void;
-  onEnd: () => void;
-};
-
 export type HeaderMovieSearchProps = {
   title: string;
   appliedParams: MovieSearchParams;
@@ -30,9 +25,9 @@ export type HeaderMovieSearchProps = {
   onSubmitFilters: (params: MovieSearchParams) => void;
   onPresetFiltersReady: (requestId: string) => void;
   onDisplayedFiltersDirtyChange: (isDirty: boolean) => void;
-  registerFilterSwipeHandlers?: (
-    handlers: AdvancedFilterSwipeHandlers | null,
-  ) => void;
+  isFiltersVisible: boolean;
+  onToggleFiltersVisibility: () => void;
+  onFilterAreaTouchStart: (event: GestureResponderEvent) => void;
 };
 
 export type HeaderMovieSearchContextValue = {
@@ -49,9 +44,9 @@ export type HeaderMovieSearchContextValue = {
   onValidityChange: (isInvalid: boolean) => void;
   registerSubmitHandler: (handler: (() => void) | null) => void;
   submitDraftFilters: () => void;
-  registerFilterSwipeHandlers?: (
-    handlers: AdvancedFilterSwipeHandlers | null,
-  ) => void;
+  isFiltersVisible: boolean;
+  onToggleFiltersVisibility: () => void;
+  onFilterAreaTouchStart: (event: GestureResponderEvent) => void;
 };
 
 export type SubHeaderTopProps = {
