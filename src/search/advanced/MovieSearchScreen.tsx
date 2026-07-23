@@ -17,7 +17,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { View, Text, ActivityIndicator, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Pressable,
+  type GestureResponderEvent,
+} from 'react-native';
 import {
   DrawerActions,
   type RouteProp,
@@ -48,6 +54,7 @@ import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
+import type { AdvancedFilterSwipeHandlers } from '../../types/search/movieSearchHeaderTypes';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
@@ -103,6 +110,9 @@ export function MovieSearchScreen() {
   const { openMovieDetail } = useDetailNavigation();
   const appliedPresetRequestIdRef = useRef<string | null>(null);
   const submitStartedAtRef = useRef(0);
+  const filterSwipeHandlersRef = useRef<AdvancedFilterSwipeHandlers | null>(
+    null,
+  );
 
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [isSearchSubmitting, setIsSearchSubmitting] = useState(false);
@@ -113,6 +123,9 @@ export function MovieSearchScreen() {
   );
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [searchSessionKey, setSearchSessionKey] = useState(0);
+  const [pendingPresetRequestId, setPendingPresetRequestId] = useState<
+    string | null
+  >(null);
   const [submittedParams, setSubmittedParams] = useState<MovieSearchParams>(
     () => buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
   );
@@ -125,6 +138,7 @@ export function MovieSearchScreen() {
     setSubmittedParams(
       buildDefaultMovieSearchParams(defaultBeginDate, defaultEndDate),
     );
+    setPendingPresetRequestId(null);
     setHasDisplayedFilterChanges(false);
     setHasSubmittedSearch(false);
     setIsSearchSubmitting(false);
@@ -136,6 +150,24 @@ export function MovieSearchScreen() {
     resetLocalState: resetLocalSearchState,
   });
   const pageRefresh = usePageRefresh(resetSearchScreen);
+
+  const registerFilterSwipeHandlers = useCallback(
+    (handlers: AdvancedFilterSwipeHandlers | null) => {
+      filterSwipeHandlersRef.current = handlers;
+    },
+    [],
+  );
+
+  const handleTopSectionTouchMove = useCallback(
+    (event: GestureResponderEvent) => {
+      filterSwipeHandlersRef.current?.onMove(event);
+    },
+    [],
+  );
+
+  const handleTopSectionTouchEnd = useCallback(() => {
+    filterSwipeHandlersRef.current?.onEnd();
+  }, []);
 
   useRegisterSearchPageReset('AdvancedSearch', resetSearchScreen);
 
@@ -171,9 +203,12 @@ export function MovieSearchScreen() {
     [refreshSeenMovieIds],
   );
 
-  function handleApplyFilters(nextParams: MovieSearchParams) {
-    submitSearchParams(nextParams);
-  }
+  const handleApplyFilters = useCallback(
+    (nextParams: MovieSearchParams) => {
+      submitSearchParams(nextParams);
+    },
+    [submitSearchParams],
+  );
 
   useEffect(() => {
     const homeSectionId = route.params?.homeSectionId;
@@ -193,15 +228,26 @@ export function MovieSearchScreen() {
     }
 
     appliedPresetRequestIdRef.current = presetRequestId;
-    submitSearchParams(
-      mergeMovieSearchParams(submittedParams, homeSection.advancedSearchParams),
+    setPendingPresetRequestId(presetRequestId);
+    setHasSubmittedSearch(false);
+    setIsSearchSubmitting(false);
+    setHasDisplayedFilterChanges(false);
+    setSubmittedParams(currentParams =>
+      mergeMovieSearchParams(currentParams, homeSection.advancedSearchParams),
     );
-  }, [
-    route.params?.homeSectionId,
-    route.params?.presetRequestId,
-    submitSearchParams,
-    submittedParams,
-  ]);
+  }, [route.params?.homeSectionId, route.params?.presetRequestId]);
+
+  const handlePresetFiltersReady = useCallback(
+    (requestId: string) => {
+      if (pendingPresetRequestId !== requestId) {
+        return;
+      }
+
+      setPendingPresetRequestId(null);
+      submitSearchParams(submittedParams);
+    },
+    [pendingPresetRequestId, submitSearchParams, submittedParams],
+  );
 
   useEffect(() => {
     if (!hasSubmittedSearch || !hasDisplayedFilterChanges) {
@@ -320,6 +366,7 @@ export function MovieSearchScreen() {
       key={searchSessionKey}
       title="Movie Search"
       appliedParams={submittedParams}
+      pendingPresetRequestId={pendingPresetRequestId ?? undefined}
       loadedPages={loadedPages}
       totalPages={totalPages}
       excludeSeenMovies={excludeSeenMovies}
@@ -334,14 +381,24 @@ export function MovieSearchScreen() {
       onToggleExcludeSeenMovies={handleToggleExcludeSeenMovies}
       isSearchSubmitting={isSearchSubmitting}
       onSubmitFilters={handleApplyFilters}
+      onPresetFiltersReady={handlePresetFiltersReady}
       onDisplayedFiltersDirtyChange={setHasDisplayedFilterChanges}
+      registerFilterSwipeHandlers={registerFilterSwipeHandlers}
     />
   );
   const searchErrorMessage =
     error instanceof Error ? error.message : 'Unknown error';
 
   return (
-    <RefreshableSearchScreenLayout topSection={searchHeader} {...pageRefresh}>
+    <RefreshableSearchScreenLayout
+      topSection={searchHeader}
+      topSectionTouchHandlers={{
+        onTouchMove: handleTopSectionTouchMove,
+        onTouchEnd: handleTopSectionTouchEnd,
+        onTouchCancel: handleTopSectionTouchEnd,
+      }}
+      {...pageRefresh}
+    >
       {hasActiveSubmittedSearch && isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />

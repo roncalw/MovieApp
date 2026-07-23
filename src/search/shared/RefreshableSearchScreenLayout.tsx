@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ScrollViewProps } from 'react-native';
 import { colors } from '../../theme/colors';
 import type { AppRefreshControlProps } from '../../shared/refresh/AppRefreshControl';
 import { RefreshableScrollView } from '../../shared/refresh/RefreshableScrollView';
@@ -7,6 +7,10 @@ import { RefreshableScrollView } from '../../shared/refresh/RefreshableScrollVie
 type RefreshableSearchScreenLayoutProps = AppRefreshControlProps & {
   topSection: ReactNode;
   children: ReactNode;
+  topSectionTouchHandlers?: Pick<
+    ScrollViewProps,
+    'onTouchMove' | 'onTouchEnd' | 'onTouchCancel'
+  >;
 };
 
 /**
@@ -19,6 +23,7 @@ type RefreshableSearchScreenLayoutProps = AppRefreshControlProps & {
 export function RefreshableSearchScreenLayout({
   topSection,
   children,
+  topSectionTouchHandlers,
   ...pageRefresh
 }: RefreshableSearchScreenLayoutProps) {
   return (
@@ -28,6 +33,7 @@ export function RefreshableSearchScreenLayout({
         contentContainerStyle={styles.topSectionContent}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
+        {...topSectionTouchHandlers}
         {...pageRefresh}
       >
         {topSection}

@@ -9,13 +9,18 @@ Purpose:
    * Renders the movie-search field controls while reading and updating the shared header coordination from the parent
      header context.
 */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Text,
   Pressable,
-  PanResponder,
-  type PanResponderGestureState,
+  type GestureResponderEvent,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { GenreField } from './fields/GenreField';
@@ -23,9 +28,7 @@ import { RatingField } from './fields/RatingField';
 import { SortField } from './fields/SortField';
 import { StreamerField } from './fields/StreamerField';
 import { YearWheelField } from './fields/YearWheelField';
-import {
-  getInitialSortValue,
-} from './fields/movieSearchFieldUtils';
+import { getInitialSortValue } from './fields/movieSearchFieldUtils';
 import { colors } from '../../styles/colors';
 import { scaleSize } from '../../theme/scale';
 import { subHeaderMovieSearchFieldsStyles as styles } from '../../styles/search/subHeaderMovieSearchFieldsStyles';
@@ -46,7 +49,10 @@ function getSortedValueSignature(values: string[]) {
 const FILTER_SWIPE_UP_MIN_DISTANCE = 35;
 const FILTER_SWIPE_UP_VERTICAL_DOMINANCE = 1.5;
 
-function isFilterSwipeUpGesture(gestureState: PanResponderGestureState) {
+export function isFilterSwipeUpGesture(gestureState: {
+  dx: number;
+  dy: number;
+}) {
   const verticalDistance = Math.abs(gestureState.dy);
   const horizontalDistance = Math.abs(gestureState.dx);
 
@@ -59,72 +65,122 @@ function isFilterSwipeUpGesture(gestureState: PanResponderGestureState) {
 export function SubHeaderMovieSearchFields() {
   const {
     appliedParams,
+    pendingPresetRequestId,
     onSubmitFilters,
+    onPresetFiltersReady,
     onDisplayedFiltersDirtyChange,
     onValidityChange,
     registerSubmitHandler,
+    registerFilterSwipeHandlers,
     excludeSeenMovies,
     onToggleExcludeSeenMovies,
   } = useHeaderMovieSearchContext();
 
   const [beginYear, setBeginYear] = useState(() =>
-    getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear())
+    getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear()),
   );
   const [endYear, setEndYear] = useState(() =>
-    getYearFromDateString(appliedParams.endDate, getDefaultEndYear())
+    getYearFromDateString(appliedParams.endDate, getDefaultEndYear()),
   );
-  const [selectedRating, setSelectedRating] = useState(appliedParams.movieRatings);
-  const [selectedGenre, setSelectedGenre] = useState(() => [...appliedParams.movieGenres]);
+  const [selectedRating, setSelectedRating] = useState(
+    appliedParams.movieRatings,
+  );
+  const [selectedGenre, setSelectedGenre] = useState(() => [
+    ...appliedParams.movieGenres,
+  ]);
   const [selectedStreamer, setSelectedStreamer] = useState(() => [
     ...appliedParams.movieStreamers,
   ]);
   const [selectedSortValue, setSelectedSortValue] = useState(() =>
-    getInitialSortValue(appliedParams.movieSortBy, appliedParams.movieVoteCount)
+    getInitialSortValue(
+      appliedParams.movieSortBy,
+      appliedParams.movieVoteCount,
+    ),
   );
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const readyPresetRequestIdRef = useRef<string | null>(null);
+  const filterSwipeStartRef = useRef<{ pageX: number; pageY: number } | null>(
+    null,
+  );
   const excludeSeenToggleLabel = excludeSeenMovies
     ? 'Exclude movies you have seen? Yes'
     : 'Exclude movies you have seen? No';
-  const filterSwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gestureState) =>
-          isFilterSwipeUpGesture(gestureState),
-        onMoveShouldSetPanResponderCapture: (_event, gestureState) =>
-          isFilterSwipeUpGesture(gestureState),
-        onPanResponderRelease: (_event, gestureState) => {
-          if (isFilterSwipeUpGesture(gestureState)) {
-            setIsFiltersVisible(false);
-          }
-        },
-      }),
-    []
+
+  const rememberFilterSwipeStart = useCallback(
+    (event: GestureResponderEvent) => {
+      filterSwipeStartRef.current = {
+        pageX: event.nativeEvent.pageX,
+        pageY: event.nativeEvent.pageY,
+      };
+    },
+    [],
   );
+
+  const trackFilterSwipe = useCallback((event: GestureResponderEvent) => {
+    const startPoint = filterSwipeStartRef.current;
+    if (!startPoint) {
+      return;
+    }
+
+    const gestureState = {
+      dx: event.nativeEvent.pageX - startPoint.pageX,
+      dy: event.nativeEvent.pageY - startPoint.pageY,
+    };
+
+    if (isFilterSwipeUpGesture(gestureState)) {
+      filterSwipeStartRef.current = null;
+      setIsFiltersVisible(false);
+    }
+  }, []);
+
+  const clearFilterSwipe = useCallback(() => {
+    filterSwipeStartRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!registerFilterSwipeHandlers) {
+      return;
+    }
+
+    /*
+      The refresh ScrollView owns the live move events. Registering these
+      callbacks lets it forward those events here without taking taps away
+      from the year and filter controls. The starting point is recorded only
+      by the fields View below, so swipes above "Hide Filter" do not collapse
+      the fields.
+    */
+    registerFilterSwipeHandlers({
+      onMove: trackFilterSwipe,
+      onEnd: clearFilterSwipe,
+    });
+
+    return () => registerFilterSwipeHandlers(null);
+  }, [clearFilterSwipe, registerFilterSwipeHandlers, trackFilterSwipe]);
 
   const searchYears = useMemo(() => buildSearchYearOptions(), []);
   const appliedGenreSignature = useMemo(
     () => getSortedValueSignature(appliedParams.movieGenres),
-    [appliedParams.movieGenres]
+    [appliedParams.movieGenres],
   );
   const appliedStreamerSignature = useMemo(
     () => getSortedValueSignature(appliedParams.movieStreamers),
-    [appliedParams.movieStreamers]
+    [appliedParams.movieStreamers],
   );
   const selectedGenreSignature = useMemo(
     () => getSortedValueSignature(selectedGenre),
-    [selectedGenre]
+    [selectedGenre],
   );
   const selectedStreamerSignature = useMemo(
     () => getSortedValueSignature(selectedStreamer),
-    [selectedStreamer]
+    [selectedStreamer],
   );
 
   useEffect(() => {
     setBeginYear(
-      getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear())
+      getYearFromDateString(appliedParams.beginDate, getDefaultBeginYear()),
     );
     setEndYear(
-      getYearFromDateString(appliedParams.endDate, getDefaultEndYear())
+      getYearFromDateString(appliedParams.endDate, getDefaultEndYear()),
     );
     setSelectedRating(appliedParams.movieRatings);
     setSelectedGenre([...appliedParams.movieGenres]);
@@ -132,8 +188,8 @@ export function SubHeaderMovieSearchFields() {
     setSelectedSortValue(
       getInitialSortValue(
         appliedParams.movieSortBy,
-        appliedParams.movieVoteCount
-      )
+        appliedParams.movieVoteCount,
+      ),
     );
     setIsFiltersVisible(true);
   }, [
@@ -156,7 +212,10 @@ export function SubHeaderMovieSearchFields() {
       selectedGenreSignature !== appliedGenreSignature ||
       selectedStreamerSignature !== appliedStreamerSignature ||
       selectedSortValue !==
-        getInitialSortValue(appliedParams.movieSortBy, appliedParams.movieVoteCount),
+        getInitialSortValue(
+          appliedParams.movieSortBy,
+          appliedParams.movieVoteCount,
+        ),
     [
       appliedGenreSignature,
       appliedParams.beginDate,
@@ -171,7 +230,7 @@ export function SubHeaderMovieSearchFields() {
       selectedRating,
       selectedSortValue,
       selectedStreamerSignature,
-    ]
+    ],
   );
 
   const { movieVoteCount, movieSortBy } = useMemo(() => {
@@ -238,10 +297,56 @@ export function SubHeaderMovieSearchFields() {
     };
   }, [registerSubmitHandler, submitFilters]);
 
+  useEffect(() => {
+    if (
+      !pendingPresetRequestId ||
+      readyPresetRequestIdRef.current === pendingPresetRequestId ||
+      displayedFiltersAreDirty ||
+      isYearRangeInvalid
+    ) {
+      return;
+    }
+
+    let filterPaintFrameId: number | null = null;
+    let submitFrameId: number | null = null;
+    let isCancelled = false;
+
+    /*
+      The first frame lets React Native paint every selected preset value.
+      Submitting on the following frame makes the query the final action in
+      this navigation flow instead of racing the controls while they mount.
+    */
+    filterPaintFrameId = requestAnimationFrame(() => {
+      submitFrameId = requestAnimationFrame(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        readyPresetRequestIdRef.current = pendingPresetRequestId;
+        onPresetFiltersReady(pendingPresetRequestId);
+      });
+    });
+
+    return () => {
+      isCancelled = true;
+      if (filterPaintFrameId !== null) {
+        cancelAnimationFrame(filterPaintFrameId);
+      }
+      if (submitFrameId !== null) {
+        cancelAnimationFrame(submitFrameId);
+      }
+    };
+  }, [
+    displayedFiltersAreDirty,
+    isYearRangeInvalid,
+    onPresetFiltersReady,
+    pendingPresetRequestId,
+  ]);
+
   return (
     <View>
       <Pressable
-        onPress={() => setIsFiltersVisible((currentValue) => !currentValue)}
+        onPress={() => setIsFiltersVisible(currentValue => !currentValue)}
         style={styles.visibilityToggle}
       >
         {/*
@@ -262,7 +367,10 @@ export function SubHeaderMovieSearchFields() {
       </Pressable>
 
       {!isFiltersVisible ? null : (
-        <View {...filterSwipeResponder.panHandlers}>
+        <View
+          testID="advanced-search-filter-fields-area"
+          onTouchStart={rememberFilterSwipeStart}
+        >
           <Pressable
             onPress={onToggleExcludeSeenMovies}
             style={styles.excludeSeenToggle}
@@ -319,22 +427,22 @@ export function SubHeaderMovieSearchFields() {
           <View style={styles.filterRow}>
             <GenreField
               value={selectedGenre}
-              onChange={(nextValue) => setSelectedGenre(nextValue)}
+              onChange={nextValue => setSelectedGenre(nextValue)}
             />
             <RatingField
               value={selectedRating}
-              onChange={(nextValue) => setSelectedRating(nextValue)}
+              onChange={nextValue => setSelectedRating(nextValue)}
             />
           </View>
 
           <View style={styles.filterRow}>
             <StreamerField
               value={selectedStreamer}
-              onChange={(nextValue) => setSelectedStreamer(nextValue)}
+              onChange={nextValue => setSelectedStreamer(nextValue)}
             />
             <SortField
               value={selectedSortValue}
-              onChange={(nextValue) => setSelectedSortValue(nextValue)}
+              onChange={nextValue => setSelectedSortValue(nextValue)}
             />
           </View>
         </View>

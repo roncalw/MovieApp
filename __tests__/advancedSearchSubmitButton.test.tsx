@@ -40,6 +40,7 @@ function renderSubmitButton(isSubmitDisabled: boolean) {
     loadedPages: 0,
     totalPages: null,
     onSubmitFilters: jest.fn(),
+    onPresetFiltersReady: jest.fn(),
     onDisplayedFiltersDirtyChange: jest.fn(),
     excludeSeenMovies: false,
     onToggleExcludeSeenMovies: jest.fn(),

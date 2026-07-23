@@ -23,6 +23,7 @@ import type {
 export function HeaderMovieSearch({
   title,
   appliedParams,
+  pendingPresetRequestId,
   loadedPages,
   totalPages,
   excludeSeenMovies,
@@ -31,7 +32,9 @@ export function HeaderMovieSearch({
   onToggleExcludeSeenMovies,
   isSearchSubmitting,
   onSubmitFilters,
+  onPresetFiltersReady,
   onDisplayedFiltersDirtyChange,
+  registerFilterSwipeHandlers,
 }: HeaderMovieSearchProps) {
   const [isFilterInputInvalid, setIsFilterInputInvalid] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
@@ -48,9 +51,11 @@ export function HeaderMovieSearch({
   const contextValue = useMemo<HeaderMovieSearchContextValue>(
     () => ({
       appliedParams,
+      pendingPresetRequestId,
       loadedPages,
       totalPages,
       onSubmitFilters,
+      onPresetFiltersReady,
       onDisplayedFiltersDirtyChange,
       excludeSeenMovies,
       onToggleExcludeSeenMovies,
@@ -58,6 +63,7 @@ export function HeaderMovieSearch({
       onValidityChange: setIsFilterInputInvalid,
       registerSubmitHandler,
       submitDraftFilters,
+      registerFilterSwipeHandlers,
     }),
     [
       appliedParams,
@@ -67,7 +73,10 @@ export function HeaderMovieSearch({
       onDisplayedFiltersDirtyChange,
       onToggleExcludeSeenMovies,
       onSubmitFilters,
+      onPresetFiltersReady,
+      pendingPresetRequestId,
       registerSubmitHandler,
+      registerFilterSwipeHandlers,
       submitDraftFilters,
       totalPages,
     ],
