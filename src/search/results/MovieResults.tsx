@@ -25,6 +25,7 @@ export function MovieResults({
   ListHeaderComponentStyle,
   cardVariant = 'summary',
   showRatingBadge = true,
+  imageRefreshGeneration,
   onMoviePress,
   onRefresh,
   refreshing,
@@ -78,6 +79,7 @@ export function MovieResults({
               movie={item}
               variant={cardVariant}
               showRatingBadge={showRatingBadge}
+              imageRefreshGeneration={imageRefreshGeneration}
               onPress={() => onMoviePress?.(item)}
             />
           );

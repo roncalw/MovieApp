@@ -3,6 +3,7 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { HeaderMovieSearchContext } from '../src/search/advanced/HeaderMovieSearchContext';
 import { SubHeaderMovieSearchFields } from '../src/search/advanced/SubHeaderMovieSearchFields';
 import type { HeaderMovieSearchContextValue } from '../src/types/search/movieSearchHeaderTypes';
+import { getDefaultEndDate } from '../src/utils/movieSearchDates';
 
 jest.mock('@react-native-vector-icons/ionicons/static', () => () => null);
 
@@ -47,7 +48,7 @@ describe('Home preset submission on Advanced Search', () => {
       appliedParams: {
         movieRatings: 'PG',
         beginDate: '2021-01-01',
-        endDate: '2026-07-23',
+        endDate: getDefaultEndDate(),
         movieGenres: ['18'],
         movieStreamers: ['8'],
         movieVoteCount: '1000',

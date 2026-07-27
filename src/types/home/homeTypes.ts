@@ -31,6 +31,7 @@ export type HomeHeroCarouselProps = {
   isError: boolean;
   error: unknown;
   isAutoPlayPaused?: boolean;
+  imageRefreshGeneration?: number;
   onMoviePress: (movie: movieType) => void;
 };
 
@@ -39,6 +40,7 @@ export type HomeMoviePosterRowProps = {
   movies: movieType[] | undefined;
   isLoading: boolean;
   isError: boolean;
+  imageRefreshGeneration?: number;
   onMoviePress: (movie: movieType) => void;
   onTitlePress?: () => void;
 };

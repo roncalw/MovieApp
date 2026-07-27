@@ -16,6 +16,7 @@ export type MovieCardProps = {
   onPress: () => void;
   variant?: 'summary' | 'posterRating';
   showRatingBadge?: boolean;
+  imageRefreshGeneration?: number;
 };
 
 type MovieResultsRefreshProps =
@@ -34,6 +35,7 @@ export type MovieResultsProps = {
   ListHeaderComponentStyle?: StyleProp<ViewStyle>;
   cardVariant?: 'summary' | 'posterRating';
   showRatingBadge?: boolean;
+  imageRefreshGeneration?: number;
   onMoviePress?: (movie: movieType) => void;
   onEndReached?: () => void;
   hasNextPage?: boolean;

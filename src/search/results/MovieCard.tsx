@@ -9,12 +9,13 @@ Purpose:
    * Renders a reusable tappable movie summary card that the shared results list can use across multiple screens.
 */
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
 import { getMovieImageUri } from '../../utils/movieImages';
 import type { MovieCardProps } from '../../types/search/movieResultsTypes';
+import { MovieRemoteImage } from '../../shared/images/MovieRemoteImage';
 
 const imageNotFound = require('../../assets/images/MissingMoviePlaceholder.png');
 
@@ -23,6 +24,7 @@ export function MovieCard({
   onPress,
   variant = 'summary',
   showRatingBadge = true,
+  imageRefreshGeneration,
 }: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
   const movieImageUri = getMovieImageUri(movie);
@@ -33,12 +35,12 @@ export function MovieCard({
       onPress={onPress}
     >
       <View>
-        <Image
-          source={
-            movieImageUri
-              ? { uri: movieImageUri }
-              : imageNotFound
-          }
+        <MovieRemoteImage
+          uri={movieImageUri}
+          fallbackSource={imageNotFound}
+          movieId={movie.id}
+          diagnosticContext="Movie results"
+          refreshGeneration={imageRefreshGeneration}
           style={[
             styles.poster,
             isPosterRating ? styles.posterRatingImage : null,

@@ -10,8 +10,8 @@ Purpose:
    * Recreates the legacy Home entry point with an upcoming-movie hero carousel, TMDB poster rows, and the same
      local movie-detail overlay behavior used by Advanced Search.
 */
-import React, { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
   DrawerActions,
   useIsFocused,
@@ -35,6 +35,16 @@ import type { HomeAdvancedSearchSectionId } from '../types/home/homeTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
+import { prepareMovieImages } from '../utils/movieImageLoading';
+import { typography } from '../theme/typography';
+import {
+  buildHomeSnapshot,
+  getHomeSnapshotCollections,
+  refreshHomeQueryStates,
+  toHomeQueryState,
+  type HomeQueryState,
+  type HomeSnapshot,
+} from './homeLoading';
 
 export function HomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
@@ -61,32 +71,84 @@ export function HomeScreen() {
   const refetchHorrorMovies = horrorMoviesQuery.refetch;
   const refetchMusicMovies = musicMoviesQuery.refetch;
   const refetchDocumentaryMovies = documentaryMoviesQuery.refetch;
-  const moviePosterRows = HOME_ADVANCED_SEARCH_SECTIONS.map(section => ({
-    ...section,
-    query: {
-      popular: popularMoviesQuery,
-      family: familyMoviesQuery,
-      comedy: comedyMoviesQuery,
-      drama: dramaMoviesQuery,
-      crime: crimeMoviesQuery,
-      horror: horrorMoviesQuery,
-      music: musicMoviesQuery,
-      documentary: documentaryMoviesQuery,
-    }[section.id],
-  }));
+  const [homeSnapshot, setHomeSnapshot] = useState<HomeSnapshot | null>(null);
+  const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
+  const initialPreparationRef = useRef<Promise<HomeSnapshot> | null>(null);
+  const homeQueryStates = useMemo<HomeQueryState[]>(
+    () => [
+      toHomeQueryState(upcomingMoviesQuery),
+      toHomeQueryState(popularMoviesQuery),
+      toHomeQueryState(familyMoviesQuery),
+      toHomeQueryState(comedyMoviesQuery),
+      toHomeQueryState(dramaMoviesQuery),
+      toHomeQueryState(crimeMoviesQuery),
+      toHomeQueryState(horrorMoviesQuery),
+      toHomeQueryState(musicMoviesQuery),
+      toHomeQueryState(documentaryMoviesQuery),
+    ],
+    [
+      comedyMoviesQuery,
+      crimeMoviesQuery,
+      documentaryMoviesQuery,
+      dramaMoviesQuery,
+      familyMoviesQuery,
+      horrorMoviesQuery,
+      musicMoviesQuery,
+      popularMoviesQuery,
+      upcomingMoviesQuery,
+    ],
+  );
+  const initialQueriesHaveSettled = homeQueryStates.every(
+    query => !query.isLoading,
+  );
+
+  useEffect(() => {
+    if (
+      homeSnapshot ||
+      !initialQueriesHaveSettled
+    ) {
+      return;
+    }
+
+    let isCancelled = false;
+    if (!initialPreparationRef.current) {
+      const nextSnapshot = buildHomeSnapshot(homeQueryStates);
+
+      initialPreparationRef.current = prepareMovieImages(
+        getHomeSnapshotCollections(nextSnapshot),
+      ).then(() => nextSnapshot);
+    }
+
+    void initialPreparationRef.current.then(nextSnapshot => {
+      if (!isCancelled) {
+        setHomeSnapshot(nextSnapshot);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [homeQueryStates, homeSnapshot, initialQueriesHaveSettled]);
+
   const refreshHome = useCallback(async () => {
-    await Promise.allSettled([
-      refetchUpcomingMovies(),
-      refetchPopularMovies(),
-      refetchFamilyMovies(),
-      refetchComedyMovies(),
-      refetchDramaMovies(),
-      refetchCrimeMovies(),
-      refetchHorrorMovies(),
-      refetchMusicMovies(),
-      refetchDocumentaryMovies(),
+    const nextQueryStates = await refreshHomeQueryStates(homeQueryStates, [
+      refetchUpcomingMovies,
+      refetchPopularMovies,
+      refetchFamilyMovies,
+      refetchComedyMovies,
+      refetchDramaMovies,
+      refetchCrimeMovies,
+      refetchHorrorMovies,
+      refetchMusicMovies,
+      refetchDocumentaryMovies,
     ]);
+    const nextSnapshot = buildHomeSnapshot(nextQueryStates);
+
+    await prepareMovieImages(getHomeSnapshotCollections(nextSnapshot));
+    setHomeSnapshot(nextSnapshot);
+    setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
   }, [
+    homeQueryStates,
     refetchComedyMovies,
     refetchCrimeMovies,
     refetchDocumentaryMovies,
@@ -98,6 +160,12 @@ export function HomeScreen() {
     refetchUpcomingMovies,
   ]);
   const pageRefresh = usePageRefresh(refreshHome);
+  const moviePosterRows = homeSnapshot
+    ? HOME_ADVANCED_SEARCH_SECTIONS.map(section => ({
+        ...section,
+        query: homeSnapshot.rows[section.id],
+      }))
+    : [];
 
   function handleOpenDrawer() {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -116,22 +184,33 @@ export function HomeScreen() {
     });
   }
 
+  if (!homeSnapshot) {
+    return (
+      <View style={styles.preparingHome}>
+        <ActivityIndicator size="large" />
+        <Text allowFontScaling={false} style={styles.preparingHomeText}>
+          Preparing movies...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <RefreshableScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         directionalLockEnabled
-        nestedScrollEnabled
         {...pageRefresh}
       >
         <View style={styles.heroStage}>
           <HomeHeroCarousel
-            movies={upcomingMoviesQuery.data}
-            isLoading={upcomingMoviesQuery.isLoading}
-            isError={upcomingMoviesQuery.isError}
-            error={upcomingMoviesQuery.error}
+            movies={homeSnapshot.upcoming.data}
+            isLoading={false}
+            isError={homeSnapshot.upcoming.isError}
+            error={homeSnapshot.upcoming.error}
             isAutoPlayPaused={!isFocused}
+            imageRefreshGeneration={imageRefreshGeneration}
             onMoviePress={openMovieDetail}
           />
           <HeaderActionRow
@@ -158,8 +237,9 @@ export function HomeScreen() {
             key={row.title}
             title={row.title}
             movies={row.query.data}
-            isLoading={row.query.isLoading}
+            isLoading={false}
             isError={row.query.isError}
+            imageRefreshGeneration={imageRefreshGeneration}
             onMoviePress={openMovieDetail}
             onTitlePress={() => handleOpenAdvancedSearchSection(row.id)}
           />
@@ -173,6 +253,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  preparingHome: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  preparingHomeText: {
+    ...typography.feedbackBody,
+    marginTop: scaleSize(10),
+    color: colors.textSecondary,
   },
   scrollView: {
     flex: 1,

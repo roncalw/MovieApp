@@ -11,7 +11,6 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   View,
   Pressable,
   StyleSheet,
@@ -23,12 +22,15 @@ import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
+import { MovieRemoteImage } from '../shared/images/MovieRemoteImage';
+import { imageAssets } from '../styles/assets';
 
 export function HomeMoviePosterRow({
   title,
   movies,
   isLoading,
   isError,
+  imageRefreshGeneration,
   onMoviePress,
   onTitlePress,
 }: HomeMoviePosterRowProps) {
@@ -71,7 +73,6 @@ export function HomeMoviePosterRow({
           keyExtractor={item => item.id.toString()}
           horizontal
           directionalLockEnabled
-          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.posterListContent}
           renderItem={({ item }) => {
@@ -85,8 +86,12 @@ export function HomeMoviePosterRow({
                 accessibilityLabel={`Open ${item.title || item.original_title}`}
               >
                 {movieImageUri ? (
-                  <Image
-                    source={{ uri: movieImageUri }}
+                  <MovieRemoteImage
+                    uri={movieImageUri}
+                    fallbackSource={imageAssets.missingMovie}
+                    movieId={item.id}
+                    diagnosticContext={`Home ${title}`}
+                    refreshGeneration={imageRefreshGeneration}
                     style={styles.posterImage}
                     resizeMode="cover"
                   />

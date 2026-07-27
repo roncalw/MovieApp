@@ -33,6 +33,7 @@ import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
+import { prepareMovieImages } from '../../utils/movieImageLoading';
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
@@ -41,6 +42,7 @@ export function SearchByMovieTitleScreen() {
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
   const [draftTitle, setDraftTitle] = useState('');
   const [submittedTitle, setSubmittedTitle] = useState('');
+  const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
   const {
     data,
     isLoading,
@@ -49,6 +51,7 @@ export function SearchByMovieTitleScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useMovieTitleSearchQuery(submittedTitle, submittedTitle.length > 0);
   const titleSearchMovies = useMemo(
     () => data?.pages.flatMap(page => page.movies) ?? [],
@@ -65,7 +68,19 @@ export function SearchByMovieTitleScreen() {
     queryKey: queryKeys.movieTitleSearchRoot,
     resetLocalState: resetLocalSearchState,
   });
-  const pageRefresh = usePageRefresh(resetSearchPage);
+  const refreshTitleSearch = useCallback(async () => {
+    if (!submittedTitle) {
+      return;
+    }
+
+    const refreshedQuery = await refetch();
+    const refreshedMovies =
+      refreshedQuery.data?.pages.flatMap(page => page.movies) ?? [];
+
+    await prepareMovieImages([refreshedMovies]);
+    setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
+  }, [refetch, submittedTitle]);
+  const pageRefresh = usePageRefresh(refreshTitleSearch);
 
   useRegisterSearchPageReset('SearchByMovieTitle', resetSearchPage);
 
@@ -220,6 +235,7 @@ export function SearchByMovieTitleScreen() {
           movies={moviesWithRatings}
           cardVariant="posterRating"
           showRatingBadge
+          imageRefreshGeneration={imageRefreshGeneration}
           onMoviePress={openMovieDetail}
           onEndReached={fetchNextPage}
           hasNextPage={hasNextPage}

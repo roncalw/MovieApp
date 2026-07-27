@@ -17,7 +17,6 @@ import {
   Pressable,
   Text,
   View,
-  type ImageSourcePropType,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import type { ImdbWebsiteRatingScrapeStatus } from '../../types/tmdb/tmdbApiTypes';
@@ -27,6 +26,7 @@ import { colors } from '../../styles/colors';
 import { scaleSize } from '../../styles/scale';
 import { movieHeroStyles as styles } from '../../styles/movie/movieHeroStyles';
 import { getMovieImageUri } from '../../utils/movieImages';
+import { MovieRemoteImage } from '../../shared/images/MovieRemoteImage';
 
 export function MovieHero({
   movie,
@@ -43,7 +43,7 @@ export function MovieHero({
   onBackPress?: () => void;
   onRetryImdbRating: () => void;
 }) {
-  const posterSource = getPosterSource(movie);
+  const posterUri = getMovieImageUri(movie);
   const hasImdbRating = imdbRating !== null;
   const missingImdbCopy = getMissingImdbCopy(imdbRefreshStatus);
 
@@ -70,8 +70,11 @@ export function MovieHero({
           </Pressable>
         ) : null}
 
-        <Image
-          source={posterSource}
+        <MovieRemoteImage
+          uri={posterUri}
+          fallbackSource={imageAssets.missingMovie}
+          movieId={movie?.id}
+          diagnosticContext="Movie Detail hero"
           style={styles.heroPoster}
           resizeMode="cover"
         />
@@ -111,12 +114,6 @@ export function MovieHero({
       </View>
     </ImageBackground>
   );
-}
-
-function getPosterSource(movie: movieType | null): ImageSourcePropType {
-  const imageUri = getMovieImageUri(movie);
-
-  return imageUri ? { uri: imageUri } : imageAssets.missingMovie;
 }
 
 function formatImdbRating(imdbRating: number) {

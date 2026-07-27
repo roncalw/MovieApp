@@ -49,6 +49,7 @@ import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator
 import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
 import { useAdvancedFilterSwipe } from './useAdvancedFilterSwipe';
+import { prepareMovieImages } from '../../utils/movieImageLoading';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
@@ -115,6 +116,7 @@ export function MovieSearchScreen() {
   const [seenMovieIds, setSeenMovieIds] = useState<Set<number>>(new Set());
   const [searchSessionKey, setSearchSessionKey] = useState(0);
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
   const [pendingPresetRequestId, setPendingPresetRequestId] = useState<
     string | null
   >(null);
@@ -157,7 +159,6 @@ export function MovieSearchScreen() {
     queryKey: queryKeys.movieSearchRoot,
     resetLocalState: resetLocalSearchState,
   });
-  const pageRefresh = usePageRefresh(resetSearchScreen);
 
   useRegisterSearchPageReset('AdvancedSearch', resetSearchScreen);
 
@@ -272,7 +273,24 @@ export function MovieSearchScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useMovieSearchQuery(submittedParams, hasActiveSubmittedSearch);
+
+  const refreshActiveSearch = useCallback(async () => {
+    await refreshSeenMovieIds();
+
+    if (!hasActiveSubmittedSearch) {
+      return;
+    }
+
+    const refreshedQuery = await refetch();
+    const refreshedMovies =
+      refreshedQuery.data?.pages.flatMap(page => page.movies) ?? [];
+
+    await prepareMovieImages([refreshedMovies]);
+    setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
+  }, [hasActiveSubmittedSearch, refetch, refreshSeenMovieIds]);
+  const pageRefresh = usePageRefresh(refreshActiveSearch);
 
   const movies = useMemo(
     () =>
@@ -435,6 +453,7 @@ export function MovieSearchScreen() {
         <MovieResults
           movies={visibleMovies}
           cardVariant="posterRating"
+          imageRefreshGeneration={imageRefreshGeneration}
           onMoviePress={openMovieDetail}
           onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
           hasNextPage={hasActiveSubmittedSearch && hasNextPage}

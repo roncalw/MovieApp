@@ -10,7 +10,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -26,6 +25,8 @@ import { colors } from '../theme/colors';
 import { scaleSize } from '../theme/scale';
 import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
+import { MovieRemoteImage } from '../shared/images/MovieRemoteImage';
+import { imageAssets } from '../styles/assets';
 
 const AUTO_PLAY_INTERVAL_MS = 3000;
 const FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS = false;
@@ -36,6 +37,7 @@ export function HomeHeroCarousel({
   isError,
   error,
   isAutoPlayPaused = false,
+  imageRefreshGeneration,
   onMoviePress,
 }: HomeHeroCarouselProps) {
   const listRef = useRef<FlatList<movieType>>(null);
@@ -129,7 +131,6 @@ export function HomeHeroCarousel({
         horizontal
         pagingEnabled
         directionalLockEnabled
-        nestedScrollEnabled
         getItemLayout={(_, index) => ({
           length: width,
           offset: width * index,
@@ -153,8 +154,12 @@ export function HomeHeroCarousel({
               accessibilityLabel={`Open ${item.title || item.original_title}`}
             >
               {movieImageUri ? (
-                <Image
-                  source={{ uri: movieImageUri }}
+                <MovieRemoteImage
+                  uri={movieImageUri}
+                  fallbackSource={imageAssets.missingMovie}
+                  movieId={item.id}
+                  diagnosticContext="Home hero"
+                  refreshGeneration={imageRefreshGeneration}
                   style={styles.heroImage}
                   resizeMode={isIPad ? 'contain' : 'cover'}
                 />

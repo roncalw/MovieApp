@@ -8,13 +8,11 @@
 import React, { useMemo } from 'react';
 import {
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
-  type ImageSourcePropType,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { mapPersonMovieCreditToMovie } from '../../api/tmdb/services/movieService';
@@ -37,6 +35,7 @@ import type {
   FilmographyItem,
 } from '../../types/movie/personTypes';
 import { getMovieImagePath, getMovieImageUri } from '../../utils/movieImages';
+import { MovieRemoteImage } from '../../shared/images/MovieRemoteImage';
 
 const IMAGE_MOVIE_NOT_FOUND = require('../../assets/images/MissingMoviePlaceholder.png');
 
@@ -114,8 +113,11 @@ export function PersonFilmographySection({
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.title}`}
               >
-                <Image
-                  source={getMoviePosterSource(item.movie)}
+                <MovieRemoteImage
+                  uri={getMovieImageUri(item.movie)}
+                  fallbackSource={IMAGE_MOVIE_NOT_FOUND}
+                  movieId={item.movie.id}
+                  diagnosticContext="Person movie-history carousel"
                   style={styles.carouselPoster}
                   resizeMode="cover"
                 />
@@ -157,8 +159,11 @@ export function PersonFilmographySection({
             accessibilityRole="button"
             accessibilityLabel={`Open ${item.title}`}
           >
-            <Image
-              source={getMoviePosterSource(item.movie)}
+            <MovieRemoteImage
+              uri={getMovieImageUri(item.movie)}
+              fallbackSource={IMAGE_MOVIE_NOT_FOUND}
+              movieId={item.movie.id}
+              diagnosticContext="Person filmography"
               style={styles.filmographyPoster}
               resizeMode="cover"
             />
@@ -253,12 +258,6 @@ function addRoleLabel(roles: string[], roleLabel: string) {
   if (!roles.includes(roleLabel)) {
     roles.push(roleLabel);
   }
-}
-
-function getMoviePosterSource(movie: movieType): ImageSourcePropType {
-  const imageUri = getMovieImageUri(movie);
-
-  return imageUri ? { uri: imageUri } : IMAGE_MOVIE_NOT_FOUND;
 }
 
 function getYear(releaseDate: string) {
