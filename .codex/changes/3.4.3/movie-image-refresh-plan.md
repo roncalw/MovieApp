@@ -79,7 +79,7 @@ This plan repairs the unreliable poster loading seen in the Google Play build wh
   - Reuse posters that already loaded successfully.
   - Preload newly introduced posters.
   - Retry posters that failed during a previous load.
-  - Keep the current Home page visible while refresh runs.
+  - Clear the current Home snapshot immediately so the page visibly returns to its normal loading state.
   - Publish the refreshed data after the coordinated operation settles or times out.
   - Stop the refresh indicator only after the data and image stages finish.
 
@@ -96,7 +96,7 @@ This plan repairs the unreliable poster loading seen in the Google Play build wh
 
   - Preserve the submitted genres, ratings, dates, providers, sort order, and "exclude seen" selection.
   - Rerun that exact submitted query.
-  - Keep the existing results visible while the refreshed results load.
+  - Clear the infinite-query result pages and page cursors before the request, then display only the new first-page response.
   - Prepare newly returned poster images before displaying the new result set.
   - Do not clear the filters or return the user to an empty search form.
 
@@ -104,18 +104,18 @@ This plan repairs the unreliable poster loading seen in the Google Play build wh
 
   - Preserve the current search text.
   - Refetch the first page for that title.
-  - Keep the existing results visible while refreshing.
-  - Reset pagination consistently after the refreshed first page arrives.
+  - Clear the infinite-query result pages and numeric page parameters before the request, then display only the new first-page response.
+  - Restart pagination at page one after the refreshed first page arrives.
   - Keep "Clear Search" as a separate explicit action.
 
 - **Preserve the existing gesture ownership and scrolling behavior.**
 
-  - Do not add pull-to-refresh to the movie-results list.
-  - Swiping downward while viewing later result pages must continue moving backward through those results.
-  - Do not intercept normal result-list scrolling.
-  - Keep refresh limited to its existing designated top or header area.
+  - Put pull-to-refresh on the movie-results list because that is the content the user is actually pulling.
+  - Let the native list activate refresh only when it is already at the top.
+  - Swiping downward while viewing later result pages must continue moving backward through those results without refreshing.
+  - Let each native refresh control own the pull threshold and release signal; hold iPhone's early callback until its results list reports the real drag-end event.
   - Preserve the Advanced Search upward swipe that hides the filters.
-  - Test only to confirm that the image and refresh changes did not alter these gestures.
+  - Confirm these behaviors on both platforms in addition to the automated gesture tests.
 
 - **Keep `w500` during the primary repair.**
 
@@ -178,7 +178,7 @@ This plan repairs the unreliable poster loading seen in the Google Play build wh
 
 ## Implementation and Verification Record
 
-Completed on July 26, 2026:
+Completed through July 28, 2026:
 
 - **Implemented coordinated Home loading without removing cards.**
 
@@ -186,7 +186,7 @@ Completed on July 26, 2026:
   - Their results are converted into one Home snapshot after every query settles.
   - All unique hero and row image URLs are prepared together with `Promise.allSettled` before that snapshot is displayed.
   - One failed category keeps its previous data and receives its own error state; successful categories are still published.
-  - Home keeps its current snapshot visible during refresh and replaces it only after refreshed data and image preparation finish.
+  - Home clears its current snapshot during refresh, displays the standard loading indicator, and publishes one rebuilt snapshot only after refreshed data and image preparation finish.
 
 - **Implemented shared, observable movie-image behavior.**
 
@@ -200,23 +200,36 @@ Completed on July 26, 2026:
 - **Implemented real refresh behavior.**
 
   - Home refetches all nine collections and prepares the resulting image set.
-  - Title Search refetches the currently submitted title instead of clearing the form.
-  - Advanced Search refetches the currently submitted filters instead of resetting them.
+  - Title Search preserves the submitted title and directly requests page one again instead of clearing the form or asking TanStack Query to reuse cached data.
+  - Advanced Search preserves the submitted filters and directly requests its first cursor page again instead of resetting the filters or reusing cached data.
+  - Both explicit refresh requests send no-cache headers and a unique refresh-request URL parameter, preventing the native HTTP cache from satisfying the reload from the identical prior URL.
+  - Before the server request starts, both searches empty their real infinite-query `pages` and `pageParams` arrays. This removes the cards and discards every old paging cursor rather than merely hiding the rendered cards.
+  - After the response arrives, only the refreshed first page and its initial page parameter are stored, so later scrolling continues from the newly restarted result set.
+  - If the replacement request fails, the previous pages and paging values are restored so a temporary network failure cannot strand the search on an unexplained blank screen.
+  - The transition is driven by the real request's `refreshing` state; it is not a timer-only animation.
   - Refresh waits for both JSON and image preparation before its indicator completes.
 
 - **Preserved gesture ownership.**
 
-  - No refresh control was added to either results list.
-  - Pull-to-refresh remains in the existing top/header refresh area.
-  - Advanced Search still recognizes its upward swipe to hide filters.
-  - Unnecessary nested-scroll flags were removed from Home's outer and horizontal scrolling containers; no Android-only branch was added.
+  - Pull-to-refresh is attached to the actual results `FlatList`, fixing Android where the short header could not reliably activate its refresh control.
+  - Each search page now renders its header or filters and result cards inside one `FlatList`, using React Native's standard native refresh props. A separate maroon activity indicator mirrors the same real `refreshing` state so the reload remains visually obvious on both platforms.
+  - A shared release gate lets the native indicator react to the pull without starting the request early. iPhone's early callback waits for `onScrollEndDrag`; Android's `SwipeRefreshLayout` callback already follows its native `ACTION_UP` release and runs directly. Both platforms therefore clear pages and start the HTTP request only after release.
+  - The obsolete separate search-page scroll layout was removed. `MovieResults` now contains the one release gate the native lists require: iPhone waits for the list's drag-end event, while Android uses its native post-release refresh callback.
+  - A results list that is below offset zero continues scrolling backward normally; native pull-to-refresh can activate only after that list reaches its top.
+  - Advanced Search records a touch that starts in its filter fields while the results list owns movement. Raw touch movement covers iPhone and short pages; the list's native scroll offset covers Android after it takes ownership of a scrollable drag.
+  - Unnecessary nested-scroll flags were removed from Home's outer and horizontal scrolling containers. The filter-swipe implementation is shared; the only platform condition is the native refresh-release timing described above.
 
 - **Automated verification passed.**
 
   - TypeScript: `npm run tsne`.
   - ESLint: `npm run lintq`.
-  - Jest: 18 suites and 57 tests passed.
+  - Jest: 22 suites and 71 tests passed.
   - Coverage added for simultaneous Home refetch starts, partial category failure, URL deduplication, native-cache reuse, image-preparation failure and timeout, bounded retry, fallback display, and refresh-generation retry.
+  - Query-level coverage proves that refresh immediately clears the cached multi-page result set and every page parameter, performs one real first-page request, and stores only that new first page.
+  - Results-list coverage proves that the page callback and refreshing state reach the native list and that a visible progress indicator is rendered.
+  - Release-timing coverage proves that iPhone does not call the real refresh function while a drag is held, calls it once on drag end, and does not leave Android waiting for a ScrollView event its native refresh control does not emit.
+  - Gesture-ownership coverage proves that list-owned native scrolling still collapses Advanced Search filters without replacing the refresh drag handlers.
+  - A native XCUITest launched the iPhone app, submitted `Matrix` in Title Search, submitted the default Advanced Search filters, performed a long pull on each real results list, and verified that both refreshed first pages repopulated.
   - The existing Advanced Search swipe and preset-submission tests remain green.
 
 - **Native build verification passed.**
@@ -230,7 +243,8 @@ Completed on July 26, 2026:
   - Uninstalled the previous app and installed the release APK, providing an empty application cache.
   - Home displayed its hero and complete visible poster rows on the first launch.
   - Home pull-to-refresh completed, changed the fetched hero content, and left posters visible without navigating away.
-  - Title Search returned poster results for `Matrix`; header refresh preserved `Matrix` and the results.
+  - Title Search returned poster results for `Matrix`; an explicit held touch showed the native pull indicator without firing early, release preserved `Matrix`, the old cards cleared, and a fresh page-one result set repopulated.
+  - Advanced Search returned its default filtered results; an explicit held pull displayed the native indicator, release kept the same filters, the old cards cleared, and a fresh page-one result set repopulated.
   - The results list was scrolled several screens downward, then backward toward the top without invoking refresh.
   - Advanced Search returned poster results, refresh preserved the submitted search, and the upward swipe still changed `Hide Filter` to `Show Filter`.
   - Filtered Logcat output contained no `Movie image` failure, React Native fatal exception, or Android runtime crash.
@@ -240,8 +254,10 @@ Completed on July 26, 2026:
   - Uninstalled and reinstalled the simulator app for a clean application state.
   - Home displayed its hero and poster rows.
   - Title Search returned poster results for `Matrix`.
-  - Header refresh preserved `Matrix` and its results.
+  - A simulator recording confirmed that Title Search refresh preserved `Matrix`, displayed the native pull indicator, cleared the old cards after release, and repopulated from the new first-page response.
+  - The same recording confirmed that Advanced Search kept its submitted filters, displayed the native pull indicator, cleared the old cards after release, and repopulated from the new first-page response.
   - No movie-image failure was found in the captured native log. Simulator-only OneSignal startup retries and Core Haptics warnings were unrelated to poster loading.
+  - Final manual checks confirmed the filter-collapse and pull-to-refresh gestures behave correctly on both iPhone and Android.
 
 Remaining release gates that require external hardware or distribution access:
 

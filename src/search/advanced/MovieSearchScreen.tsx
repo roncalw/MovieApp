@@ -46,10 +46,11 @@ import type { AppDrawerParamList } from '../../types/navigation/navigationTypes'
 import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
 import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
-import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
 import { useAdvancedFilterSwipe } from './useAdvancedFilterSwipe';
 import { prepareMovieImages } from '../../utils/movieImageLoading';
+import { fetchMovieSearchResults } from '../../api/tmdb/services/movieService';
+import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
@@ -134,7 +135,7 @@ export function MovieSearchScreen() {
     setIsFiltersVisible(currentValue => !currentValue);
   }, []);
 
-  const { onFilterAreaTouchStart, topSectionTouchHandlers } =
+  const { onFilterAreaTouchStart, resultListGestureHandlers } =
     useAdvancedFilterSwipe(hideFilters);
 
   useEffect(() => {
@@ -170,8 +171,8 @@ export function MovieSearchScreen() {
   const refreshSeenMovieIds = useCallback(async () => {
     try {
       setSeenMovieIds(await getStoredMovieIds(MOVIE_SEEN_STORAGE_KEY));
-    } catch (error) {
-      console.error('Error loading seen movie ids:', error);
+    } catch (storageError) {
+      console.error('Error loading seen movie ids:', storageError);
       setSeenMovieIds(new Set());
     }
   }, []);
@@ -273,23 +274,36 @@ export function MovieSearchScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch,
   } = useMovieSearchQuery(submittedParams, hasActiveSubmittedSearch);
 
   const refreshActiveSearch = useCallback(async () => {
-    await refreshSeenMovieIds();
-
     if (!hasActiveSubmittedSearch) {
       return;
     }
 
-    const refreshedQuery = await refetch();
-    const refreshedMovies =
-      refreshedQuery.data?.pages.flatMap(page => page.movies) ?? [];
+    const activeQueryKey = queryKeys.movieSearch(submittedParams);
 
-    await prepareMovieImages([refreshedMovies]);
+    const [refreshedFirstPage] = await Promise.all([
+      refreshActiveInfiniteSearch({
+        queryClient,
+        queryKey: activeQueryKey,
+        firstPageParam: null as string | null,
+        fetchFirstPage: () =>
+          fetchMovieSearchResults(submittedParams, null, {
+            bypassCache: true,
+          }),
+      }),
+      refreshSeenMovieIds(),
+    ]);
+
+    await prepareMovieImages([refreshedFirstPage.movies]);
     setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
-  }, [hasActiveSubmittedSearch, refetch, refreshSeenMovieIds]);
+  }, [
+    hasActiveSubmittedSearch,
+    queryClient,
+    refreshSeenMovieIds,
+    submittedParams,
+  ]);
   const pageRefresh = usePageRefresh(refreshActiveSearch);
 
   const movies = useMemo(
@@ -398,68 +412,64 @@ export function MovieSearchScreen() {
   );
   const searchErrorMessage =
     error instanceof Error ? error.message : 'Unknown error';
+  const searchFeedback =
+    hasActiveSubmittedSearch && isLoading ? (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+        <Text allowFontScaling={false} style={styles.message}>
+          Loading movies...
+        </Text>
+      </View>
+    ) : hasActiveSubmittedSearch && isError ? (
+      <View style={styles.centered}>
+        <Text allowFontScaling={false} style={styles.errorText}>
+          Error loading movies
+        </Text>
+        <Text allowFontScaling={false} style={styles.message}>
+          {searchErrorMessage}
+        </Text>
+        <View style={styles.errorActions}>
+          <Pressable
+            onPress={resetSearchScreen}
+            style={styles.errorPrimaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Return to movie search filters"
+          >
+            <Text allowFontScaling={false} style={styles.errorPrimaryButtonText}>
+              Try Again
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={resetSearchScreen}
+            style={styles.errorSecondaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Return to movie search filters"
+          >
+            <Text
+              allowFontScaling={false}
+              style={styles.errorSecondaryButtonText}
+            >
+              Back to Search
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    ) : null;
 
   return (
-    <RefreshableSearchScreenLayout
-      topSection={searchHeader}
-      topSectionTouchHandlers={topSectionTouchHandlers}
+    <MovieResults
+      movies={searchFeedback ? [] : visibleMovies}
+      ListHeaderComponent={<View>{searchHeader}</View>}
+      ListHeaderComponentStyle={styles.resultsListHeader}
+      ListEmptyComponent={searchFeedback}
+      cardVariant="posterRating"
+      imageRefreshGeneration={imageRefreshGeneration}
+      onMoviePress={openMovieDetail}
+      onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
+      hasNextPage={hasActiveSubmittedSearch && hasNextPage}
+      isFetchingNextPage={hasActiveSubmittedSearch && isFetchingNextPage}
+      {...resultListGestureHandlers}
       {...pageRefresh}
-    >
-      {hasActiveSubmittedSearch && isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-          <Text allowFontScaling={false} style={styles.message}>
-            Loading movies...
-          </Text>
-        </View>
-      ) : hasActiveSubmittedSearch && isError ? (
-        <View style={styles.centered}>
-          <Text allowFontScaling={false} style={styles.errorText}>
-            Error loading movies
-          </Text>
-          <Text allowFontScaling={false} style={styles.message}>
-            {searchErrorMessage}
-          </Text>
-          <View style={styles.errorActions}>
-            <Pressable
-              onPress={resetSearchScreen}
-              style={styles.errorPrimaryButton}
-              accessibilityRole="button"
-              accessibilityLabel="Return to movie search filters"
-            >
-              <Text
-                allowFontScaling={false}
-                style={styles.errorPrimaryButtonText}
-              >
-                Try Again
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={resetSearchScreen}
-              style={styles.errorSecondaryButton}
-              accessibilityRole="button"
-              accessibilityLabel="Return to movie search filters"
-            >
-              <Text
-                allowFontScaling={false}
-                style={styles.errorSecondaryButtonText}
-              >
-                Back to Search
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      ) : (
-        <MovieResults
-          movies={visibleMovies}
-          cardVariant="posterRating"
-          imageRefreshGeneration={imageRefreshGeneration}
-          onMoviePress={openMovieDetail}
-          onEndReached={hasActiveSubmittedSearch ? fetchNextPage : undefined}
-          hasNextPage={hasActiveSubmittedSearch && hasNextPage}
-          isFetchingNextPage={hasActiveSubmittedSearch && isFetchingNextPage}
-        />
-      )}
-    </RefreshableSearchScreenLayout>
+    />
   );
 }

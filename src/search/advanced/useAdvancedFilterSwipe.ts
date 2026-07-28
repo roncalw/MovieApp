@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useRef } from 'react';
-import type { GestureResponderEvent, ScrollViewProps } from 'react-native';
+import type {
+  GestureResponderEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollViewProps,
+} from 'react-native';
 
 const FILTER_SWIPE_UP_MIN_DISTANCE = 35;
 const FILTER_SWIPE_UP_VERTICAL_DOMINANCE = 1.5;
@@ -14,30 +19,44 @@ export function isFilterSwipeUpGesture(gesture: { dx: number; dy: number }) {
   );
 }
 
-type TopSectionTouchHandlers = Pick<
+type ResultListGestureHandlers = Pick<
   ScrollViewProps,
-  'onTouchMove' | 'onTouchEnd' | 'onTouchCancel'
+  'onStartShouldSetResponderCapture' | 'onTouchMove' | 'onTouchEnd' | 'onScroll'
 >;
 
 /**
  * Coordinates one gesture across the two views that receive its events.
  *
  * The filter-fields View reports where the finger first touched the screen.
- * The surrounding refresh ScrollView continues receiving movement so a
- * downward drag can activate pull-to-refresh. If that same touch instead moves
- * deliberately upward, this hook calls onSwipeUp to hide the filter fields.
+ * The page's scrolling list then reports either raw touch movement or its
+ * native scroll distance. Using the list as the shared movement owner lets an
+ * upward filter swipe coexist with the list's pull-to-refresh gesture.
  */
 export function useAdvancedFilterSwipe(onSwipeUp: () => void) {
-  const startPointRef = useRef<{ pageX: number; pageY: number } | null>(null);
+  const currentScrollYRef = useRef(0);
+  const startPointRef = useRef<{
+    pageX: number;
+    pageY: number;
+    scrollY: number;
+  } | null>(null);
+
+  const onResultsTouchStartCapture = useCallback(() => {
+    // Clear any unfinished native scroll before the filter child records this
+    // gesture. Returning false observes the touch without taking it from the
+    // list, its refresh control, or any filter input.
+    startPointRef.current = null;
+    return false;
+  }, []);
 
   const onFilterAreaTouchStart = useCallback((event: GestureResponderEvent) => {
     startPointRef.current = {
       pageX: event.nativeEvent.pageX,
       pageY: event.nativeEvent.pageY,
+      scrollY: currentScrollYRef.current,
     };
   }, []);
 
-  const onTopSectionTouchMove = useCallback(
+  const onResultsTouchMove = useCallback(
     (event: GestureResponderEvent) => {
       const startPoint = startPointRef.current;
       if (!startPoint) {
@@ -57,21 +76,45 @@ export function useAdvancedFilterSwipe(onSwipeUp: () => void) {
     [onSwipeUp],
   );
 
-  const onTopSectionTouchEnd = useCallback(() => {
+  const onListScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const currentScrollY = event.nativeEvent.contentOffset.y;
+      const startPoint = startPointRef.current;
+
+      if (
+        startPoint &&
+        currentScrollY - startPoint.scrollY >= FILTER_SWIPE_UP_MIN_DISTANCE
+      ) {
+        startPointRef.current = null;
+        onSwipeUp();
+      }
+
+      currentScrollYRef.current = currentScrollY;
+    },
+    [onSwipeUp],
+  );
+
+  const onResultsTouchEnd = useCallback(() => {
     startPointRef.current = null;
   }, []);
 
-  const topSectionTouchHandlers = useMemo<TopSectionTouchHandlers>(
+  const resultListGestureHandlers = useMemo<ResultListGestureHandlers>(
     () => ({
-      onTouchMove: onTopSectionTouchMove,
-      onTouchEnd: onTopSectionTouchEnd,
-      onTouchCancel: onTopSectionTouchEnd,
+      onStartShouldSetResponderCapture: onResultsTouchStartCapture,
+      onTouchMove: onResultsTouchMove,
+      onTouchEnd: onResultsTouchEnd,
+      onScroll: onListScroll,
     }),
-    [onTopSectionTouchEnd, onTopSectionTouchMove],
+    [
+      onListScroll,
+      onResultsTouchEnd,
+      onResultsTouchMove,
+      onResultsTouchStartCapture,
+    ],
   );
 
   return {
     onFilterAreaTouchStart,
-    topSectionTouchHandlers,
+    resultListGestureHandlers,
   };
 }

@@ -8,7 +8,7 @@
  */
 
 import type React from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ScrollViewProps, StyleProp, ViewStyle } from 'react-native';
 import type { movieType } from '../movie/MovieTypes';
 
 export type MovieCardProps = {
@@ -33,6 +33,7 @@ export type MovieResultsProps = {
   movies: movieType[] | undefined;
   ListHeaderComponent?: React.ReactElement | null;
   ListHeaderComponentStyle?: StyleProp<ViewStyle>;
+  ListEmptyComponent?: React.ReactElement | null;
   cardVariant?: 'summary' | 'posterRating';
   showRatingBadge?: boolean;
   imageRefreshGeneration?: number;
@@ -40,4 +41,11 @@ export type MovieResultsProps = {
   onEndReached?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
-} & MovieResultsRefreshProps;
+} & MovieResultsRefreshProps &
+  Pick<
+    ScrollViewProps,
+    | 'onStartShouldSetResponderCapture'
+    | 'onTouchMove'
+    | 'onTouchEnd'
+    | 'onScroll'
+  >;

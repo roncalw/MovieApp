@@ -57,6 +57,15 @@ const ALL_STREAMER_PROVIDER_IDS = [
   '531',
 ];
 
+type MovieRequestOptions = {
+  bypassCache?: boolean;
+};
+
+const NO_CACHE_REQUEST_HEADERS = {
+  'Cache-Control': 'no-cache',
+  Pragma: 'no-cache',
+};
+
 function buildLegacyTmdbPath(endpoint: string, queryString = '') {
   const suffix = queryString.length > 0 ? `&${queryString}` : '';
 
@@ -66,6 +75,7 @@ function buildLegacyTmdbPath(endpoint: string, queryString = '') {
 async function fetchHomeMovieList(
   label: string,
   path: string,
+  options?: MovieRequestOptions,
 ): Promise<MovieListResponse> {
   /*
     WHY HOME USES tmdbClient:
@@ -79,7 +89,13 @@ async function fetchHomeMovieList(
 
   try {
     stage = 'axios-get';
-    const response = await tmdbClient.get<MovieListResponse>(path);
+    const requestPath = options?.bypassCache
+      ? `${path}&refreshRequest=${Date.now()}`
+      : path;
+    const response = await tmdbClient.get<MovieListResponse>(
+      requestPath,
+      options?.bypassCache ? { headers: NO_CACHE_REQUEST_HEADERS } : undefined,
+    );
 
     return response.data;
   } catch (error) {
@@ -219,8 +235,9 @@ export async function fetchMoviesByGenre(
 export async function fetchMovieSearchResults(
   params: MovieSearchParams,
   cursor: string | null,
+  options?: MovieRequestOptions,
 ): Promise<CloudflareMovieSearchResults> {
-  return fetchCloudflareMovieSearchResults(params, cursor);
+  return fetchCloudflareMovieSearchResults(params, cursor, options);
 }
 
 export async function fetchMovieListImdbRating(
@@ -240,6 +257,7 @@ export async function fetchMovieListImdbRating(
 export async function fetchMoviesByTitle(
   title: string,
   page: number,
+  options?: MovieRequestOptions,
 ): Promise<MovieTitleSearchResults> {
   const normalizedTitle = title.trim();
 
@@ -261,7 +279,7 @@ export async function fetchMoviesByTitle(
     ENDPOINTS.SEARCH_MOVIES_BY_TITLE,
     queryString.toString(),
   );
-  const data = await fetchHomeMovieList('title-search', path);
+  const data = await fetchHomeMovieList('title-search', path, options);
 
   return {
     movies: data.results.map(mapMovieToMovie),
@@ -283,6 +301,7 @@ export async function fetchMoviesByTitle(
 export async function fetchCloudflareMovieSearchResults(
   params: MovieSearchParams,
   cursor: string | null,
+  options?: MovieRequestOptions,
 ): Promise<CloudflareMovieSearchResults> {
   const {
     movieRatings,
@@ -343,6 +362,10 @@ export async function fetchCloudflareMovieSearchResults(
     searchParams.set('cursor', cursor);
   }
 
+  if (options?.bypassCache) {
+    searchParams.set('refreshRequest', Date.now().toString());
+  }
+
   /*
     WHAT THIS PATH DOES:
     - Builds the query-string path using your existing apiKey style
@@ -354,6 +377,7 @@ export async function fetchCloudflareMovieSearchResults(
   */
   const response = await fetch(
     `${CLOUDFLARE_MOVIE_SEARCH_URL}?${searchParams.toString()}`,
+    options?.bypassCache ? { headers: NO_CACHE_REQUEST_HEADERS } : undefined,
   );
 
   if (!response.ok) {

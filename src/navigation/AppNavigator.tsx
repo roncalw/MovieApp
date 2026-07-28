@@ -68,7 +68,7 @@ function AppDrawerNavigatorContent() {
 
   return (
     <Drawer.Navigator
-      drawerContent={props => <AppDrawerContent {...props} />}
+      drawerContent={AppDrawerContent}
       screenListeners={({ navigation, route }) => ({
         drawerItemPress: () => {
           const drawerState = navigation.getState();

@@ -17,6 +17,7 @@ import {
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { MovieResults } from '../results/MovieResults';
 import { HeaderActionRow } from '../../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../../shared/header/HeaderNavButton';
@@ -31,12 +32,14 @@ import type { AppDrawerParamList } from '../../types/navigation/navigationTypes'
 import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
 import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
-import { RefreshableSearchScreenLayout } from '../shared/RefreshableSearchScreenLayout';
 import { queryKeys } from '../../query/queryKeys';
 import { prepareMovieImages } from '../../utils/movieImageLoading';
+import { fetchMoviesByTitle } from '../../api/tmdb/services/movieService';
+import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const { openMovieDetail } = useDetailNavigation();
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
@@ -51,7 +54,6 @@ export function SearchByMovieTitleScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch,
   } = useMovieTitleSearchQuery(submittedTitle, submittedTitle.length > 0);
   const titleSearchMovies = useMemo(
     () => data?.pages.flatMap(page => page.movies) ?? [],
@@ -73,13 +75,19 @@ export function SearchByMovieTitleScreen() {
       return;
     }
 
-    const refreshedQuery = await refetch();
-    const refreshedMovies =
-      refreshedQuery.data?.pages.flatMap(page => page.movies) ?? [];
+    const activeQueryKey = queryKeys.movieTitleSearch(submittedTitle.trim());
 
-    await prepareMovieImages([refreshedMovies]);
+    const refreshedFirstPage = await refreshActiveInfiniteSearch({
+      queryClient,
+      queryKey: activeQueryKey,
+      firstPageParam: 1,
+      fetchFirstPage: () =>
+        fetchMoviesByTitle(submittedTitle.trim(), 1, { bypassCache: true }),
+    });
+
+    await prepareMovieImages([refreshedFirstPage.movies]);
     setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
-  }, [refetch, submittedTitle]);
+  }, [queryClient, submittedTitle]);
   const pageRefresh = usePageRefresh(refreshTitleSearch);
 
   useRegisterSearchPageReset('SearchByMovieTitle', resetSearchPage);
@@ -229,24 +237,29 @@ export function SearchByMovieTitleScreen() {
   );
 
   return (
-    <RefreshableSearchScreenLayout topSection={searchHeader} {...pageRefresh}>
-      {searchFeedback ?? (
-        <MovieResults
-          movies={moviesWithRatings}
-          cardVariant="posterRating"
-          showRatingBadge
-          imageRefreshGeneration={imageRefreshGeneration}
-          onMoviePress={openMovieDetail}
-          onEndReached={fetchNextPage}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-        />
-      )}
-    </RefreshableSearchScreenLayout>
+    <MovieResults
+      movies={searchFeedback ? [] : moviesWithRatings}
+      ListHeaderComponent={searchHeader}
+      ListHeaderComponentStyle={styles.resultsListHeader}
+      ListEmptyComponent={searchFeedback}
+      cardVariant="posterRating"
+      showRatingBadge
+      imageRefreshGeneration={imageRefreshGeneration}
+      onMoviePress={openMovieDetail}
+      onEndReached={fetchNextPage}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      {...pageRefresh}
+    />
   );
 }
 
 const styles = StyleSheet.create({
+  resultsListHeader: {
+    marginHorizontal: -scaleSize(20),
+    marginTop: -scaleSize(24),
+    marginBottom: scaleSize(24),
+  },
   header: {
     paddingHorizontal: scaleSize(16),
     paddingBottom: scaleSize(18),

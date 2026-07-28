@@ -11,7 +11,7 @@ Purpose:
      local movie-detail overlay behavior used by Advanced Search.
 */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   DrawerActions,
   useIsFocused,
@@ -36,7 +36,6 @@ import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { prepareMovieImages } from '../utils/movieImageLoading';
-import { typography } from '../theme/typography';
 import {
   buildHomeSnapshot,
   getHomeSnapshotCollections,
@@ -72,6 +71,7 @@ export function HomeScreen() {
   const refetchMusicMovies = musicMoviesQuery.refetch;
   const refetchDocumentaryMovies = documentaryMoviesQuery.refetch;
   const [homeSnapshot, setHomeSnapshot] = useState<HomeSnapshot | null>(null);
+  const [isRebuildingHome, setIsRebuildingHome] = useState(false);
   const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
   const initialPreparationRef = useRef<Promise<HomeSnapshot> | null>(null);
   const homeQueryStates = useMemo<HomeQueryState[]>(
@@ -105,6 +105,7 @@ export function HomeScreen() {
   useEffect(() => {
     if (
       homeSnapshot ||
+      isRebuildingHome ||
       !initialQueriesHaveSettled
     ) {
       return;
@@ -128,25 +129,41 @@ export function HomeScreen() {
     return () => {
       isCancelled = true;
     };
-  }, [homeQueryStates, homeSnapshot, initialQueriesHaveSettled]);
+  }, [
+    homeQueryStates,
+    homeSnapshot,
+    initialQueriesHaveSettled,
+    isRebuildingHome,
+  ]);
 
   const refreshHome = useCallback(async () => {
-    const nextQueryStates = await refreshHomeQueryStates(homeQueryStates, [
-      refetchUpcomingMovies,
-      refetchPopularMovies,
-      refetchFamilyMovies,
-      refetchComedyMovies,
-      refetchDramaMovies,
-      refetchCrimeMovies,
-      refetchHorrorMovies,
-      refetchMusicMovies,
-      refetchDocumentaryMovies,
-    ]);
-    const nextSnapshot = buildHomeSnapshot(nextQueryStates);
+    // Removing the snapshot unmounts every Home section immediately. The page
+    // then follows the same sequence as its first visit: request every Home
+    // collection together, prepare their posters, and publish one full snapshot.
+    setIsRebuildingHome(true);
+    initialPreparationRef.current = null;
+    setHomeSnapshot(null);
 
-    await prepareMovieImages(getHomeSnapshotCollections(nextSnapshot));
-    setHomeSnapshot(nextSnapshot);
-    setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
+    try {
+      const nextQueryStates = await refreshHomeQueryStates(homeQueryStates, [
+        refetchUpcomingMovies,
+        refetchPopularMovies,
+        refetchFamilyMovies,
+        refetchComedyMovies,
+        refetchDramaMovies,
+        refetchCrimeMovies,
+        refetchHorrorMovies,
+        refetchMusicMovies,
+        refetchDocumentaryMovies,
+      ]);
+      const nextSnapshot = buildHomeSnapshot(nextQueryStates);
+
+      await prepareMovieImages(getHomeSnapshotCollections(nextSnapshot));
+      setHomeSnapshot(nextSnapshot);
+      setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
+    } finally {
+      setIsRebuildingHome(false);
+    }
   }, [
     homeQueryStates,
     refetchComedyMovies,
@@ -188,9 +205,6 @@ export function HomeScreen() {
     return (
       <View style={styles.preparingHome}>
         <ActivityIndicator size="large" />
-        <Text allowFontScaling={false} style={styles.preparingHomeText}>
-          Preparing movies...
-        </Text>
       </View>
     );
   }
@@ -259,11 +273,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
-  },
-  preparingHomeText: {
-    ...typography.feedbackBody,
-    marginTop: scaleSize(10),
-    color: colors.textSecondary,
   },
   scrollView: {
     flex: 1,

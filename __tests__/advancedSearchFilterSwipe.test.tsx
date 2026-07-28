@@ -62,7 +62,7 @@ function FilterSwipeHarness() {
     () => setIsFiltersVisible(currentValue => !currentValue),
     [],
   );
-  const { onFilterAreaTouchStart, topSectionTouchHandlers } =
+  const { onFilterAreaTouchStart, resultListGestureHandlers } =
     useAdvancedFilterSwipe(hideFilters);
   const contextValue: HeaderMovieSearchContextValue = {
     ...baseContextValue,
@@ -72,7 +72,7 @@ function FilterSwipeHarness() {
   };
 
   return (
-    <View testID="advanced-search-top-section" {...topSectionTouchHandlers}>
+    <View testID="advanced-search-top-section" {...resultListGestureHandlers}>
       <HeaderMovieSearchContext.Provider value={contextValue}>
         <SubHeaderMovieSearchFields />
       </HeaderMovieSearchContext.Provider>
@@ -116,6 +116,36 @@ describe('Advanced Search swipe-to-hide filters', () => {
       }),
     ).toHaveLength(0);
 
+    act(() => component.unmount());
+  });
+
+  test('hides filters when the list takes ownership of the upward drag', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      component = TestRenderer.create(<FilterSwipeHarness />);
+    });
+
+    const fieldsArea = component.root.findByProps({
+      testID: 'advanced-search-filter-fields-area',
+    });
+    const topSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
+
+    expect(topSection.props.onStartShouldSetResponderCapture()).toBe(false);
+
+    act(() => {
+      fieldsArea.props.onTouchStart(touchEvent(100, 200));
+      topSection.props.onScroll({
+        nativeEvent: { contentOffset: { x: 0, y: 50 } },
+      });
+    });
+
+    expect(
+      component.root.findAll(
+        node => node.type === Text && node.props.children === 'Show Filter',
+      ),
+    ).toHaveLength(1);
     act(() => component.unmount());
   });
 

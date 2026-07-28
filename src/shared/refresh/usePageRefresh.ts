@@ -12,7 +12,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type PageRefreshAction = () => Promise<unknown> | unknown;
-export const MINIMUM_PAGE_REFRESH_DURATION_MS = 450;
+// Keep the native spinner and cleared result area visible long enough for a
+// person to recognize that the submitted search is genuinely being rerun.
+export const MINIMUM_PAGE_REFRESH_DURATION_MS = 1000;
 const EMPTY_PAGE_REFRESH: PageRefreshAction = () => undefined;
 
 function wait(milliseconds: number) {

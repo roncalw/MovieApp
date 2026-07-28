@@ -14,6 +14,11 @@ import { scaleSize } from '../scale';
 import { typography } from '../typography';
 
 export const movieSearchScreenStyles = StyleSheet.create({
+  resultsListHeader: {
+    marginHorizontal: -scaleSize(20),
+    marginTop: -scaleSize(24),
+    marginBottom: scaleSize(24),
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
