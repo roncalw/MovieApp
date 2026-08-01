@@ -8,6 +8,7 @@ describe('queryKeys', () => {
       endDate: '2026-12-31',
       movieGenres: [],
       movieStreamers: [],
+      movieOriginalLanguages: ['en'],
       movieVoteCount: '',
       movieSortBy: '',
     };
@@ -17,6 +18,30 @@ describe('queryKeys', () => {
     );
     expect(queryKeys.movieTitleSearch('Alien').slice(0, 1)).toEqual(
       queryKeys.movieTitleSearchRoot,
+    );
+  });
+
+  test('normalizes original-language order in the movie-search cache key', () => {
+    const baseParams = {
+      movieRatings: '',
+      beginDate: '2020-01-01',
+      endDate: '2026-12-31',
+      movieGenres: [],
+      movieStreamers: [],
+      movieVoteCount: '',
+      movieSortBy: '',
+    };
+
+    expect(
+      queryKeys.movieSearch({
+        ...baseParams,
+        movieOriginalLanguages: [' KO ', 'en', 'ko'],
+      }),
+    ).toEqual(
+      queryKeys.movieSearch({
+        ...baseParams,
+        movieOriginalLanguages: ['en', 'ko'],
+      }),
     );
   });
 

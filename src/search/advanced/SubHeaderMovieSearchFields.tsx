@@ -22,6 +22,7 @@ import { GenreField } from './fields/GenreField';
 import { RatingField } from './fields/RatingField';
 import { SortField } from './fields/SortField';
 import { StreamerField } from './fields/StreamerField';
+import { LanguageField } from './fields/LanguageField';
 import { YearWheelField } from './fields/YearWheelField';
 import { getInitialSortValue } from './fields/movieSearchFieldUtils';
 import { colors } from '../../styles/colors';
@@ -36,6 +37,7 @@ import {
   getYearFromDateString,
 } from '../../utils/movieSearchDates';
 import { useHeaderMovieSearchContext } from './HeaderMovieSearchContext';
+import { useMovieLanguagesQuery } from '../../hooks/useMovieSearchQuery';
 
 function getSortedValueSignature(values: string[]) {
   return [...values].sort().join('|');
@@ -72,6 +74,9 @@ export function SubHeaderMovieSearchFields() {
   const [selectedStreamer, setSelectedStreamer] = useState(() => [
     ...appliedParams.movieStreamers,
   ]);
+  const [selectedOriginalLanguages, setSelectedOriginalLanguages] = useState(
+    () => [...appliedParams.movieOriginalLanguages],
+  );
   const [selectedSortValue, setSelectedSortValue] = useState(() =>
     getInitialSortValue(
       appliedParams.movieSortBy,
@@ -79,6 +84,14 @@ export function SubHeaderMovieSearchFields() {
     ),
   );
   const readyPresetRequestIdRef = useRef<string | null>(null);
+  const movieLanguagesQuery = useMovieLanguagesQuery();
+  const languageOptions = useMemo(
+    () =>
+      movieLanguagesQuery.data?.languages ?? [
+        { code: 'en', englishName: 'English', nativeName: 'English' },
+      ],
+    [movieLanguagesQuery.data?.languages],
+  );
   const excludeSeenToggleLabel = excludeSeenMovies
     ? 'Exclude movies you have seen? Yes'
     : 'Exclude movies you have seen? No';
@@ -92,6 +105,10 @@ export function SubHeaderMovieSearchFields() {
     () => getSortedValueSignature(appliedParams.movieStreamers),
     [appliedParams.movieStreamers],
   );
+  const appliedOriginalLanguageSignature = useMemo(
+    () => getSortedValueSignature(appliedParams.movieOriginalLanguages),
+    [appliedParams.movieOriginalLanguages],
+  );
   const selectedGenreSignature = useMemo(
     () => getSortedValueSignature(selectedGenre),
     [selectedGenre],
@@ -99,6 +116,10 @@ export function SubHeaderMovieSearchFields() {
   const selectedStreamerSignature = useMemo(
     () => getSortedValueSignature(selectedStreamer),
     [selectedStreamer],
+  );
+  const selectedOriginalLanguageSignature = useMemo(
+    () => getSortedValueSignature(selectedOriginalLanguages),
+    [selectedOriginalLanguages],
   );
 
   useEffect(() => {
@@ -111,6 +132,7 @@ export function SubHeaderMovieSearchFields() {
     setSelectedRating(appliedParams.movieRatings);
     setSelectedGenre([...appliedParams.movieGenres]);
     setSelectedStreamer([...appliedParams.movieStreamers]);
+    setSelectedOriginalLanguages([...appliedParams.movieOriginalLanguages]);
     setSelectedSortValue(
       getInitialSortValue(
         appliedParams.movieSortBy,
@@ -122,11 +144,13 @@ export function SubHeaderMovieSearchFields() {
     appliedParams.beginDate,
     appliedParams.endDate,
     appliedParams.movieGenres,
+    appliedParams.movieOriginalLanguages,
     appliedParams.movieRatings,
     appliedParams.movieSortBy,
     appliedParams.movieStreamers,
     appliedParams.movieVoteCount,
     appliedStreamerSignature,
+    appliedOriginalLanguageSignature,
   ]);
 
   const displayedFiltersAreDirty = useMemo(
@@ -136,6 +160,7 @@ export function SubHeaderMovieSearchFields() {
       selectedRating !== appliedParams.movieRatings ||
       selectedGenreSignature !== appliedGenreSignature ||
       selectedStreamerSignature !== appliedStreamerSignature ||
+      selectedOriginalLanguageSignature !== appliedOriginalLanguageSignature ||
       selectedSortValue !==
         getInitialSortValue(
           appliedParams.movieSortBy,
@@ -146,6 +171,7 @@ export function SubHeaderMovieSearchFields() {
       appliedParams.beginDate,
       appliedParams.endDate,
       appliedParams.movieRatings,
+      appliedOriginalLanguageSignature,
       appliedParams.movieSortBy,
       appliedParams.movieVoteCount,
       appliedStreamerSignature,
@@ -153,6 +179,7 @@ export function SubHeaderMovieSearchFields() {
       endYear,
       selectedGenreSignature,
       selectedRating,
+      selectedOriginalLanguageSignature,
       selectedSortValue,
       selectedStreamerSignature,
     ],
@@ -192,6 +219,7 @@ export function SubHeaderMovieSearchFields() {
       endDate: getEndDateFromYear(endYear),
       movieGenres: selectedGenre,
       movieStreamers: selectedStreamer,
+      movieOriginalLanguages: selectedOriginalLanguages,
       movieVoteCount,
       movieSortBy,
     });
@@ -203,6 +231,7 @@ export function SubHeaderMovieSearchFields() {
     onSubmitFilters,
     selectedGenre,
     selectedRating,
+    selectedOriginalLanguages,
     selectedStreamer,
   ]);
 
@@ -368,6 +397,19 @@ export function SubHeaderMovieSearchFields() {
             <SortField
               value={selectedSortValue}
               onChange={nextValue => setSelectedSortValue(nextValue)}
+            />
+          </View>
+
+          <View style={styles.languageFieldRow}>
+            <LanguageField
+              value={selectedOriginalLanguages}
+              onChange={setSelectedOriginalLanguages}
+              languages={languageOptions}
+              isLoading={movieLanguagesQuery.isLoading}
+              isError={movieLanguagesQuery.isError}
+              onRetry={() => {
+                movieLanguagesQuery.refetch();
+              }}
             />
           </View>
         </View>

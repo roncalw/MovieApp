@@ -8,6 +8,7 @@
  */
 
 import type { ImageSourcePropType } from 'react-native';
+import type { MovieLanguage } from '../tmdb/tmdbApiTypes';
 
 export type GenreFieldProps = {
   value: string[];
@@ -27,6 +28,15 @@ export type SortFieldProps = {
 export type StreamerFieldProps = {
   value: string[];
   onChange: (nextValue: string[]) => void;
+};
+
+export type LanguageFieldProps = {
+  value: string[];
+  onChange: (nextValue: string[]) => void;
+  languages: MovieLanguage[];
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
 };
 
 export type YearWheelFieldProps = {

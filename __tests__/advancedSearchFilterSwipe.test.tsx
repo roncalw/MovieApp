@@ -22,6 +22,21 @@ jest.mock('../src/search/advanced/fields/SortField', () => ({
 jest.mock('../src/search/advanced/fields/StreamerField', () => ({
   StreamerField: () => null,
 }));
+jest.mock('../src/search/advanced/fields/LanguageField', () => ({
+  LanguageField: () => null,
+}));
+jest.mock('../src/hooks/useMovieSearchQuery', () => ({
+  useMovieLanguagesQuery: () => ({
+    data: {
+      languages: [
+        { code: 'en', englishName: 'English', nativeName: 'English' },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  }),
+}));
 jest.mock('../src/search/advanced/fields/YearWheelField', () => ({
   YearWheelField: () => null,
 }));
@@ -33,6 +48,7 @@ const baseContextValue = {
     endDate: '2026-07-23',
     movieGenres: [],
     movieStreamers: [],
+    movieOriginalLanguages: ['en'],
     movieVoteCount: '',
     movieSortBy: '',
   },

@@ -27,6 +27,7 @@ import {
   fetchMovieListImdbRating,
   fetchMovieVideos,
   fetchMovieWatchProviders,
+  fetchMovieLanguages,
   fetchMoviesByTitle,
 } from '../api/tmdb/services/movieService';
 import { fetchPersonFamily } from '../api/cloudflare/personFamilyService';
@@ -62,6 +63,7 @@ import { queryKeys } from '../query/queryKeys';
         endDate: '2024-12-31',
         movieGenres: '28',
         movieStreamers: '8',
+        movieOriginalLanguages: ['ko'],
         movieVoteCount: '500',
         movieSortBy: 'vote_average.desc',
       })
@@ -111,6 +113,14 @@ export function useMovieSearchQuery(params: MovieSearchParams, enabled = true) {
     },
     staleTime: 1000 * 60 * 5,
     enabled,
+  });
+}
+
+export function useMovieLanguagesQuery() {
+  return useQuery({
+    queryKey: queryKeys.movieLanguages,
+    queryFn: fetchMovieLanguages,
+    staleTime: 1000 * 60 * 60 * 24 * 7,
   });
 }
 

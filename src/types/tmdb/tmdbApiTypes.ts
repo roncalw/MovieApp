@@ -25,6 +25,7 @@ export type CloudflareMovieSearchItem = {
   tmdb_id: number;
   poster_path: string;
   imdb_rating: number | null;
+  original_language: string | null;
 };
 
 export type CloudflareMovieSearchResponse = {
@@ -34,6 +35,17 @@ export type CloudflareMovieSearchResponse = {
   sort: string;
   beginDate: string;
   endDate: string;
+  originalLanguages: string[];
+};
+
+export type MovieLanguage = {
+  code: string;
+  englishName: string;
+  nativeName: string | null;
+};
+
+export type MovieLanguagesResponse = {
+  languages: MovieLanguage[];
 };
 
 export type CloudflareMovieListImdbRating = {

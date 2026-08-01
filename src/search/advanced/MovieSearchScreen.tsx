@@ -51,6 +51,7 @@ import { useAdvancedFilterSwipe } from './useAdvancedFilterSwipe';
 import { prepareMovieImages } from '../../utils/movieImageLoading';
 import { fetchMovieSearchResults } from '../../api/tmdb/services/movieService';
 import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
+import { DEFAULT_MOVIE_ORIGINAL_LANGUAGES } from '../../utils/movieOriginalLanguages';
 
 const MIN_VISIBLE_FILTERED_RESULTS = 20;
 const MINIMUM_SUBMIT_DISABLED_DURATION_MS = 450;
@@ -66,6 +67,7 @@ function buildDefaultMovieSearchParams(
     endDate,
     movieGenres: [],
     movieStreamers: [],
+    movieOriginalLanguages: [...DEFAULT_MOVIE_ORIGINAL_LANGUAGES],
     movieVoteCount: '',
     movieSortBy: '',
   };
@@ -84,6 +86,9 @@ function mergeMovieSearchParams(
     movieStreamers: nextParams.movieStreamers
       ? [...nextParams.movieStreamers]
       : [...currentParams.movieStreamers],
+    movieOriginalLanguages: nextParams.movieOriginalLanguages
+      ? [...nextParams.movieOriginalLanguages]
+      : [...currentParams.movieOriginalLanguages],
   };
 }
 
@@ -435,7 +440,10 @@ export function MovieSearchScreen() {
             accessibilityRole="button"
             accessibilityLabel="Return to movie search filters"
           >
-            <Text allowFontScaling={false} style={styles.errorPrimaryButtonText}>
+            <Text
+              allowFontScaling={false}
+              style={styles.errorPrimaryButtonText}
+            >
               Try Again
             </Text>
           </Pressable>

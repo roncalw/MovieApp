@@ -34,6 +34,7 @@ function renderSubmitButton(isSubmitDisabled: boolean) {
       endDate: '2026-12-31',
       movieGenres: [],
       movieStreamers: [],
+      movieOriginalLanguages: ['en'],
       movieVoteCount: '',
       movieSortBy: '',
     },

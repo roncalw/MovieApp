@@ -62,6 +62,14 @@ export const subHeaderMovieSearchFieldsStyles = StyleSheet.create({
     marginTop: scaleSize(8),
     marginBottom: scaleSize(6),
   },
+  languageFieldRow: {
+    width: '50%',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: scaleSize(4),
+    marginBottom: scaleSize(6),
+  },
   dateFieldLabel: {
     color: colors.brandText,
     fontSize: scaleSize(20),

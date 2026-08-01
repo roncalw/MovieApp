@@ -31,6 +31,7 @@ import type {
   HomeMovieGenreId,
   MovieDetailsResponse,
   MovieListResponse,
+  MovieLanguagesResponse,
   MovieTitleSearchResults,
 } from '../../../types/tmdb/tmdbApiTypes';
 import { mapMovieToMovie } from '../mappers/movieMapper';
@@ -38,11 +39,14 @@ import {
   getDefaultBeginDate,
   getDefaultEndDate,
 } from '../../../utils/movieSearchDates';
+import { normalizeMovieOriginalLanguages } from '../../../utils/movieOriginalLanguages';
 
 const CLOUDFLARE_MOVIE_SEARCH_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
 const CLOUDFLARE_MOVIE_LIST_BASE_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies';
+const CLOUDFLARE_MOVIE_LANGUAGES_URL =
+  'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/languages';
 
 const ALL_STREAMER_PROVIDER_IDS = [
   '8',
@@ -221,9 +225,9 @@ export async function fetchMoviesByGenre(
         endDate: '2024-12-31',
         movieGenres: '28',
         movieStreamers: '8',
+        movieOriginalLanguages: ['ko'],
         movieVoteCount: '500',
         movieSortBy: 'vote_average.desc',
-        pageNum: 1,
       })
     - this keeps the function call easier to read and harder to mix up
 
@@ -252,6 +256,16 @@ export async function fetchMovieListImdbRating(
   }
 
   return (await response.json()) as CloudflareMovieListImdbRating;
+}
+
+export async function fetchMovieLanguages(): Promise<MovieLanguagesResponse> {
+  const response = await fetch(CLOUDFLARE_MOVIE_LANGUAGES_URL);
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare movie languages failed: ${response.status}`);
+  }
+
+  return (await response.json()) as MovieLanguagesResponse;
 }
 
 export async function fetchMoviesByTitle(
@@ -309,6 +323,7 @@ export async function fetchCloudflareMovieSearchResults(
     endDate,
     movieGenres,
     movieStreamers,
+    movieOriginalLanguages,
     movieVoteCount,
     movieSortBy,
   } = params;
@@ -345,6 +360,17 @@ export async function fetchCloudflareMovieSearchResults(
     } else if (movieStreamers.length > 0) {
       searchParams.set('providerIds', movieStreamers.join(','));
     }
+  }
+
+  const normalizedOriginalLanguages = normalizeMovieOriginalLanguages(
+    movieOriginalLanguages,
+  );
+
+  if (normalizedOriginalLanguages.length > 0) {
+    searchParams.set(
+      'originalLanguages',
+      normalizedOriginalLanguages.join(','),
+    );
   }
 
   if (movieVoteCount && movieVoteCount !== '0') {
@@ -414,7 +440,7 @@ function mapCloudflareMovieToMovie(
     adult: false,
     backdrop_path: '',
     genres: [],
-    original_language: '',
+    original_language: movie.original_language ?? '',
     original_title: '',
     overview: '',
     popularity: 0,

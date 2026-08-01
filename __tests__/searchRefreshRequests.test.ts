@@ -1,5 +1,6 @@
 import { tmdbClient } from '../src/api/tmdb/client';
 import {
+  fetchMovieLanguages,
   fetchMovieSearchResults,
   fetchMoviesByTitle,
 } from '../src/api/tmdb/services/movieService';
@@ -50,7 +51,17 @@ describe('search refresh requests', () => {
   test('advanced refresh uses a unique URL and no-cache headers', async () => {
     globalThis.fetch = jest.fn(async () => ({
       ok: true,
-      json: async () => ({ movies: [], nextCursor: null }),
+      json: async () => ({
+        movies: [
+          {
+            tmdb_id: 1526650,
+            poster_path: '/mudborn.jpg',
+            imdb_rating: 5.7,
+            original_language: 'zh',
+          },
+        ],
+        nextCursor: null,
+      }),
     })) as jest.Mock;
     const params: MovieSearchParams = {
       movieRatings: '',
@@ -58,20 +69,39 @@ describe('search refresh requests', () => {
       endDate: '2026-01-01',
       movieGenres: [],
       movieStreamers: [],
+      movieOriginalLanguages: ['en'],
       movieVoteCount: '0',
       movieSortBy: 'popularity.desc',
     };
 
-    await fetchMovieSearchResults(params, null, { bypassCache: true });
+    const results = await fetchMovieSearchResults(params, null, {
+      bypassCache: true,
+    });
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('refreshRequest=123456789'),
+      expect.stringMatching(/originalLanguages=en.*refreshRequest=123456789/),
       {
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
         },
       },
+    );
+    expect(results.movies[0].original_language).toBe('zh');
+  });
+
+  test('loads the English language-name lookup from the Worker', async () => {
+    const languages = [
+      { code: 'ko', englishName: 'Korean', nativeName: '한국어/조선말' },
+    ];
+    globalThis.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ languages }),
+    })) as jest.Mock;
+
+    await expect(fetchMovieLanguages()).resolves.toEqual({ languages });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/languages',
     );
   });
 });

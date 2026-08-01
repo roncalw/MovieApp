@@ -8,6 +8,7 @@
  */
 import type { MovieSearchParams } from '../types/search/movieSearchParams';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
+import { normalizeMovieOriginalLanguages } from '../utils/movieOriginalLanguages';
 
 const MOVIE_SEARCH_ROOT = ['movieSearch'] as const;
 const MOVIE_TITLE_SEARCH_ROOT = ['movieTitleSearch'] as const;
@@ -15,7 +16,16 @@ const MOVIE_TITLE_SEARCH_ROOT = ['movieTitleSearch'] as const;
 export const queryKeys = {
   movieSearchRoot: MOVIE_SEARCH_ROOT,
   movieSearch: (params: MovieSearchParams) =>
-    [...MOVIE_SEARCH_ROOT, params] as const,
+    [
+      ...MOVIE_SEARCH_ROOT,
+      {
+        ...params,
+        movieOriginalLanguages: normalizeMovieOriginalLanguages(
+          params.movieOriginalLanguages,
+        ),
+      },
+    ] as const,
+  movieLanguages: ['movieLanguages'] as const,
 
   movieTitleSearchRoot: MOVIE_TITLE_SEARCH_ROOT,
   movieTitleSearch: (title: string) =>
