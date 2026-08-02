@@ -10,27 +10,31 @@
 import type { ImageSourcePropType } from 'react-native';
 import type { MovieLanguage } from '../tmdb/tmdbApiTypes';
 
-export type GenreFieldProps = {
+export type FilterPopupVisibilityProps = {
+  onPopupVisibilityChange: (isVisible: boolean) => void;
+};
+
+export type GenreFieldProps = FilterPopupVisibilityProps & {
   value: string[];
   onChange: (nextValue: string[]) => void;
 };
 
-export type RatingFieldProps = {
+export type RatingFieldProps = FilterPopupVisibilityProps & {
   value: string;
   onChange: (nextValue: string) => void;
 };
 
-export type SortFieldProps = {
+export type SortFieldProps = FilterPopupVisibilityProps & {
   value: string;
   onChange: (nextValue: string) => void;
 };
 
-export type StreamerFieldProps = {
+export type StreamerFieldProps = FilterPopupVisibilityProps & {
   value: string[];
   onChange: (nextValue: string[]) => void;
 };
 
-export type LanguageFieldProps = {
+export type LanguageFieldProps = FilterPopupVisibilityProps & {
   value: string[];
   onChange: (nextValue: string[]) => void;
   languages: MovieLanguage[];
@@ -39,7 +43,7 @@ export type LanguageFieldProps = {
   onRetry: () => void;
 };
 
-export type YearWheelFieldProps = {
+export type YearWheelFieldProps = FilterPopupVisibilityProps & {
   title: string;
   value: number;
   years: number[];

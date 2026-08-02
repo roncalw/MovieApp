@@ -88,19 +88,42 @@ export const movieSearchFieldModalStyles = StyleSheet.create({
   },
   languageModalCard: {
     maxHeight: scaleSize(560),
+    overflow: 'hidden',
+  },
+  languageInlineTrigger: {
+    alignSelf: 'center',
+    maxWidth: '92%',
+    paddingHorizontal: scaleSize(12),
+    paddingBottom: scaleSize(8),
+  },
+  languageInlineTriggerText: {
+    fontSize: scaleSize(12),
+    lineHeight: scaleSize(13),
+    color: colors.brandTextLight,
+    fontStyle: 'italic',
+    fontWeight: typography.summaryBody.fontWeight,
+    textAlign: 'center',
   },
   languageScrollView: {
     width: '100%',
-    maxHeight: scaleSize(390),
+    height: scaleSize(336),
+    maxHeight: scaleSize(336),
   },
   languageScrollContent: {
+    alignItems: 'stretch',
+    paddingVertical: 0,
+  },
+  languageHorizontalRow: {
+    width: '100%',
+    height: scaleSize(42),
+    maxHeight: scaleSize(42),
+    overflow: 'hidden',
+  },
+  languageHorizontalRowContent: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: scaleSize(6),
-    paddingHorizontal: scaleSize(4),
-    paddingVertical: scaleSize(4),
+    paddingRight: scaleSize(48),
   },
   languageStatusButton: {
     paddingHorizontal: scaleSize(8),

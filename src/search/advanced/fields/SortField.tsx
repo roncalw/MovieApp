@@ -8,26 +8,33 @@ import {
 import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
 import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { SortFieldProps } from '../../../types/search/movieSearchFieldTypes';
+import { useFilterPopupVisibility } from './useFilterPopupVisibility';
 
-export function SortField({ value, onChange }: SortFieldProps) {
+export function SortField({
+  value,
+  onChange,
+  onPopupVisibilityChange,
+}: SortFieldProps) {
   const [draftValue, setDraftValue] = useState(value);
   const [snapshotValue, setSnapshotValue] = useState(value);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const { hideModal, isModalVisible, showModal } = useFilterPopupVisibility(
+    onPopupVisibilityChange,
+  );
 
   function openModal() {
     setDraftValue(value);
     setSnapshotValue(value);
-    setIsModalVisible(true);
+    showModal();
   }
 
   function closeModal() {
     onChange(draftValue);
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function cancelModal() {
     setDraftValue(snapshotValue);
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function toggleDraftValue(nextValue: string) {

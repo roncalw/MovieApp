@@ -13,11 +13,18 @@ import {
 import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
 import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
 import type { RatingFieldProps } from '../../../types/search/movieSearchFieldTypes';
+import { useFilterPopupVisibility } from './useFilterPopupVisibility';
 
-export function RatingField({ value, onChange }: RatingFieldProps) {
+export function RatingField({
+  value,
+  onChange,
+  onPopupVisibilityChange,
+}: RatingFieldProps) {
   const [draftValue, setDraftValue] = useState(() => parseRatingValue(value));
   const [snapshotValue, setSnapshotValue] = useState(() => parseRatingValue(value));
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const { hideModal, isModalVisible, showModal } = useFilterPopupVisibility(
+    onPopupVisibilityChange,
+  );
   const selectedRatings = useMemo(() => parseRatingValue(value), [value]);
   const summary = useMemo(
     () => formatRatingSummary(selectedRatings),
@@ -28,17 +35,17 @@ export function RatingField({ value, onChange }: RatingFieldProps) {
     const nextValue = parseRatingValue(value);
     setDraftValue(nextValue);
     setSnapshotValue(nextValue);
-    setIsModalVisible(true);
+    showModal();
   }
 
   function closeModal() {
     onChange(formatRatingValue(draftValue));
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function cancelModal() {
     setDraftValue([...snapshotValue]);
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function toggleDraftValue(nextValue: string) {

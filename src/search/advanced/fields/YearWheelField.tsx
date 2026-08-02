@@ -22,6 +22,7 @@ import { colors } from '../../../styles/colors';
 import { yearWheelFieldStyles as styles } from '../../../styles/search/yearWheelFieldStyles';
 import { getCurrentYear } from '../../../utils/movieSearchDates';
 import type { YearWheelFieldProps } from '../../../types/search/movieSearchFieldTypes';
+import { useFilterPopupVisibility } from './useFilterPopupVisibility';
 
 function buildDate(year: number, month: number, day: number) {
   const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
@@ -36,9 +37,12 @@ export function YearWheelField({
   onChange,
   variant = 'default',
   dateRole,
+  onPopupVisibilityChange,
 }: YearWheelFieldProps) {
   const today = useMemo(() => new Date(), []);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const { hideModal, isModalVisible, showModal } = useFilterPopupVisibility(
+    onPopupVisibilityChange,
+  );
   const [anchoredModalTop, setAnchoredModalTop] = useState(scaleSize(96));
   const [anchoredModalLeft, setAnchoredModalLeft] = useState(scaleSize(16));
   const isAnchoredDate = variant === 'anchoredDate';
@@ -79,7 +83,7 @@ export function YearWheelField({
     setAnchoredOpenedDate(initialDate);
 
     if (!isAnchoredDate) {
-      setIsModalVisible(true);
+      showModal();
       return;
     }
 
@@ -91,7 +95,7 @@ export function YearWheelField({
 
       setAnchoredModalLeft(nextLeft);
       setAnchoredModalTop(nextTop);
-      setIsModalVisible(true);
+      showModal();
     });
   }
 
@@ -104,18 +108,18 @@ export function YearWheelField({
       setDraftDate(getDisplayDateForYear(value));
     }
 
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function applySelection() {
     onChange(draftDate.getFullYear());
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function cancelAnchoredSelection() {
     setDraftDate(anchoredOpenedDate);
     onChange(anchoredOpenedDate.getFullYear());
-    setIsModalVisible(false);
+    hideModal();
   }
 
   return (

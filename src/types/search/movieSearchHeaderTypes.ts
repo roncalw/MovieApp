@@ -28,6 +28,7 @@ export type HeaderMovieSearchProps = {
   isFiltersVisible: boolean;
   onToggleFiltersVisibility: () => void;
   onFilterAreaTouchStart: (event: GestureResponderEvent) => void;
+  onFilterPopupVisibilityChange: (isVisible: boolean) => void;
 };
 
 export type HeaderMovieSearchContextValue = {
@@ -47,6 +48,7 @@ export type HeaderMovieSearchContextValue = {
   isFiltersVisible: boolean;
   onToggleFiltersVisibility: () => void;
   onFilterAreaTouchStart: (event: GestureResponderEvent) => void;
+  onFilterPopupVisibilityChange: (isVisible: boolean) => void;
 };
 
 export type SubHeaderTopProps = {

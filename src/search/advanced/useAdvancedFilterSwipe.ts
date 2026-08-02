@@ -98,6 +98,10 @@ export function useAdvancedFilterSwipe(onSwipeUp: () => void) {
     startPointRef.current = null;
   }, []);
 
+  const cancelFilterSwipeTracking = useCallback(() => {
+    startPointRef.current = null;
+  }, []);
+
   const resultListGestureHandlers = useMemo<ResultListGestureHandlers>(
     () => ({
       onStartShouldSetResponderCapture: onResultsTouchStartCapture,
@@ -114,6 +118,7 @@ export function useAdvancedFilterSwipe(onSwipeUp: () => void) {
   );
 
   return {
+    cancelFilterSwipeTracking,
     onFilterAreaTouchStart,
     resultListGestureHandlers,
   };

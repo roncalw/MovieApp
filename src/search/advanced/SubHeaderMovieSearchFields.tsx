@@ -55,6 +55,7 @@ export function SubHeaderMovieSearchFields() {
     isFiltersVisible,
     onToggleFiltersVisibility,
     onFilterAreaTouchStart,
+    onFilterPopupVisibilityChange,
     excludeSeenMovies,
     onToggleExcludeSeenMovies,
   } = useHeaderMovieSearchContext();
@@ -325,6 +326,18 @@ export function SubHeaderMovieSearchFields() {
           testID="advanced-search-filter-fields-area"
           onTouchStart={onFilterAreaTouchStart}
         >
+          <LanguageField
+            value={selectedOriginalLanguages}
+            onChange={setSelectedOriginalLanguages}
+            languages={languageOptions}
+            isLoading={movieLanguagesQuery.isLoading}
+            isError={movieLanguagesQuery.isError}
+            onRetry={() => {
+              movieLanguagesQuery.refetch();
+            }}
+            onPopupVisibilityChange={onFilterPopupVisibilityChange}
+          />
+
           <Pressable
             onPress={onToggleExcludeSeenMovies}
             style={styles.excludeSeenToggle}
@@ -354,6 +367,7 @@ export function SubHeaderMovieSearchFields() {
                 onChange={setBeginYear}
                 variant="anchoredDate"
                 dateRole="begin"
+                onPopupVisibilityChange={onFilterPopupVisibilityChange}
               />
             </View>
 
@@ -368,6 +382,7 @@ export function SubHeaderMovieSearchFields() {
                 onChange={setEndYear}
                 variant="anchoredDate"
                 dateRole="end"
+                onPopupVisibilityChange={onFilterPopupVisibilityChange}
               />
             </View>
           </View>
@@ -382,10 +397,12 @@ export function SubHeaderMovieSearchFields() {
             <GenreField
               value={selectedGenre}
               onChange={nextValue => setSelectedGenre(nextValue)}
+              onPopupVisibilityChange={onFilterPopupVisibilityChange}
             />
             <RatingField
               value={selectedRating}
               onChange={nextValue => setSelectedRating(nextValue)}
+              onPopupVisibilityChange={onFilterPopupVisibilityChange}
             />
           </View>
 
@@ -393,23 +410,12 @@ export function SubHeaderMovieSearchFields() {
             <StreamerField
               value={selectedStreamer}
               onChange={nextValue => setSelectedStreamer(nextValue)}
+              onPopupVisibilityChange={onFilterPopupVisibilityChange}
             />
             <SortField
               value={selectedSortValue}
               onChange={nextValue => setSelectedSortValue(nextValue)}
-            />
-          </View>
-
-          <View style={styles.languageFieldRow}>
-            <LanguageField
-              value={selectedOriginalLanguages}
-              onChange={setSelectedOriginalLanguages}
-              languages={languageOptions}
-              isLoading={movieLanguagesQuery.isLoading}
-              isError={movieLanguagesQuery.isError}
-              onRetry={() => {
-                movieLanguagesQuery.refetch();
-              }}
+              onPopupVisibilityChange={onFilterPopupVisibilityChange}
             />
           </View>
         </View>

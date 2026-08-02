@@ -52,6 +52,7 @@ function renderSubmitButton(isSubmitDisabled: boolean) {
     isFiltersVisible: true,
     onToggleFiltersVisibility: jest.fn(),
     onFilterAreaTouchStart: jest.fn(),
+    onFilterPopupVisibilityChange: jest.fn(),
   });
 
   let component!: TestRenderer.ReactTestRenderer;

@@ -3,14 +3,50 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { formatInlineSummary, toggleArrayValue } from './movieSearchFieldUtils';
 import {
   MovieSearchBulkSelectionLinks,
-  MovieSearchFieldTrigger,
   MovieSearchModalActions,
   MovieSearchPopupChip,
 } from './MovieSearchFieldShared';
 import { movieSearchFieldSharedStyles as sharedStyles } from '../../../styles/search/movieSearchFieldSharedStyles';
 import { movieSearchFieldModalStyles as styles } from '../../../styles/search/movieSearchFieldModalStyles';
-import type { LanguageFieldProps } from '../../../types/search/movieSearchFieldTypes';
+import type {
+  LabelValueItem,
+  LanguageFieldProps,
+} from '../../../types/search/movieSearchFieldTypes';
 import { normalizeMovieOriginalLanguages } from '../../../utils/movieOriginalLanguages';
+import { useFilterPopupVisibility } from './useFilterPopupVisibility';
+
+export type LanguageLetterRow = {
+  letter: string;
+  items: LabelValueItem[];
+};
+
+export function groupLanguagesByFirstLetter(
+  languageItems: LabelValueItem[],
+): LanguageLetterRow[] {
+  const itemsByLetter = new Map<string, LabelValueItem[]>();
+
+  languageItems.forEach(item => {
+    const firstLetter = item.label.trim().charAt(0).toLocaleUpperCase('en-US');
+    if (!firstLetter) {
+      return;
+    }
+
+    const existingItems = itemsByLetter.get(firstLetter) ?? [];
+    existingItems.push(item);
+    itemsByLetter.set(firstLetter, existingItems);
+  });
+
+  return [...itemsByLetter.entries()]
+    .sort(([leftLetter], [rightLetter]) =>
+      leftLetter.localeCompare(rightLetter, 'en-US'),
+    )
+    .map(([letter, items]) => ({
+      letter,
+      items: [...items].sort((leftItem, rightItem) =>
+        leftItem.label.localeCompare(rightItem.label, 'en-US'),
+      ),
+    }));
+}
 
 export function LanguageField({
   value,
@@ -19,10 +55,13 @@ export function LanguageField({
   isLoading,
   isError,
   onRetry,
+  onPopupVisibilityChange,
 }: LanguageFieldProps) {
   const [draftValue, setDraftValue] = useState(() => [...value]);
   const [snapshotValue, setSnapshotValue] = useState(() => [...value]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const { hideModal, isModalVisible, showModal } = useFilterPopupVisibility(
+    onPopupVisibilityChange,
+  );
   const languageItems = useMemo(
     () =>
       languages.map(language => ({
@@ -30,6 +69,10 @@ export function LanguageField({
         value: language.code,
       })),
     [languages],
+  );
+  const languageRows = useMemo(
+    () => groupLanguagesByFirstLetter(languageItems),
+    [languageItems],
   );
   const summary = useMemo(() => {
     if (value.length === 0) {
@@ -48,17 +91,17 @@ export function LanguageField({
   function openModal() {
     setDraftValue([...value]);
     setSnapshotValue([...value]);
-    setIsModalVisible(true);
+    showModal();
   }
 
   function closeModal() {
     onChange(normalizeMovieOriginalLanguages(draftValue));
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function cancelModal() {
     setDraftValue([...snapshotValue]);
-    setIsModalVisible(false);
+    hideModal();
   }
 
   function toggleDraftValue(nextValue: string) {
@@ -67,11 +110,21 @@ export function LanguageField({
 
   return (
     <>
-      <MovieSearchFieldTrigger
-        label="Original Language"
-        value={summary}
+      <Pressable
         onPress={openModal}
-      />
+        style={styles.languageInlineTrigger}
+        accessibilityRole="button"
+        accessibilityLabel={`Show movies in: ${summary}`}
+      >
+        <Text
+          allowFontScaling={false}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={styles.languageInlineTriggerText}
+        >
+          Show movies in: {summary}
+        </Text>
+      </Pressable>
 
       <Modal
         transparent
@@ -113,24 +166,31 @@ export function LanguageField({
               style={styles.languageScrollView}
               contentContainerStyle={styles.languageScrollContent}
               showsVerticalScrollIndicator
+              directionalLockEnabled
+              nestedScrollEnabled
             >
-              <MovieSearchPopupChip
-                label="All Languages"
-                selected={draftValue.length === 0}
-                onPress={() => setDraftValue([])}
-                reversedSelectionAppearance
-                subtleBorder
-              />
-
-              {languageItems.map(item => (
-                <MovieSearchPopupChip
-                  key={item.value}
-                  label={item.label}
-                  selected={draftValue.includes(item.value)}
-                  onPress={() => toggleDraftValue(item.value)}
-                  reversedSelectionAppearance
-                  subtleBorder
-                />
+              {languageRows.map(row => (
+                <ScrollView
+                  key={row.letter}
+                  testID={`language-row-${row.letter}`}
+                  horizontal
+                  directionalLockEnabled
+                  nestedScrollEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.languageHorizontalRow}
+                  contentContainerStyle={styles.languageHorizontalRowContent}
+                >
+                  {row.items.map(item => (
+                    <MovieSearchPopupChip
+                      key={item.value}
+                      label={item.label}
+                      selected={draftValue.includes(item.value)}
+                      onPress={() => toggleDraftValue(item.value)}
+                      reversedSelectionAppearance
+                      subtleBorder
+                    />
+                  ))}
+                </ScrollView>
               ))}
             </ScrollView>
 

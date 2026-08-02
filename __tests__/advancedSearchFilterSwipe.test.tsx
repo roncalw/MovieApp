@@ -5,8 +5,8 @@ import { HeaderMovieSearchContext } from '../src/search/advanced/HeaderMovieSear
 import { SubHeaderMovieSearchFields } from '../src/search/advanced/SubHeaderMovieSearchFields';
 import {
   isFilterSwipeUpGesture,
-  useAdvancedFilterSwipe,
 } from '../src/search/advanced/useAdvancedFilterSwipe';
+import { useAdvancedSearchGestureRouting } from '../src/search/advanced/useAdvancedSearchGestureRouting';
 import type { HeaderMovieSearchContextValue } from '../src/types/search/movieSearchHeaderTypes';
 
 jest.mock('@react-native-vector-icons/ionicons/static', () => () => null);
@@ -63,6 +63,7 @@ const baseContextValue = {
   onValidityChange: jest.fn(),
   registerSubmitHandler: jest.fn(),
   submitDraftFilters: jest.fn(),
+  onFilterPopupVisibilityChange: jest.fn(),
 };
 
 function touchEvent(pageX: number, pageY: number) {
@@ -78,17 +79,26 @@ function FilterSwipeHarness() {
     () => setIsFiltersVisible(currentValue => !currentValue),
     [],
   );
-  const { onFilterAreaTouchStart, resultListGestureHandlers } =
-    useAdvancedFilterSwipe(hideFilters);
+  const {
+    onFilterAreaTouchStart,
+    onFilterPopupVisibilityChange,
+    resultListGestureHandlers,
+  } = useAdvancedSearchGestureRouting(hideFilters);
   const contextValue: HeaderMovieSearchContextValue = {
     ...baseContextValue,
     isFiltersVisible,
     onToggleFiltersVisibility,
     onFilterAreaTouchStart,
+    onFilterPopupVisibilityChange,
   };
 
   return (
     <View testID="advanced-search-top-section" {...resultListGestureHandlers}>
+      <View
+        testID="filter-popup-routing-control"
+        onTouchStart={() => onFilterPopupVisibilityChange(true)}
+        onTouchEnd={() => onFilterPopupVisibilityChange(false)}
+      />
       <HeaderMovieSearchContext.Provider value={contextValue}>
         <SubHeaderMovieSearchFields />
       </HeaderMovieSearchContext.Provider>
@@ -192,6 +202,83 @@ describe('Advanced Search swipe-to-hide filters', () => {
     );
     expect(hideFilterLabels).toHaveLength(1);
     expect(showFilterLabels).toHaveLength(0);
+
+    act(() => component.unmount());
+  });
+
+  test('routes movement away from filter collapse while a popup is open', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      component = TestRenderer.create(<FilterSwipeHarness />);
+    });
+
+    const fieldsArea = component.root.findByProps({
+      testID: 'advanced-search-filter-fields-area',
+    });
+    const topSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
+    const popupRoutingControl = component.root.findByProps({
+      testID: 'filter-popup-routing-control',
+    });
+
+    act(() => {
+      fieldsArea.props.onTouchStart(touchEvent(100, 200));
+      popupRoutingControl.props.onTouchStart();
+      topSection.props.onTouchMove(touchEvent(100, 120));
+      topSection.props.onScroll({
+        nativeEvent: { contentOffset: { x: 0, y: 80 } },
+      });
+    });
+
+    expect(
+      component.root.findAll(
+        node => node.type === Text && node.props.children === 'Hide Filter',
+      ),
+    ).toHaveLength(1);
+
+    const popupOwnedFieldsArea = component.root.findByProps({
+      testID: 'advanced-search-filter-fields-area',
+    });
+    const popupOwnedTopSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
+
+    act(() => {
+      popupOwnedFieldsArea.props.onTouchStart(touchEvent(100, 200));
+      popupOwnedTopSection.props.onTouchMove(touchEvent(100, 120));
+      popupOwnedTopSection.props.onScroll({
+        nativeEvent: { contentOffset: { x: 0, y: 160 } },
+      });
+    });
+
+    expect(
+      component.root.findAll(
+        node => node.type === Text && node.props.children === 'Hide Filter',
+      ),
+    ).toHaveLength(1);
+
+    act(() => {
+      popupRoutingControl.props.onTouchEnd();
+    });
+
+    const reopenedFieldsArea = component.root.findByProps({
+      testID: 'advanced-search-filter-fields-area',
+    });
+    const reroutedTopSection = component.root.findByProps({
+      testID: 'advanced-search-top-section',
+    });
+
+    act(() => {
+      reopenedFieldsArea.props.onTouchStart(touchEvent(100, 200));
+      reroutedTopSection.props.onTouchMove(touchEvent(100, 150));
+    });
+
+    expect(
+      component.root.findAll(
+        node => node.type === Text && node.props.children === 'Show Filter',
+      ),
+    ).toHaveLength(1);
 
     act(() => component.unmount());
   });

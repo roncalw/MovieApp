@@ -47,7 +47,7 @@ import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
 import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { queryKeys } from '../../query/queryKeys';
-import { useAdvancedFilterSwipe } from './useAdvancedFilterSwipe';
+import { useAdvancedSearchGestureRouting } from './useAdvancedSearchGestureRouting';
 import { prepareMovieImages } from '../../utils/movieImageLoading';
 import { fetchMovieSearchResults } from '../../api/tmdb/services/movieService';
 import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
@@ -140,8 +140,11 @@ export function MovieSearchScreen() {
     setIsFiltersVisible(currentValue => !currentValue);
   }, []);
 
-  const { onFilterAreaTouchStart, resultListGestureHandlers } =
-    useAdvancedFilterSwipe(hideFilters);
+  const {
+    onFilterAreaTouchStart,
+    onFilterPopupVisibilityChange,
+    resultListGestureHandlers,
+  } = useAdvancedSearchGestureRouting(hideFilters);
 
   useEffect(() => {
     setIsFiltersVisible(true);
@@ -413,6 +416,7 @@ export function MovieSearchScreen() {
       isFiltersVisible={isFiltersVisible}
       onToggleFiltersVisibility={toggleFiltersVisibility}
       onFilterAreaTouchStart={onFilterAreaTouchStart}
+      onFilterPopupVisibilityChange={onFilterPopupVisibilityChange}
     />
   );
   const searchErrorMessage =

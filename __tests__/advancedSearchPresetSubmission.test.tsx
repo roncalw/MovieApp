@@ -84,6 +84,7 @@ describe('Home preset submission on Advanced Search', () => {
       isFiltersVisible: true,
       onToggleFiltersVisibility: jest.fn(),
       onFilterAreaTouchStart: jest.fn(),
+      onFilterPopupVisibilityChange: jest.fn(),
     };
 
     let component!: TestRenderer.ReactTestRenderer;

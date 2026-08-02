@@ -37,6 +37,7 @@ export function HeaderMovieSearch({
   isFiltersVisible,
   onToggleFiltersVisibility,
   onFilterAreaTouchStart,
+  onFilterPopupVisibilityChange,
 }: HeaderMovieSearchProps) {
   const [isFilterInputInvalid, setIsFilterInputInvalid] = useState(false);
   const submitHandlerRef = useRef<(() => void) | null>(null);
@@ -68,6 +69,7 @@ export function HeaderMovieSearch({
       isFiltersVisible,
       onToggleFiltersVisibility,
       onFilterAreaTouchStart,
+      onFilterPopupVisibilityChange,
     }),
     [
       appliedParams,
@@ -77,6 +79,7 @@ export function HeaderMovieSearch({
       loadedPages,
       onDisplayedFiltersDirtyChange,
       onFilterAreaTouchStart,
+      onFilterPopupVisibilityChange,
       onToggleExcludeSeenMovies,
       onToggleFiltersVisibility,
       onSubmitFilters,
