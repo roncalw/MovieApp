@@ -58,6 +58,7 @@ describe('search refresh requests', () => {
             poster_path: '/mudborn.jpg',
             imdb_rating: 5.7,
             original_language: 'zh',
+            available_with_subscription: false,
           },
         ],
         nextCursor: null,
@@ -88,6 +89,7 @@ describe('search refresh requests', () => {
       },
     );
     expect(results.movies[0].original_language).toBe('zh');
+    expect(results.movies[0].available_with_subscription).toBe(false);
   });
 
   test('loads the English language-name lookup from the Worker', async () => {

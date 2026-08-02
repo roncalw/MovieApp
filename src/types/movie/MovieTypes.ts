@@ -277,6 +277,13 @@ export type movieType = {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  /**
+   * This value is added only while preparing poster cards. It is not written
+   * into Favorites or Seen storage. False means Cloudflare successfully
+   * checked the current US provider rows and found no subscription option;
+   * null or undefined means the app does not have a dependable answer.
+   */
+  available_with_subscription?: boolean | null;
   genreIds: number[];
   budget: number;
   revenue: number;

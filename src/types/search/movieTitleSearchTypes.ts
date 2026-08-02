@@ -1,9 +1,18 @@
 /**
  * Type definitions for Search by Movie Title.
  *
- * Title search loads TMDB results first and then fills each card's IMDb rating
- * afterward. This map stores ratings by TMDB movie id so the screen can update
- * one card at a time without blocking the initial results from appearing.
+ * Title search loads TMDB results first and then adds the two values shown or
+ * used by each poster card: its IMDb rating and its subscription availability.
+ * Keeping those answers by TMDB movie id lets cards update in small groups
+ * without making the initial TMDB results wait for every Cloudflare request.
  */
 
-export type MovieRatingById = Record<number, number | null>;
+export type MovieCardDisplayData = {
+  imdbRating: number | null;
+  availableWithSubscription: boolean | null;
+};
+
+export type MovieCardDataById = Record<
+  number,
+  MovieCardDisplayData | undefined
+>;

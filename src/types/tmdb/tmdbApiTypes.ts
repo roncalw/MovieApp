@@ -26,6 +26,7 @@ export type CloudflareMovieSearchItem = {
   poster_path: string;
   imdb_rating: number | null;
   original_language: string | null;
+  available_with_subscription: boolean;
 };
 
 export type CloudflareMovieSearchResponse = {
@@ -51,6 +52,12 @@ export type MovieLanguagesResponse = {
 export type CloudflareMovieListImdbRating = {
   tmdb_id: number;
   imdb_rating: number | null;
+};
+
+export type CloudflareMovieCardData = {
+  tmdb_id: number;
+  imdb_rating: number | null;
+  available_with_subscription: boolean;
 };
 
 export type ImdbWebsiteRatingScrapeStatus =

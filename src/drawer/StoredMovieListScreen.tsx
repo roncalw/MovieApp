@@ -11,7 +11,7 @@ import { DrawerScreenHeader } from '../shared/header/DrawerScreenHeader';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
-import { hydrateMoviesWithCurrentImdbRatings } from '../utils/storage/movieListRatingHydration';
+import { loadMovieCardDataForMovies } from '../utils/storage/movieCardData';
 import {
   getStoredMovieList,
   storedMovieToMovieType,
@@ -36,11 +36,11 @@ export function StoredMovieListScreen({
 
     try {
       const storedMovies = await getStoredMovieList(storageKey);
-      const hydratedMovies = await hydrateMoviesWithCurrentImdbRatings(
+      const moviesWithCardData = await loadMovieCardDataForMovies(
         storedMovies.map(storedMovieToMovieType),
       );
 
-      setMovies(hydratedMovies);
+      setMovies(moviesWithCardData);
     } catch (error) {
       console.error(`Error loading ${title}:`, error);
       setMovies([]);

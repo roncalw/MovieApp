@@ -24,6 +24,7 @@ import type {
 } from '../../../types/movie/MovieTypes';
 import type { MovieSearchParams } from '../../../types/search/movieSearchParams';
 import type {
+  CloudflareMovieCardData,
   CloudflareMovieListImdbRating,
   CloudflareMovieSearchItem,
   CloudflareMovieSearchResponse,
@@ -258,6 +259,20 @@ export async function fetchMovieListImdbRating(
   return (await response.json()) as CloudflareMovieListImdbRating;
 }
 
+export async function fetchMovieCardData(
+  movieId: number,
+): Promise<CloudflareMovieCardData> {
+  const response = await fetch(
+    `${CLOUDFLARE_MOVIE_LIST_BASE_URL}/${movieId}/card-data`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare movie card lookup failed: ${response.status}`);
+  }
+
+  return (await response.json()) as CloudflareMovieCardData;
+}
+
 export async function fetchMovieLanguages(): Promise<MovieLanguagesResponse> {
   const response = await fetch(CLOUDFLARE_MOVIE_LANGUAGES_URL);
 
@@ -450,6 +465,7 @@ function mapCloudflareMovieToMovie(
     video: false,
     vote_average: movie.imdb_rating ?? 0,
     vote_count: 0,
+    available_with_subscription: movie.available_with_subscription,
     genreIds: [],
     budget: 0,
     revenue: 0,

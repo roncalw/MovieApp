@@ -60,6 +60,17 @@ export function MovieCard({
             </Text>
           </View>
         ) : null}
+        {isPosterRating && movie.available_with_subscription === false ? (
+          <View
+            testID="subscription-unavailable-badge"
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="Not available through a subscription"
+            style={styles.subscriptionUnavailableBadge}
+          >
+            <Ionicons name="bag-handle" size={scaleSize(15)} color="#FFD400" />
+          </View>
+        ) : null}
       </View>
 
       {!isPosterRating ? (
@@ -142,6 +153,19 @@ const styles = StyleSheet.create({
     fontSize: scaleSize(10),
     fontWeight: '700',
     lineHeight: scaleSize(12),
+  },
+  subscriptionUnavailableBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    minHeight: scaleSize(22),
+    minWidth: scaleSize(26),
+    paddingHorizontal: scaleSize(5),
+    paddingVertical: scaleSize(3),
+    borderRadius: scaleSize(9),
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   movieTitle: {
     ...typography.cardTitle,

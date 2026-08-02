@@ -24,7 +24,7 @@ import { HeaderNavButton } from '../../shared/header/HeaderNavButton';
 import { getHeaderNavSecondaryTop } from '../../shared/header/headerNavMetrics';
 import { useMovieTitleSearchQuery } from '../../hooks/useMovieSearchQuery';
 import { useDetailNavigation } from '../../hooks/useDetailNavigation';
-import { useTitleSearchRatings } from './useTitleSearchRatings';
+import { useTitleSearchCardData } from './useTitleSearchCardData';
 import { colors } from '../../theme/colors';
 import { scaleSize } from '../../theme/scale';
 import { typography } from '../../theme/typography';
@@ -59,13 +59,13 @@ export function SearchByMovieTitleScreen() {
     () => data?.pages.flatMap(page => page.movies) ?? [],
     [data],
   );
-  const { moviesWithRatings, resetRatingHydrationState } =
-    useTitleSearchRatings(titleSearchMovies);
+  const { moviesWithCardData, resetCardDataState } =
+    useTitleSearchCardData(titleSearchMovies);
   const resetLocalSearchState = useCallback(() => {
     setDraftTitle('');
     setSubmittedTitle('');
-    resetRatingHydrationState();
-  }, [resetRatingHydrationState]);
+    resetCardDataState();
+  }, [resetCardDataState]);
   const resetSearchPage = useSearchPageReset({
     queryKey: queryKeys.movieTitleSearchRoot,
     resetLocalState: resetLocalSearchState,
@@ -75,6 +75,7 @@ export function SearchByMovieTitleScreen() {
       return;
     }
 
+    resetCardDataState();
     const activeQueryKey = queryKeys.movieTitleSearch(submittedTitle.trim());
 
     const refreshedFirstPage = await refreshActiveInfiniteSearch({
@@ -87,7 +88,7 @@ export function SearchByMovieTitleScreen() {
 
     await prepareMovieImages([refreshedFirstPage.movies]);
     setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
-  }, [queryClient, submittedTitle]);
+  }, [queryClient, resetCardDataState, submittedTitle]);
   const pageRefresh = usePageRefresh(refreshTitleSearch);
 
   useRegisterSearchPageReset('SearchByMovieTitle', resetSearchPage);
@@ -104,7 +105,7 @@ export function SearchByMovieTitleScreen() {
     const nextSubmittedTitle = draftTitle.trim();
 
     Keyboard.dismiss();
-    resetRatingHydrationState();
+    resetCardDataState();
     setSubmittedTitle(nextSubmittedTitle);
   }
 
@@ -238,7 +239,7 @@ export function SearchByMovieTitleScreen() {
 
   return (
     <MovieResults
-      movies={searchFeedback ? [] : moviesWithRatings}
+      movies={searchFeedback ? [] : moviesWithCardData}
       ListHeaderComponent={searchHeader}
       ListHeaderComponentStyle={styles.resultsListHeader}
       ListEmptyComponent={searchFeedback}
