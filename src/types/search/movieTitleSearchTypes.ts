@@ -10,6 +10,7 @@
 export type MovieCardDisplayData = {
   imdbRating: number | null;
   availableWithSubscription: boolean | null;
+  availableWithoutRentOrPurchase: boolean | null;
 };
 
 export type MovieCardDataById = Record<

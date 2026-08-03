@@ -46,6 +46,8 @@ export function useTitleSearchCardData(titleSearchMovies: movieType[]) {
         vote_average: cardData?.imdbRating ?? 0,
         available_with_subscription:
           cardData?.availableWithSubscription ?? null,
+        available_without_rent_or_purchase:
+          cardData?.availableWithoutRentOrPurchase ?? null,
       };
     });
   }, [movieCardDataById, titleSearchMovies]);
@@ -121,6 +123,8 @@ async function loadTitleSearchCardData(
             {
               imdbRating: cardData.imdb_rating,
               availableWithSubscription: cardData.available_with_subscription,
+              availableWithoutRentOrPurchase:
+                cardData.available_without_rent_or_purchase,
             },
           ] as const;
         } catch {
@@ -129,6 +133,7 @@ async function loadTitleSearchCardData(
             {
               imdbRating: null,
               availableWithSubscription: null,
+              availableWithoutRentOrPurchase: null,
             },
           ] as const;
         }

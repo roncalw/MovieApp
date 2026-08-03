@@ -466,6 +466,8 @@ function mapCloudflareMovieToMovie(
     vote_average: movie.imdb_rating ?? 0,
     vote_count: 0,
     available_with_subscription: movie.available_with_subscription,
+    available_without_rent_or_purchase:
+      movie.available_without_rent_or_purchase,
     genreIds: [],
     budget: 0,
     revenue: 0,

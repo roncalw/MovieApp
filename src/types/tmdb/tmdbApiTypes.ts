@@ -27,6 +27,7 @@ export type CloudflareMovieSearchItem = {
   imdb_rating: number | null;
   original_language: string | null;
   available_with_subscription: boolean;
+  available_without_rent_or_purchase: boolean;
 };
 
 export type CloudflareMovieSearchResponse = {
@@ -58,6 +59,7 @@ export type CloudflareMovieCardData = {
   tmdb_id: number;
   imdb_rating: number | null;
   available_with_subscription: boolean;
+  available_without_rent_or_purchase: boolean;
 };
 
 export type ImdbWebsiteRatingScrapeStatus =

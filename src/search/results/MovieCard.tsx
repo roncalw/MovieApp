@@ -28,6 +28,8 @@ export function MovieCard({
 }: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
   const movieImageUri = getMovieImageUri(movie);
+  const shouldShowRentOrPurchaseBadge =
+    isPosterRating && movie.available_without_rent_or_purchase === false;
 
   return (
     <Pressable
@@ -60,13 +62,13 @@ export function MovieCard({
             </Text>
           </View>
         ) : null}
-        {isPosterRating && movie.available_with_subscription === false ? (
+        {shouldShowRentOrPurchaseBadge ? (
           <View
-            testID="subscription-unavailable-badge"
+            testID="rent-or-purchase-required-badge"
             accessible
             accessibilityRole="image"
-            accessibilityLabel="Not available through a subscription"
-            style={styles.subscriptionUnavailableBadge}
+            accessibilityLabel="Rental or purchase may be required"
+            style={styles.rentOrPurchaseRequiredBadge}
           >
             <Ionicons name="bag-handle" size={scaleSize(15)} color="#FFD400" />
           </View>
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: scaleSize(12),
   },
-  subscriptionUnavailableBadge: {
+  rentOrPurchaseRequiredBadge: {
     position: 'absolute',
     right: 0,
     bottom: 0,

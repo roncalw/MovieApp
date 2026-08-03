@@ -59,6 +59,7 @@ describe('search refresh requests', () => {
             imdb_rating: 5.7,
             original_language: 'zh',
             available_with_subscription: false,
+            available_without_rent_or_purchase: true,
           },
         ],
         nextCursor: null,
@@ -90,6 +91,7 @@ describe('search refresh requests', () => {
     );
     expect(results.movies[0].original_language).toBe('zh');
     expect(results.movies[0].available_with_subscription).toBe(false);
+    expect(results.movies[0].available_without_rent_or_purchase).toBe(true);
   });
 
   test('loads the English language-name lookup from the Worker', async () => {

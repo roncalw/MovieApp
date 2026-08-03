@@ -42,13 +42,14 @@ describe('movie card data', () => {
     jest.restoreAllMocks();
   });
 
-  test('requests the combined IMDb and subscription endpoint', async () => {
+  test('requests the combined IMDb and viewing-option endpoint', async () => {
     globalThis.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({
         tmdb_id: 603,
         imdb_rating: 8.7,
         available_with_subscription: true,
+        available_without_rent_or_purchase: true,
       }),
     })) as jest.Mock;
 
@@ -56,6 +57,7 @@ describe('movie card data', () => {
       tmdb_id: 603,
       imdb_rating: 8.7,
       available_with_subscription: true,
+      available_without_rent_or_purchase: true,
     });
     expect(globalThis.fetch).toHaveBeenCalledWith(
       'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/603/card-data',
@@ -72,6 +74,7 @@ describe('movie card data', () => {
           tmdb_id: isFirstMovie ? 101 : 202,
           imdb_rating: isFirstMovie ? 5.5 : 8.2,
           available_with_subscription: !isFirstMovie,
+          available_without_rent_or_purchase: isFirstMovie,
         }),
       };
     }) as jest.Mock;
@@ -85,10 +88,12 @@ describe('movie card data', () => {
     expect(movies[0]).toMatchObject({
       vote_average: 8.2,
       available_with_subscription: true,
+      available_without_rent_or_purchase: false,
     });
     expect(movies[1]).toMatchObject({
       vote_average: 5.5,
       available_with_subscription: false,
+      available_without_rent_or_purchase: true,
     });
   });
 
@@ -102,7 +107,7 @@ describe('movie card data', () => {
     ({ answer, expectedBadgeCount }) => {
       const movie = {
         ...makeMovie(303, 'Subscription test'),
-        available_with_subscription: answer,
+        available_without_rent_or_purchase: answer,
       };
       let component!: TestRenderer.ReactTestRenderer;
 
@@ -120,7 +125,7 @@ describe('movie card data', () => {
         component.root.findAll(
           node =>
             node.type === View &&
-            node.props.testID === 'subscription-unavailable-badge',
+            node.props.testID === 'rent-or-purchase-required-badge',
         ),
       ).toHaveLength(expectedBadgeCount);
 

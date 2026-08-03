@@ -284,6 +284,14 @@ export type movieType = {
    * null or undefined means the app does not have a dependable answer.
    */
   available_with_subscription?: boolean | null;
+  /**
+   * False means Cloudflare confirmed that the movie has neither a current US
+   * subscription provider nor an ad-supported stream. The poster card uses
+   * only this broader answer for the rent-or-purchase shopping-bag badge.
+   * Null or undefined means the app does not have a dependable answer and must
+   * not display the badge.
+   */
+  available_without_rent_or_purchase?: boolean | null;
   genreIds: number[];
   budget: number;
   revenue: number;

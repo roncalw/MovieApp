@@ -14,12 +14,15 @@ export async function loadMovieCardDataForMovies(
           movie,
           imdbRating: cardData.imdb_rating,
           availableWithSubscription: cardData.available_with_subscription,
+          availableWithoutRentOrPurchase:
+            cardData.available_without_rent_or_purchase,
         };
       } catch {
         return {
           movie,
           imdbRating: null,
           availableWithSubscription: null,
+          availableWithoutRentOrPurchase: null,
         };
       }
     }),
@@ -39,10 +42,16 @@ export async function loadMovieCardDataForMovies(
     : moviesWithCardData;
 
   return orderedMoviesWithCardData.map(
-    ({ movie, imdbRating, availableWithSubscription }) => ({
+    ({
+      movie,
+      imdbRating,
+      availableWithSubscription,
+      availableWithoutRentOrPurchase,
+    }) => ({
       ...movie,
       vote_average: imdbRating ?? 0,
       available_with_subscription: availableWithSubscription,
+      available_without_rent_or_purchase: availableWithoutRentOrPurchase,
     }),
   );
 }
