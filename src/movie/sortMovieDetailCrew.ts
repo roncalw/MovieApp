@@ -5,44 +5,81 @@ import {
 } from './movieCrewSortConfig';
 
 type IndexedCrewMember = {
+  normalizedJob: string;
+  normalizedName: string;
   originalIndex: number;
   person: movieCrewProfile;
+  pictureRank: number;
+  roleRank: number;
 };
+
+type NormalizedCrewRolePriorityRule = Omit<
+  MovieCrewRolePriorityRule,
+  'excludes' | 'jobs'
+> & {
+  excludes?: readonly string[];
+  jobs: readonly string[];
+};
+
+/*
+  Android's JavaScript engine is extremely slow when locale-aware text methods
+  are called repeatedly from an Array.sort comparator. Normalize the small,
+  fixed configuration once when this module loads, then normalize each TMDB
+  crew member once before sorting. Android and iPhone use this same code path.
+*/
+const NORMALIZED_ROLE_PRIORITY: readonly NormalizedCrewRolePriorityRule[] =
+  MOVIE_DETAIL_CREW_SORT_CONFIG.rolePriority.map(rule => ({
+    ...rule,
+    excludes: rule.excludes?.map(normalizeText),
+    jobs: rule.jobs.map(normalizeText),
+  }));
 
 export function sortMovieDetailCrew(crew: movieCrewProfile[]) {
   return crew
     .map(
-      (person, originalIndex): IndexedCrewMember => ({
-        originalIndex,
-        person,
-      }),
+      (person, originalIndex): IndexedCrewMember => {
+        const normalizedJob = normalizeText(person.job);
+
+        return {
+          normalizedJob,
+          normalizedName: normalizeText(person.name),
+          originalIndex,
+          person,
+          pictureRank: getPictureRank(person),
+          roleRank: getRoleRank(normalizedJob),
+        };
+      },
     )
     .sort(compareCrewMembers)
     .map(({ person }) => person);
 }
 
 function compareCrewMembers(left: IndexedCrewMember, right: IndexedCrewMember) {
-  const pictureComparison =
-    getPictureRank(left.person) - getPictureRank(right.person);
+  const pictureComparison = left.pictureRank - right.pictureRank;
 
   if (pictureComparison !== 0) {
     return pictureComparison;
   }
 
-  const roleComparison =
-    getRoleRank(left.person.job) - getRoleRank(right.person.job);
+  const roleComparison = left.roleRank - right.roleRank;
 
   if (roleComparison !== 0) {
     return roleComparison;
   }
 
-  const jobComparison = compareText(left.person.job, right.person.job);
+  const jobComparison = compareNormalizedText(
+    left.normalizedJob,
+    right.normalizedJob,
+  );
 
   if (jobComparison !== 0) {
     return jobComparison;
   }
 
-  const nameComparison = compareText(left.person.name, right.person.name);
+  const nameComparison = compareNormalizedText(
+    left.normalizedName,
+    right.normalizedName,
+  );
 
   if (nameComparison !== 0) {
     return nameComparison;
@@ -59,40 +96,48 @@ function getPictureRank(person: movieCrewProfile) {
   return person.profile_path?.trim() ? 0 : 1;
 }
 
-function getRoleRank(job: string) {
+function getRoleRank(normalizedJob: string) {
   const matchingRuleIndex =
-    MOVIE_DETAIL_CREW_SORT_CONFIG.rolePriority.findIndex(rule =>
-      jobMatchesRule(job, rule),
+    NORMALIZED_ROLE_PRIORITY.findIndex(rule =>
+      jobMatchesRule(normalizedJob, rule),
     );
 
   return matchingRuleIndex === -1
-    ? MOVIE_DETAIL_CREW_SORT_CONFIG.rolePriority.length
+    ? NORMALIZED_ROLE_PRIORITY.length
     : matchingRuleIndex;
 }
 
-function jobMatchesRule(job: string, rule: MovieCrewRolePriorityRule) {
-  const normalizedJob = normalizeText(job);
+function jobMatchesRule(
+  normalizedJob: string,
+  rule: NormalizedCrewRolePriorityRule,
+) {
   const isExcluded = rule.excludes?.some(excludedJob =>
-    normalizedJob.includes(normalizeText(excludedJob)),
+    normalizedJob.includes(excludedJob),
   );
 
   if (isExcluded) {
     return false;
   }
 
-  return rule.jobs.some(configuredJob => {
-    const normalizedConfiguredJob = normalizeText(configuredJob);
-
-    return rule.match === 'exact'
-      ? normalizedJob === normalizedConfiguredJob
-      : normalizedJob.includes(normalizedConfiguredJob);
-  });
+  return rule.jobs.some(configuredJob =>
+    rule.match === 'exact'
+      ? normalizedJob === configuredJob
+      : normalizedJob.includes(configuredJob),
+  );
 }
 
-function compareText(left: string, right: string) {
-  return normalizeText(left).localeCompare(normalizeText(right));
+function compareNormalizedText(left: string, right: string) {
+  if (left < right) {
+    return -1;
+  }
+
+  if (left > right) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function normalizeText(value: string) {
-  return value.trim().toLocaleLowerCase('en-US');
+  return value.trim().toLowerCase();
 }

@@ -29,6 +29,8 @@ Apple customers are currently on MovieApp 3.4.2, so the App Store description in
   * Posters that do not load immediately are automatically tried again.
   * A familiar placeholder appears instead of an empty poster area when an image is unavailable.
   * The same reliable poster experience is available across Home, searches, filmographies, and Movie Details.
+
+* Bug Fix - Optimized Movie Detail page to render faster.
 ```
 
 ## Google Play
@@ -45,4 +47,6 @@ Google Play customers already have the poster and refresh features in MovieApp 3
   * Look for the yellow shopping bag on movie posters.
   * The bag appears when a movie is not available through a subscription or an ad-supported stream.
   * See this guidance in Favorites, Movies I Have Seen, Search by Movie Title, and Advanced Search.
+
+* Bug Fix - Optimized Movie Detail to render faster.
 ```

@@ -82,4 +82,38 @@ describe('Movie Detail crew sorting', () => {
 
     expect(crew).toEqual(originalOrder);
   });
+
+  test('avoids locale-aware string operations that can freeze Android', () => {
+    const localeCompareSpy = jest
+      .spyOn(String.prototype, 'localeCompare')
+      .mockImplementation(() => {
+        throw new Error('localeCompare must not be used by the crew sorter.');
+      });
+    const toLocaleLowerCaseSpy = jest
+      .spyOn(String.prototype, 'toLocaleLowerCase')
+      .mockImplementation(() => {
+        throw new Error(
+          'toLocaleLowerCase must not be used by the crew sorter.',
+        );
+      });
+
+    try {
+      const sortedCrew = sortMovieDetailCrew([
+        crewMember('Zoe Producer', 'Producer', '/zoe.jpg'),
+        crewMember('Amy Executive', 'Executive Producer', '/amy.jpg'),
+        crewMember('Beth Producer', 'Producer', '/beth.jpg'),
+      ]);
+
+      expect(sortedCrew.map(person => person.name)).toEqual([
+        'Amy Executive',
+        'Beth Producer',
+        'Zoe Producer',
+      ]);
+      expect(localeCompareSpy).not.toHaveBeenCalled();
+      expect(toLocaleLowerCaseSpy).not.toHaveBeenCalled();
+    } finally {
+      localeCompareSpy.mockRestore();
+      toLocaleLowerCaseSpy.mockRestore();
+    }
+  });
 });
