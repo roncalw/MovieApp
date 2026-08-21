@@ -50,6 +50,7 @@ import { useMovieUserListActions } from './useMovieUserListActions';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { queryKeys } from '../query/queryKeys';
+import { getMovieDetailDisplayTitle } from './movieDetailTitle';
 
 export function MovieDetail({
   movieId,
@@ -131,6 +132,7 @@ function LoadedMovieDetail({
 }) {
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
+  const displayTitle = getMovieDetailDisplayTitle(movie);
   const cast = movie.credits?.cast ?? [];
   const crew = useMemo(
     () => sortMovieDetailCrew(movie.credits?.crew ?? []),
@@ -186,7 +188,7 @@ function LoadedMovieDetail({
           numberOfLines={2}
           style={styles.movieTitle}
         >
-          {movie.title}
+          {displayTitle}
         </Text>
 
         <GenreList genres={movie.genres ?? []} />

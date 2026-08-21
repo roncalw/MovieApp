@@ -44,6 +44,7 @@ export function mapMovieToMovie(movie: movieType): movieType {
     poster_path: movie.poster_path,
     release_date: movie.release_date,
     title: movie.title,
+    alternative_titles: movie.alternative_titles,
     video: movie.video,
     vote_average: movie.vote_average,
     vote_count: movie.vote_count,

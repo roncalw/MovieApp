@@ -34,7 +34,7 @@ describe('TMDB detail service boundaries', () => {
     ]);
 
     expect(mockedGet.mock.calls.map(([path]) => path)).toEqual([
-      `/movie/${movieId}?${CONFIG.apiKey}&append_to_response=credits,release_dates`,
+      `/movie/${movieId}?${CONFIG.apiKey}&append_to_response=credits,release_dates,alternative_titles`,
       `/movie/${movieId}/videos?${CONFIG.apiKey}`,
       `/movie/${movieId}/external_ids?${CONFIG.apiKey}`,
       `/movie/${movieId}/watch/providers?${CONFIG.apiKey}`,

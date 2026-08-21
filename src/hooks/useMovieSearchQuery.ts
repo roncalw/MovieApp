@@ -28,7 +28,7 @@ import {
   fetchMovieVideos,
   fetchMovieWatchProviders,
   fetchMovieLanguages,
-  fetchMoviesByTitle,
+  fetchMovieTitleSearchResults,
 } from '../api/tmdb/services/movieService';
 import { fetchPersonFamily } from '../api/cloudflare/personFamilyService';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
@@ -247,10 +247,11 @@ export function useMovieTitleSearchQuery(title: string, enabled = true) {
 
   return useInfiniteQuery({
     queryKey: queryKeys.movieTitleSearch(normalizedTitle),
-    queryFn: ({ pageParam }) => fetchMoviesByTitle(normalizedTitle, pageParam),
+    queryFn: () => fetchMovieTitleSearchResults(normalizedTitle),
     initialPageParam: 1,
-    getNextPageParam: lastPage =>
-      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    // The service has already combined up to five TMDb pages into this one
+    // result packet. There is no customer-visible load-more operation.
+    getNextPageParam: () => undefined,
     staleTime: 1000 * 60 * 5,
     enabled: enabled && normalizedTitle.length > 0,
   });

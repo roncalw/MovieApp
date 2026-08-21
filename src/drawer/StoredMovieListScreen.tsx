@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import {
   DrawerActions,
@@ -21,6 +21,10 @@ import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import type { StoredMovieListScreenProps } from '../types/drawer/drawerScreenTypes';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
+import {
+  findStoredMovieListMembershipChanges,
+  reconcileStoredMovieListMembership,
+} from './storedMovieListReconciliation';
 
 export function StoredMovieListScreen({
   title,
@@ -31,29 +35,135 @@ export function StoredMovieListScreen({
   const { openMovieDetail } = useDetailNavigation();
   const [movies, setMovies] = useState<movieType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const loadMovies = useCallback(async () => {
-    setIsLoading(true);
+  const moviesRef = useRef<movieType[]>([]);
+  const hasCompletedInitialLoadRef = useRef(false);
+  const dataLoadRunIdRef = useRef(0);
 
-    try {
-      const storedMovies = await getStoredMovieList(storageKey);
-      const moviesWithCardData = await loadMovieCardDataForMovies(
-        storedMovies.map(storedMovieToMovieType),
-      );
+  const commitMovies = useCallback((nextMovies: movieType[]) => {
+    moviesRef.current = nextMovies;
+    setMovies(nextMovies);
+  }, []);
 
-      setMovies(moviesWithCardData);
-    } catch (error) {
-      console.error(`Error loading ${title}:`, error);
-      setMovies([]);
-    } finally {
-      setIsLoading(false);
+  const loadAllMovies = useCallback(async () => {
+    const storedMovies = await getStoredMovieList(storageKey);
+
+    return loadMovieCardDataForMovies(
+      storedMovies.map(storedMovieToMovieType),
+    );
+  }, [storageKey]);
+
+  const refreshAllMovies = useCallback(async () => {
+    const runId = ++dataLoadRunIdRef.current;
+    const moviesWithCardData = await loadAllMovies();
+
+    if (dataLoadRunIdRef.current !== runId) {
+      return;
     }
-  }, [storageKey, title]);
-  const pageRefresh = usePageRefresh(loadMovies);
+
+    commitMovies(moviesWithCardData);
+    hasCompletedInitialLoadRef.current = true;
+  }, [commitMovies, loadAllMovies]);
+  const pageRefresh = usePageRefresh(refreshAllMovies);
 
   useFocusEffect(
     useCallback(() => {
-      loadMovies();
-    }, [loadMovies]),
+      const runId = ++dataLoadRunIdRef.current;
+      let isActive = true;
+
+      async function synchronizeVisibleList() {
+        if (!hasCompletedInitialLoadRef.current) {
+          setIsLoading(true);
+
+          try {
+            const moviesWithCardData = await loadAllMovies();
+
+            if (isActive && dataLoadRunIdRef.current === runId) {
+              commitMovies(moviesWithCardData);
+              hasCompletedInitialLoadRef.current = true;
+            }
+          } catch (error) {
+            console.error(`Error loading ${title}:`, error);
+
+            if (isActive && dataLoadRunIdRef.current === runId) {
+              commitMovies([]);
+            }
+          } finally {
+            if (isActive && dataLoadRunIdRef.current === runId) {
+              setIsLoading(false);
+            }
+          }
+
+          return;
+        }
+
+        try {
+          const storedMovies = await getStoredMovieList(storageKey);
+          const currentMovies = moviesRef.current;
+          const changes = findStoredMovieListMembershipChanges(
+            currentMovies,
+            storedMovies,
+          );
+
+          if (
+            changes.addedStoredMovies.length === 0 &&
+            changes.removedMovieIds.size === 0
+          ) {
+            return;
+          }
+
+          const shouldShowEmptyListLoading =
+            currentMovies.length === 0 &&
+            changes.addedStoredMovies.length > 0;
+
+          if (shouldShowEmptyListLoading) {
+            setIsLoading(true);
+          }
+
+          const addedMoviesWithCardData =
+            changes.addedStoredMovies.length > 0
+              ? await loadMovieCardDataForMovies(
+                  changes.addedStoredMovies.map(storedMovieToMovieType),
+                )
+              : [];
+
+          if (isActive && dataLoadRunIdRef.current === runId) {
+            const nextMovies = reconcileStoredMovieListMembership(
+              moviesRef.current,
+              storedMovies,
+              addedMoviesWithCardData,
+            );
+
+            if (nextMovies !== moviesRef.current) {
+              commitMovies(nextMovies);
+            }
+          }
+
+          if (
+            shouldShowEmptyListLoading &&
+            isActive &&
+            dataLoadRunIdRef.current === runId
+          ) {
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error(`Error synchronizing ${title}:`, error);
+
+          if (isActive && dataLoadRunIdRef.current === runId) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      void synchronizeVisibleList();
+
+      return () => {
+        isActive = false;
+
+        if (dataLoadRunIdRef.current === runId) {
+          dataLoadRunIdRef.current += 1;
+        }
+      };
+    }, [commitMovies, loadAllMovies, storageKey, title]),
   );
 
   function handleOpenTitleSearch() {
@@ -94,10 +204,7 @@ export function StoredMovieListScreen({
           movies={movies}
           cardVariant="posterRating"
           ListHeaderComponent={
-            <>
-              {screenHeader}
-              {loadingStatus}
-            </>
+            <>{screenHeader}</>
           }
           ListHeaderComponentStyle={styles.storedMovieListHeader}
           {...pageRefresh}

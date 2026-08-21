@@ -1,10 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
 import { fetchMovieCardData } from '../src/api/tmdb/services/movieService';
 import { MovieCard } from '../src/search/results/MovieCard';
 import type { movieType } from '../src/types/movie/MovieTypes';
 import { loadMovieCardDataForMovies } from '../src/utils/storage/movieCardData';
+import { colors } from '../src/theme/colors';
+import { scaleSize } from '../src/theme/scale';
 
 const originalFetch = globalThis.fetch;
 
@@ -132,4 +134,84 @@ describe('movie card data', () => {
       act(() => component.unmount());
     },
   );
+
+  test('matches the missing-poster artwork lettering for the overlaid movie title', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      component = TestRenderer.create(
+        <MovieCard
+          movie={makeMovie(404, 'A Movie Without a Poster')}
+          variant="posterRating"
+          onPress={() => undefined}
+        />,
+      );
+    });
+
+    const titleOverlay = component.root.find(
+      node => node.props.testID === 'missing-poster-title',
+    );
+    const titleText = titleOverlay.findByType(Text);
+
+    expect(titleText.props.children).toBe(
+      'A Movie Without a Poster',
+    );
+    expect(titleText.props.style.color).toBe(colors.brandText);
+    expect(titleText.props.style.fontSize).toBe(scaleSize(20));
+    expect(titleText.props.style.fontWeight).toBe('400');
+    expect(titleOverlay.props.style.backgroundColor).toBeUndefined();
+
+    act(() => component.unmount());
+  });
+
+  test('does not place the missing-poster title over a real poster', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      component = TestRenderer.create(
+        <MovieCard
+          movie={{
+            ...makeMovie(405, 'Movie With a Poster'),
+            poster_path: '/movie-with-a-poster.jpg',
+          }}
+          variant="posterRating"
+          onPress={() => undefined}
+        />,
+      );
+    });
+
+    expect(
+      component.root.findAll(
+        node => node.props.testID === 'missing-poster-title',
+      ),
+    ).toHaveLength(0);
+
+    act(() => component.unmount());
+  });
+
+  test('uses the original title when a missing-poster movie has no display title', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      component = TestRenderer.create(
+        <MovieCard
+          movie={{
+            ...makeMovie(406, ''),
+            original_title: 'Original Missing-Poster Title',
+          }}
+          variant="posterRating"
+          onPress={() => undefined}
+        />,
+      );
+    });
+
+    const titleBanner = component.root.find(
+      node => node.props.testID === 'missing-poster-title',
+    );
+    expect(titleBanner.findByType(Text).props.children).toBe(
+      'Original Missing-Poster Title',
+    );
+
+    act(() => component.unmount());
+  });
 });

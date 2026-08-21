@@ -66,6 +66,8 @@ type MovieRequestOptions = {
   bypassCache?: boolean;
 };
 
+const MAX_TITLE_SEARCH_PAGES = 5;
+
 const NO_CACHE_REQUEST_HEADERS = {
   'Cache-Control': 'no-cache',
   Pragma: 'no-cache',
@@ -318,6 +320,45 @@ export async function fetchMoviesByTitle(
   };
 }
 
+/**
+ * Loads the bounded result set used by Search by Movie Title.
+ *
+ * TMDb exposes title-search results as pages, but MovieApp presents one stable
+ * grid. The first response tells us how many pages exist. We then request the
+ * remaining pages concurrently, stopping after page five even when TMDb has
+ * more. At the normal TMDb page size, this examines at most 100 movies without
+ * making the customer scroll through supplier-defined page boundaries. The
+ * screen applies customer-facing exact-match ordering without changing this
+ * cached supplier response.
+ */
+export async function fetchMovieTitleSearchResults(
+  title: string,
+  options?: MovieRequestOptions,
+): Promise<MovieTitleSearchResults> {
+  const firstPage = await fetchMoviesByTitle(title, 1, options);
+  const lastPageToFetch = Math.min(
+    MAX_TITLE_SEARCH_PAGES,
+    firstPage.totalPages,
+  );
+  const remainingPageNumbers = Array.from(
+    { length: Math.max(0, lastPageToFetch - 1) },
+    (_, index) => index + 2,
+  );
+  const remainingPages = await Promise.all(
+    remainingPageNumbers.map(page => fetchMoviesByTitle(title, page, options)),
+  );
+  const loadedMovies = [firstPage, ...remainingPages].flatMap(
+    page => page.movies,
+  );
+
+  return {
+    movies: loadedMovies,
+    page: lastPageToFetch || firstPage.page,
+    totalPages: firstPage.totalPages,
+    totalResults: firstPage.totalResults,
+  };
+}
+
 /*
 ======================================================== fetchCloudflareMovieSearchResults ====================================================
 
@@ -500,7 +541,8 @@ function mapCloudflareMovieToMovie(
     discarding the movie information that already loaded successfully.
 
   REQUEST OWNERSHIP:
-  - fetchMovie owns the core movie, cast, crew, and release certifications.
+  - fetchMovie owns the core movie, US alternative titles, cast, crew, and
+    release certifications.
   - fetchMovieVideos owns trailer metadata.
   - fetchMovieExternalIds owns the IMDb identifier used by the Reviews link.
   - fetchMovieWatchProviders owns US subscription, ad-supported, and rental data.
@@ -511,7 +553,7 @@ function mapCloudflareMovieToMovie(
 export async function fetchMovie(id: number): Promise<MovieDetailsResponse> {
   return fetchTmdbDetailResource<MovieDetailsResponse>(
     'movie-core',
-    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates`,
+    `${ENDPOINTS.MOVIE_DETAILS}/${id}?${CONFIG.apiKey}&append_to_response=credits,release_dates,alternative_titles`,
   );
 }
 

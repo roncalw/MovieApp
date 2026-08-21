@@ -99,10 +99,9 @@ async function loadTitleSearchCardData(
   onCardDataBatchLoaded: (cardDataUpdates: MovieCardDataById) => void,
 ) {
   /*
-    Title searches can match many TMDB pages. Request card data only for movies
-    that are already in the scrolling list, and make those requests in small
-    groups. This lets the first posters appear promptly and avoids sending one
-    large burst of Cloudflare requests for a broad title search.
+    One title search can contain as many as five TMDB pages. Request the related
+    card data in small groups so the first ratings and availability answers can
+    appear promptly without sending one large burst of Cloudflare requests.
   */
   for (
     let index = 0;

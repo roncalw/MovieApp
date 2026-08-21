@@ -34,8 +34,9 @@ import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { queryKeys } from '../../query/queryKeys';
 import { prepareMovieImages } from '../../utils/movieImageLoading';
-import { fetchMoviesByTitle } from '../../api/tmdb/services/movieService';
+import { fetchMovieTitleSearchResults } from '../../api/tmdb/services/movieService';
 import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
+import { rankTitleSearchMovies } from './titleSearchResults';
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
@@ -46,18 +47,17 @@ export function SearchByMovieTitleScreen() {
   const [draftTitle, setDraftTitle] = useState('');
   const [submittedTitle, setSubmittedTitle] = useState('');
   const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useMovieTitleSearchQuery(submittedTitle, submittedTitle.length > 0);
-  const titleSearchMovies = useMemo(
+  const { data, isLoading, isError, error } = useMovieTitleSearchQuery(
+    submittedTitle,
+    submittedTitle.length > 0,
+  );
+  const loadedTitleSearchMovies = useMemo(
     () => data?.pages.flatMap(page => page.movies) ?? [],
     [data],
+  );
+  const titleSearchMovies = useMemo(
+    () => rankTitleSearchMovies(loadedTitleSearchMovies, submittedTitle),
+    [loadedTitleSearchMovies, submittedTitle],
   );
   const { moviesWithCardData, resetCardDataState } =
     useTitleSearchCardData(titleSearchMovies);
@@ -78,15 +78,17 @@ export function SearchByMovieTitleScreen() {
     resetCardDataState();
     const activeQueryKey = queryKeys.movieTitleSearch(submittedTitle.trim());
 
-    const refreshedFirstPage = await refreshActiveInfiniteSearch({
+    const refreshedResults = await refreshActiveInfiniteSearch({
       queryClient,
       queryKey: activeQueryKey,
       firstPageParam: 1,
       fetchFirstPage: () =>
-        fetchMoviesByTitle(submittedTitle.trim(), 1, { bypassCache: true }),
+        fetchMovieTitleSearchResults(submittedTitle.trim(), {
+          bypassCache: true,
+        }),
     });
 
-    await prepareMovieImages([refreshedFirstPage.movies]);
+    await prepareMovieImages([refreshedResults.movies]);
     setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
   }, [queryClient, resetCardDataState, submittedTitle]);
   const pageRefresh = usePageRefresh(refreshTitleSearch);
@@ -247,9 +249,6 @@ export function SearchByMovieTitleScreen() {
       showRatingBadge
       imageRefreshGeneration={imageRefreshGeneration}
       onMoviePress={openMovieDetail}
-      onEndReached={fetchNextPage}
-      hasNextPage={hasNextPage}
-      isFetchingNextPage={isFetchingNextPage}
       {...pageRefresh}
     />
   );

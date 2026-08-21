@@ -262,6 +262,16 @@ export type movieIMDBRatingType = {
   imdbVotes: string | undefined;
 };
 
+export type movieAlternativeTitle = {
+  iso_3166_1: string;
+  title: string;
+  type: string;
+};
+
+export type movieAlternativeTitles = {
+  titles: movieAlternativeTitle[];
+};
+
 export type movieType = {
   id: number;
   adult: boolean;
@@ -274,6 +284,7 @@ export type movieType = {
   poster_path: string;
   release_date: string;
   title: string;
+  alternative_titles?: movieAlternativeTitles;
   video: boolean;
   vote_average: number;
   vote_count: number;

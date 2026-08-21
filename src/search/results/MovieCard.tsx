@@ -16,6 +16,7 @@ import { typography } from '../../theme/typography';
 import { getMovieImageUri } from '../../utils/movieImages';
 import type { MovieCardProps } from '../../types/search/movieResultsTypes';
 import { MovieRemoteImage } from '../../shared/images/MovieRemoteImage';
+import { colors } from '../../theme/colors';
 
 const imageNotFound = require('../../assets/images/MissingMoviePlaceholder.png');
 
@@ -28,6 +29,11 @@ export function MovieCard({
 }: MovieCardProps) {
   const isPosterRating = variant === 'posterRating';
   const movieImageUri = getMovieImageUri(movie);
+  const shouldShowMissingPosterTitle = isPosterRating && !movieImageUri;
+  const missingPosterTitle =
+    (movie.title ?? '').trim() ||
+    (movie.original_title ?? '').trim() ||
+    'Title unavailable';
   const shouldShowRentOrPurchaseBadge =
     isPosterRating && movie.available_without_rent_or_purchase === false;
 
@@ -49,6 +55,17 @@ export function MovieCard({
           ]}
           resizeMode={isPosterRating ? 'contain' : 'cover'}
         />
+        {shouldShowMissingPosterTitle ? (
+          <View testID="missing-poster-title" style={styles.missingPosterTitle}>
+            <Text
+              allowFontScaling={false}
+              numberOfLines={2}
+              style={styles.missingPosterTitleText}
+            >
+              {missingPosterTitle}
+            </Text>
+          </View>
+        ) : null}
         {isPosterRating && showRatingBadge ? (
           <View style={styles.ratingBadge}>
             <Ionicons
@@ -168,6 +185,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.78)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  missingPosterTitle: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    minHeight: scaleSize(38),
+    paddingHorizontal: scaleSize(6),
+    paddingVertical: scaleSize(5),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missingPosterTitleText: {
+    ...typography.cardMeta,
+    color: colors.brandText,
+    fontSize: scaleSize(20),
+    fontWeight: '400',
+    lineHeight: scaleSize(24),
+    textAlign: 'center',
   },
   movieTitle: {
     ...typography.cardTitle,
