@@ -5,6 +5,7 @@ import { HomeScreen } from '../src/home/HomeScreen';
 import {
   useHomeGenreMoviesQuery,
   usePopularMoviesQuery,
+  useStreamingMoviesQuery,
   useUpcomingMoviesQuery,
 } from '../src/hooks/useMovieSearchQuery';
 import { prepareMovieImages } from '../src/utils/movieImageLoading';
@@ -23,6 +24,7 @@ jest.mock('../src/hooks/useDetailNavigation', () => ({
 jest.mock('../src/hooks/useMovieSearchQuery', () => ({
   useHomeGenreMoviesQuery: jest.fn(),
   usePopularMoviesQuery: jest.fn(),
+  useStreamingMoviesQuery: jest.fn(),
   useUpcomingMoviesQuery: jest.fn(),
 }));
 
@@ -127,17 +129,24 @@ function countRenderedViews(
 
 describe('Home pull-to-refresh', () => {
   test('clears the entire page before rebuilding all Home collections', async () => {
-    const queries = Array.from({ length: 9 }, (_, index) =>
+    const queries = Array.from({ length: 10 }, (_, index) =>
       createQueryResult(index + 1),
     );
 
-    jest.mocked(useUpcomingMoviesQuery).mockReturnValue(queries[0].result as any);
-    jest.mocked(usePopularMoviesQuery).mockReturnValue(queries[1].result as any);
+    jest
+      .mocked(useUpcomingMoviesQuery)
+      .mockReturnValue(queries[0].result as any);
+    jest
+      .mocked(usePopularMoviesQuery)
+      .mockReturnValue(queries[1].result as any);
+    jest
+      .mocked(useStreamingMoviesQuery)
+      .mockReturnValue(queries[2].result as any);
     jest
       .mocked(useHomeGenreMoviesQuery)
       .mockImplementation((_rowKey, genreId) => {
         const genreIds = [10751, 35, 18, 80, 27, 10402, 99];
-        return queries[genreIds.indexOf(genreId) + 2].result as any;
+        return queries[genreIds.indexOf(genreId) + 3].result as any;
       });
 
     let component!: TestRenderer.ReactTestRenderer;
@@ -147,7 +156,7 @@ describe('Home pull-to-refresh', () => {
     });
 
     expect(countRenderedViews(component, 'home-hero')).toBe(1);
-    expect(countRenderedViews(component, 'home-row')).toBe(8);
+    expect(countRenderedViews(component, 'home-row')).toBe(9);
 
     const refresh = component.root.findByProps({ testID: 'home-scroll' }).props
       .onRefresh as () => Promise<void>;
@@ -158,9 +167,9 @@ describe('Home pull-to-refresh', () => {
       await Promise.resolve();
     });
 
-    expect(queries.every(query => query.result.refetch.mock.calls.length === 1)).toBe(
-      true,
-    );
+    expect(
+      queries.every(query => query.result.refetch.mock.calls.length === 1),
+    ).toBe(true);
     expect(countRenderedViews(component, 'home-hero')).toBe(0);
     expect(countRenderedViews(component, 'home-row')).toBe(0);
     expect(component.root.findAllByType(ActivityIndicator)).toHaveLength(1);
@@ -173,7 +182,7 @@ describe('Home pull-to-refresh', () => {
 
     expect(prepareMovieImages).toHaveBeenCalledTimes(2);
     expect(countRenderedViews(component, 'home-hero')).toBe(1);
-    expect(countRenderedViews(component, 'home-row')).toBe(8);
+    expect(countRenderedViews(component, 'home-row')).toBe(9);
 
     act(() => component.unmount());
   });

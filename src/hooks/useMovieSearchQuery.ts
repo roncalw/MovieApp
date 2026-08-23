@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-query';
 import {
   fetchPopularMovies,
+  fetchStreamingMovies,
   fetchUpcomingMovies,
   fetchMoviesByGenre,
   fetchMovieSearchResults,
@@ -277,6 +278,15 @@ export function usePopularMoviesQuery() {
   return useQuery({
     queryKey: queryKeys.popularMovies,
     queryFn: fetchPopularMovies,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/** Gives HomeScreen the subscription-only, popularity-sorted movie row. */
+export function useStreamingMoviesQuery() {
+  return useQuery({
+    queryKey: queryKeys.streamingMovies,
+    queryFn: fetchStreamingMovies,
     staleTime: 1000 * 60 * 5,
   });
 }

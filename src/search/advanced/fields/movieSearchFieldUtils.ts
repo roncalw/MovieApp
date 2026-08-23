@@ -4,6 +4,7 @@ import type {
   SortItem,
   StreamerItem,
 } from '../../../types/search/movieSearchFieldTypes';
+import { MOVIE_STREAMER_PROVIDER_IDS } from '../../shared/movieStreamers';
 
 export const GENRE_ITEMS: LabelValueItem[] = [
   { label: 'Action', value: '28' },
@@ -34,16 +35,16 @@ export const RATING_ITEMS: RatingItem[] = [
 ];
 
 export const STREAMER_ITEMS: StreamerItem[] = [
-  { label: 'Netflix', value: '8', image: require('../../../assets/images/netflix.png') },
-  { label: 'Hulu', value: '15', image: require('../../../assets/images/hulu.png') },
-  { label: 'Prime', value: '9', image: require('../../../assets/images/amazon_prime.png') },
-  { label: 'Max', value: '1899', image: require('../../../assets/images/max.png') },
-  { label: 'YouTube', value: '192', image: require('../../../assets/images/youtube_premium.png') },
-  { label: 'Disney Plus', value: '337', image: require('../../../assets/images/disney_plus.png') },
-  { label: 'Apple TV Plus', value: '350', image: require('../../../assets/images/apple_tv_plus.png') },
-  { label: 'Peacock', value: '387', image: require('../../../assets/images/peacock.png') },
-  { label: 'AMC+', value: '526', image: require('../../../assets/images/amc.png') },
-  { label: 'Paramount+', value: '531', image: require('../../../assets/images/paramount_plus.png') },
+  { label: 'Netflix', value: MOVIE_STREAMER_PROVIDER_IDS.netflix, image: require('../../../assets/images/netflix.png') },
+  { label: 'Hulu', value: MOVIE_STREAMER_PROVIDER_IDS.hulu, image: require('../../../assets/images/hulu.png') },
+  { label: 'Prime', value: MOVIE_STREAMER_PROVIDER_IDS.prime, image: require('../../../assets/images/amazon_prime.png') },
+  { label: 'Max', value: MOVIE_STREAMER_PROVIDER_IDS.max, image: require('../../../assets/images/max.png') },
+  { label: 'YouTube', value: MOVIE_STREAMER_PROVIDER_IDS.youtube, image: require('../../../assets/images/youtube_premium.png') },
+  { label: 'Disney Plus', value: MOVIE_STREAMER_PROVIDER_IDS.disneyPlus, image: require('../../../assets/images/disney_plus.png') },
+  { label: 'Apple TV Plus', value: MOVIE_STREAMER_PROVIDER_IDS.appleTvPlus, image: require('../../../assets/images/apple_tv_plus.png') },
+  { label: 'Peacock', value: MOVIE_STREAMER_PROVIDER_IDS.peacock, image: require('../../../assets/images/peacock.png') },
+  { label: 'AMC+', value: MOVIE_STREAMER_PROVIDER_IDS.amcPlus, image: require('../../../assets/images/amc.png') },
+  { label: 'Paramount+', value: MOVIE_STREAMER_PROVIDER_IDS.paramountPlus, image: require('../../../assets/images/paramount_plus.png') },
 ];
 
 export const SORT_ITEMS: SortItem[] = [

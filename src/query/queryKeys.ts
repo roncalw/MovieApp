@@ -49,6 +49,7 @@ export const queryKeys = {
     ['personMovieCredits', personId] as const,
 
   popularMovies: ['popularMovies'] as const,
+  streamingMovies: ['streamingMovies'] as const,
   upcomingMovies: ['upcomingMovies'] as const,
   homeGenreMovies: (rowKey: string, genreId: HomeMovieGenreId) =>
     ['homeGenreMovies', rowKey, genreId] as const,

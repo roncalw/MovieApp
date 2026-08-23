@@ -41,6 +41,7 @@ import {
   getDefaultEndDate,
 } from '../../../utils/movieSearchDates';
 import { normalizeMovieOriginalLanguages } from '../../../utils/movieOriginalLanguages';
+import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../../../search/shared/movieStreamers';
 
 const CLOUDFLARE_MOVIE_SEARCH_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
@@ -48,19 +49,6 @@ const CLOUDFLARE_MOVIE_LIST_BASE_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies';
 const CLOUDFLARE_MOVIE_LANGUAGES_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/languages';
-
-const ALL_STREAMER_PROVIDER_IDS = [
-  '8',
-  '15',
-  '9',
-  '1899',
-  '192',
-  '337',
-  '350',
-  '387',
-  '526',
-  '531',
-];
 
 type MovieRequestOptions = {
   bypassCache?: boolean;
@@ -176,6 +164,24 @@ function logHomeTmdbError(
 export async function fetchPopularMovies(): Promise<movieType[]> {
   const path = buildLegacyTmdbPath(ENDPOINTS.POPULAR_MOVIES);
   const data = await fetchHomeMovieList('popular', path);
+
+  return data.results.map(mapMovieToMovie);
+}
+
+/**
+ * Loads movies that can be watched through any subscription streamer supported
+ * by MovieApp. The pipe characters tell TMDb that a movie may match any one of
+ * the providers; requiring every provider would exclude nearly everything.
+ */
+export async function fetchStreamingMovies(): Promise<movieType[]> {
+  const query = new URLSearchParams({
+    sort_by: 'popularity.desc',
+    watch_region: 'US',
+    with_watch_monetization_types: 'flatrate',
+    with_watch_providers: ALL_MOVIE_STREAMER_PROVIDER_IDS.join('|'),
+  });
+  const path = buildLegacyTmdbPath(ENDPOINTS.MOVIE_SEARCH, query.toString());
+  const data = await fetchHomeMovieList('streaming', path);
 
   return data.results.map(mapMovieToMovie);
 }
@@ -477,13 +483,13 @@ export async function fetchCloudflareMovieSearchResults(
 }
 
 function allStreamersAreSelected(streamerIds: string[]) {
-  if (streamerIds.length !== ALL_STREAMER_PROVIDER_IDS.length) {
+  if (streamerIds.length !== ALL_MOVIE_STREAMER_PROVIDER_IDS.length) {
     return false;
   }
 
   const selectedIds = new Set(streamerIds);
 
-  return ALL_STREAMER_PROVIDER_IDS.every(providerId =>
+  return ALL_MOVIE_STREAMER_PROVIDER_IDS.every(providerId =>
     selectedIds.has(providerId),
   );
 }

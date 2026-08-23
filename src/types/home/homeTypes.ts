@@ -11,6 +11,7 @@ import type { MovieSearchParams } from '../search/movieSearchParams';
 
 export type HomeAdvancedSearchSectionId =
   | 'popular'
+  | 'streaming'
   | 'family'
   | 'comedy'
   | 'drama'

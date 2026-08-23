@@ -21,6 +21,7 @@ import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import {
   useHomeGenreMoviesQuery,
   usePopularMoviesQuery,
+  useStreamingMoviesQuery,
   useUpcomingMoviesQuery,
 } from '../hooks/useMovieSearchQuery';
 import { HomeHeroCarousel } from './HomeHeroCarousel';
@@ -51,6 +52,7 @@ export function HomeScreen() {
   const { openMovieDetail } = useDetailNavigation();
   const upcomingMoviesQuery = useUpcomingMoviesQuery();
   const popularMoviesQuery = usePopularMoviesQuery();
+  const streamingMoviesQuery = useStreamingMoviesQuery();
   const familyMoviesQuery = useHomeGenreMoviesQuery('familyMovies', 10751);
   const comedyMoviesQuery = useHomeGenreMoviesQuery('comedyMovies', 35);
   const dramaMoviesQuery = useHomeGenreMoviesQuery('dramaMovies', 18);
@@ -63,6 +65,7 @@ export function HomeScreen() {
   );
   const refetchUpcomingMovies = upcomingMoviesQuery.refetch;
   const refetchPopularMovies = popularMoviesQuery.refetch;
+  const refetchStreamingMovies = streamingMoviesQuery.refetch;
   const refetchFamilyMovies = familyMoviesQuery.refetch;
   const refetchComedyMovies = comedyMoviesQuery.refetch;
   const refetchDramaMovies = dramaMoviesQuery.refetch;
@@ -78,6 +81,7 @@ export function HomeScreen() {
     () => [
       toHomeQueryState(upcomingMoviesQuery),
       toHomeQueryState(popularMoviesQuery),
+      toHomeQueryState(streamingMoviesQuery),
       toHomeQueryState(familyMoviesQuery),
       toHomeQueryState(comedyMoviesQuery),
       toHomeQueryState(dramaMoviesQuery),
@@ -95,6 +99,7 @@ export function HomeScreen() {
       horrorMoviesQuery,
       musicMoviesQuery,
       popularMoviesQuery,
+      streamingMoviesQuery,
       upcomingMoviesQuery,
     ],
   );
@@ -148,6 +153,7 @@ export function HomeScreen() {
       const nextQueryStates = await refreshHomeQueryStates(homeQueryStates, [
         refetchUpcomingMovies,
         refetchPopularMovies,
+        refetchStreamingMovies,
         refetchFamilyMovies,
         refetchComedyMovies,
         refetchDramaMovies,
@@ -174,6 +180,7 @@ export function HomeScreen() {
     refetchHorrorMovies,
     refetchMusicMovies,
     refetchPopularMovies,
+    refetchStreamingMovies,
     refetchUpcomingMovies,
   ]);
   const pageRefresh = usePageRefresh(refreshHome);

@@ -2,6 +2,7 @@ import type {
   HomeAdvancedSearchSectionConfig,
   HomeAdvancedSearchSectionId,
 } from '../types/home/homeTypes';
+import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../search/shared/movieStreamers';
 
 export const HOME_ADVANCED_SEARCH_SECTIONS: HomeAdvancedSearchSectionConfig[] = [
   {
@@ -11,6 +12,17 @@ export const HOME_ADVANCED_SEARCH_SECTIONS: HomeAdvancedSearchSectionConfig[] = 
       movieRatings: '',
       movieGenres: [],
       movieStreamers: [],
+      movieVoteCount: '',
+      movieSortBy: 'popularity.desc',
+    },
+  },
+  {
+    id: 'streaming',
+    title: 'Streaming Now',
+    advancedSearchParams: {
+      movieRatings: '',
+      movieGenres: [],
+      movieStreamers: [...ALL_MOVIE_STREAMER_PROVIDER_IDS],
       movieVoteCount: '',
       movieSortBy: 'popularity.desc',
     },
