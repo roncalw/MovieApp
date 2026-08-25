@@ -20,6 +20,16 @@ fi
 # identify the exact committed source code supplied to Gradle.
 RELEASE_COMMIT="$(git rev-parse --verify HEAD)"
 
+# Android does not provide a permanent archive history comparable to Xcode's.
+# Create that history under Library/Developer, using the same date grouping as
+# Xcode and one timestamped folder for every successful Android bundle command.
+# The folder is created only after Gradle succeeds, so a failed build does not
+# leave behind an empty archive entry.
+BUNDLE_ARCHIVE_DATE="$(date +%Y-%m-%d)"
+BUNDLE_ARCHIVE_TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+ANDROID_ARCHIVES_ROOT="$HOME/Library/Developer/Android/Archives"
+BUNDLE_ARCHIVE_FOLDER="$ANDROID_ARCHIVES_ROOT/$BUNDLE_ARCHIVE_DATE/MovieApp-$BUNDLE_ARCHIVE_TIMESTAMP"
+
 # Build the Android App Bundle that Google Play expects for release uploads.
 ./android/gradlew -p android bundleRelease
 
@@ -32,33 +42,34 @@ if [[ ! -f "$STANDARD_BUNDLE" ]]; then
   exit 1
 fi
 
-# Read the version values that Gradle used and preserve a release-named copy.
-# Gradle always rewrites app-release.aab, so the added copy prevents one release
-# from silently replacing the artifact produced for an earlier release.
+# Read the version values that Gradle used. Gradle always rewrites
+# app-release.aab, so copy the finished bundle into the permanent archive folder
+# before another build can replace it.
 ANDROID_VERSION_CODE="$(awk '/^[[:space:]]*versionCode[[:space:]]+/ { print $2; exit }' "$APP_GRADLE_FILE")"
 ANDROID_VERSION_NAME="$(awk -F'\"' '/^[[:space:]]*versionName[[:space:]]+\"/ { print $2; exit }' "$APP_GRADLE_FILE")"
-SHORT_COMMIT="${RELEASE_COMMIT[1,7]}"
-BUNDLE_FOLDER="${STANDARD_BUNDLE:h}"
-RELEASE_BUNDLE="$BUNDLE_FOLDER/MovieApp-${ANDROID_VERSION_NAME}-${ANDROID_VERSION_CODE}-${SHORT_COMMIT}.aab"
-COMMIT_RECORD="${RELEASE_BUNDLE%.aab}-commit.txt"
+ARCHIVED_BUNDLE="$BUNDLE_ARCHIVE_FOLDER/MovieApp-${ANDROID_VERSION_NAME}-${ANDROID_VERSION_CODE}.aab"
+COMMIT_RECORD="$BUNDLE_ARCHIVE_FOLDER/MovieApp-${ANDROID_VERSION_NAME}-${ANDROID_VERSION_CODE}-commit.txt"
 
-cp "$STANDARD_BUNDLE" "$RELEASE_BUNDLE"
+mkdir -p "$BUNDLE_ARCHIVE_FOLDER"
+cp "$STANDARD_BUNDLE" "$ARCHIVED_BUNDLE"
 
-# Keep the release record beside the preserved .aab, never inside it. Google
-# Play receives the normal bundle while the neighboring text file provides a
-# readable answer to: which version, version code, and commit produced it?
+# Keep the release record beside the archived .aab, never inside it. The commit
+# stays in the text record instead of the bundle filename, matching the iPhone
+# archive approach and keeping the artifact name easy to read.
 {
   print -r -- "Platform: Android"
   print -r -- "Version: $ANDROID_VERSION_NAME"
   print -r -- "Version Code: $ANDROID_VERSION_CODE"
   print -r -- "Commit: $RELEASE_COMMIT"
-  print -r -- "Bundle: ${RELEASE_BUNDLE:t}"
+  print -r -- "Bundle: ${ARCHIVED_BUNDLE:t}"
 } > "$COMMIT_RECORD"
 
 print -r -- ""
 print -r -- "Android App Bundle created:"
 print -r -- "  $STANDARD_BUNDLE"
-print -r -- "Release-named copy preserved as:"
-print -r -- "  $RELEASE_BUNDLE"
+print -r -- "Permanent Android bundle archive created:"
+print -r -- "  $BUNDLE_ARCHIVE_FOLDER"
+print -r -- "Archived bundle:"
+print -r -- "  $ARCHIVED_BUNDLE"
 print -r -- "Commit record created beside it:"
 print -r -- "  $COMMIT_RECORD"

@@ -11,7 +11,8 @@ set -euo pipefail
 #
 # The first value is the customer-facing version shown by Google Play. The
 # second value is Google's always-increasing numeric upload identifier. This
-# script changes only those two settings in android/app/build.gradle.
+# script changes those two settings in android/app/build.gradle and regenerates
+# the tracked version snapshot displayed by MovieApp's Settings page.
 
 if [[ "$#" -ne 2 ]]; then
   echo "Usage: scripts/set-android-version.sh <version> <version-code>" >&2
@@ -39,9 +40,30 @@ fi
 # works whether it is launched from the MovieApp folder or another directory.
 APP_ROOT="${0:A:h:h}"
 BUILD_FILE="$APP_ROOT/android/app/build.gradle"
+GENERATED_VERSION_FILE="$APP_ROOT/src/appVersion/generatedBuildVersion.ts"
+GENERATOR_SCRIPT="$APP_ROOT/scripts/generate-app-build-version.js"
 
 if [[ ! -f "$BUILD_FILE" ]]; then
   echo "Error: Android build file was not found: $BUILD_FILE" >&2
+  exit 1
+fi
+
+# The native settings and generated Settings-page snapshot are updated as one
+# operation. Require both the existing snapshot and its generator before any
+# edit starts so a later failure can restore the exact original files.
+if [[ ! -f "$GENERATED_VERSION_FILE" ]]; then
+  echo "Error: Generated app-version snapshot was not found: $GENERATED_VERSION_FILE" >&2
+  exit 1
+fi
+
+if [[ ! -f "$GENERATOR_SCRIPT" ]]; then
+  echo "Error: App-version generator was not found: $GENERATOR_SCRIPT" >&2
+  exit 1
+fi
+
+NODE_BINARY="$(command -v node || true)"
+if [[ -z "$NODE_BINARY" ]]; then
+  echo "Error: Node.js is required to refresh the Settings-page version snapshot." >&2
   exit 1
 fi
 
@@ -56,18 +78,22 @@ if [[ "$VERSION_NAME_COUNT" -ne 1 || "$VERSION_CODE_COUNT" -ne 1 ]]; then
   exit 1
 fi
 
-# Keep an unchanged temporary copy until both edits have been verified. If an
-# edit or verification fails, the EXIT cleanup restores the original file.
+# Keep unchanged temporary copies until the native edits and snapshot generation
+# have both succeeded. If any step fails, EXIT cleanup restores both files.
 BACKUP_FILE="$(mktemp "${TMPDIR:-/tmp}/movieapp-android-build-gradle.XXXXXX")"
+GENERATED_VERSION_BACKUP_FILE="$(mktemp "${TMPDIR:-/tmp}/movieapp-generated-version.XXXXXX")"
 cp "$BUILD_FILE" "$BACKUP_FILE"
+cp "$GENERATED_VERSION_FILE" "$GENERATED_VERSION_BACKUP_FILE"
 VERSION_EDITS_VERIFIED=0
 
 cleanup() {
   if [[ "$VERSION_EDITS_VERIFIED" -eq 0 ]]; then
     cp "$BACKUP_FILE" "$BUILD_FILE"
+    cp "$GENERATED_VERSION_BACKUP_FILE" "$GENERATED_VERSION_FILE"
   fi
 
   rm -f "$BACKUP_FILE"
+  rm -f "$GENERATED_VERSION_BACKUP_FILE"
 }
 trap cleanup EXIT
 
@@ -87,12 +113,23 @@ UPDATED_VERSION_NAME_COUNT="$({ grep -Ec "^[[:space:]]*versionName[[:space:]]+\"
 UPDATED_VERSION_CODE_COUNT="$({ grep -Ec "^[[:space:]]*versionCode[[:space:]]+${VERSION_CODE}[[:space:]]*$" "$BUILD_FILE" || true; })"
 
 if [[ "$UPDATED_VERSION_NAME_COUNT" -ne 1 || "$UPDATED_VERSION_CODE_COUNT" -ne 1 ]]; then
-  echo "Error: Android version changes could not be verified. The original build.gradle was restored." >&2
+  echo "Error: Android version changes could not be verified. The original version files were restored." >&2
   exit 1
 fi
+
+# Refresh the tracked snapshot now, before the release commit. The iOS Archive
+# and Android Bundle tasks intentionally do not regenerate it, so this version
+# command is the only supported way to synchronize the Android native settings
+# with the app-facing snapshot.
+(
+  cd "$APP_ROOT"
+  "$NODE_BINARY" "$GENERATOR_SCRIPT"
+)
 
 VERSION_EDITS_VERIFIED=1
 
 echo "Updated the Android store version:"
 echo "  Version:      $ANDROID_VERSION"
 echo "  Version code: $VERSION_CODE"
+echo "Updated the Settings-page version snapshot:"
+echo "  $GENERATED_VERSION_FILE"

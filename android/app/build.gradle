@@ -72,23 +72,6 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
-def repoRoot = rootDir.parentFile
-
-// Android entry point for the TypeScript installed-version snapshot.
-//
-// The React Native JavaScript bundle imports src/appVersion/generatedBuildVersion.ts,
-// so Android must regenerate that file before Metro creates a release bundle.
-// Keeping this generated file in the normal Gradle task graph prevents stale
-// version data from being packaged into the app and satisfies Gradle's task
-// dependency validation.
-def generatedAppBuildVersion = tasks.register("generateAppBuildVersion", Exec) {
-    workingDir repoRoot
-    commandLine "node", "scripts/generate-app-build-version.js"
-    inputs.file file("build.gradle")
-    inputs.file file("${repoRoot}/ios/MovieApp.xcodeproj/project.pbxproj")
-    outputs.file file("${repoRoot}/src/appVersion/generatedBuildVersion.ts")
-}
-
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -99,7 +82,7 @@ android {
         applicationId "com.codefest.movieapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 82
+        versionCode 83
         versionName "3.6.1"
     }
     signingConfigs {
@@ -130,20 +113,6 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
-}
-
-tasks.named("preBuild").configure {
-    dependsOn(generatedAppBuildVersion)
-}
-
-// React Native creates variant-specific bundle tasks such as
-// createBundleReleaseJsAndAssets. Those tasks read the generated TypeScript
-// snapshot while Metro bundles JavaScript, so they must wait for the generator
-// just like preBuild does.
-tasks.matching { task ->
-    task.name.startsWith("createBundle") && task.name.endsWith("JsAndAssets")
-}.configureEach {
-    dependsOn(generatedAppBuildVersion)
 }
 
 dependencies {

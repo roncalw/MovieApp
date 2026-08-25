@@ -17,8 +17,9 @@ import { INSTALLED_APP_VERSION } from './generatedBuildVersion';
  * - src/api/appVersion.ts receives this function's result from SettingsScreen.
  *
  * Code flow:
- * 1. Android Gradle or Xcode generates generatedBuildVersion.ts before the app
- *    build finishes.
+ * 1. The release version scripts generate generatedBuildVersion.ts before the
+ *    release commit. The iOS Archive and Android Bundle packaging tasks use the
+ *    committed snapshot without changing it.
  * 2. This file imports that generated snapshot when the JavaScript bundle
  *    loads.
  * 3. getInstalledAppVersion selects only the current platform's values.

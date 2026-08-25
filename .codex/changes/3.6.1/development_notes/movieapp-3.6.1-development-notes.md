@@ -232,18 +232,50 @@ navigation code.
 
 ## 9. Store Version and Source-Commit Tracking
 
-### 9.1 Android version-setting script
+### 9.1 Version-setting scripts and Settings-page snapshot
 
-The new command mirrors the existing iOS version-setting workflow:
+The release versions are prepared with the two platform-specific commands:
 
 ```text
+scripts/set-ios-version.sh 3.6.1 <next-build-number>
 scripts/set-android-version.sh 3.6.1 <next-version-code>
 ```
 
-It updates only `versionName` and `versionCode` in
-`android/app/build.gradle`. Before keeping the edit, it verifies that the file
-contained exactly one of each setting and that both requested values were
-written successfully. A failed edit restores the unchanged temporary copy.
+The iOS command updates the four app/extension version and build-number pairs in
+the Xcode project. The Android command updates `versionName` and `versionCode`
+in `android/app/build.gradle`. Each command verifies its native edits and then
+runs `scripts/generate-app-build-version.js` to refresh:
+
+```text
+src/appVersion/generatedBuildVersion.ts
+```
+
+That tracked TypeScript file supplies the installed version displayed by the
+MovieApp Settings page. It contains both platforms, so the final version command
+run during release preparation writes a snapshot containing the current iOS and
+Android values together.
+
+The native file and generated snapshot are one operation. Each script backs up
+both files before editing. If native verification or snapshot generation fails,
+the script restores both original files rather than leaving one version updated
+and the other stale.
+
+The iOS Archive and Android Bundle packaging tasks do not run the generator and
+do not modify the tracked snapshot. They package the version information that
+was produced by the version-setting scripts and included in the release commit.
+This prevents an iPhone archive from creating a tracked change that blocks the
+Android bundle's clean-repository check or forces the two artifacts to record
+different commits.
+
+The intended release order is:
+
+1. Set the iOS release version.
+2. Set the Android release version.
+3. Review and commit both native files plus the generated snapshot once.
+4. Create the iPhone archive.
+5. Create the Android bundle immediately afterward without another commit.
+
+Both artifact records should then contain the same complete Git commit.
 
 ### 9.2 Clean source requirement
 
@@ -275,25 +307,37 @@ The record is not inserted into or allowed to modify the Xcode archive.
 ### 9.4 Android bundle record
 
 Gradle always writes the normal bundle as `app-release.aab`. After a successful
-build, `scripts/androidbundle.sh` preserves a release-named copy using this
-pattern:
+build, `scripts/androidbundle.sh` creates a permanent Android archive outside
+Gradle's `build` directory. The archive uses the same date grouping as the Xcode
+archive history and gives every bundle command its own timestamped folder:
 
 ```text
-MovieApp-<version>-<version-code>-<short-commit>.aab
+~/Library/Developer/Android/Archives/
+  <YYYY-MM-DD>/
+    MovieApp-<YYYYMMDD-HHMMSS>/
+      MovieApp-<version>-<version-code>.aab
+      MovieApp-<version>-<version-code>-commit.txt
 ```
 
-A separate neighboring text file records:
+The preserved bundle filename deliberately does not contain the Git commit. The
+neighboring text file already records the complete commit, matching the iPhone
+rule of keeping source identification beside the artifact instead of putting it
+in the artifact name.
+
+The text file contains:
 
 ```text
 Platform: Android
 Version: 3.6.1
 Version Code: <version-code>
 Commit: <complete-40-character-commit>
-Bundle: <release-named-bundle>.aab
+Bundle: MovieApp-3.6.1-<version-code>.aab
 ```
 
 The normal `app-release.aab` remains available for the existing validation and
-Google Play upload workflow.
+Google Play upload workflow. The permanent archived copy survives
+`./gradlew clean` and deletion of `android/app/build` because it is stored
+outside the Gradle workspace.
 
 ## 10. Automated Coverage
 
@@ -309,11 +353,11 @@ The included changes have focused coverage in:
 | `__tests__/homeStreamingSection.test.ts`          | Home placement, TMDb subscription request, and Advanced Search preset.         |
 | `__tests__/homeRefresh.test.tsx`                  | Streaming Now participation in Home refresh behavior.                          |
 
-The release scripts were also checked with zsh syntax validation. The Android
-version script was exercised against disposable copies for both a successful
-replacement and a failed verification that restored the original file. The
-archive and bundle commands were not run while the release-tracking change was
-developed.
+The release scripts were also checked with zsh syntax validation. Both version
+scripts were exercised against disposable copies to confirm successful native
+updates, Settings-page snapshot generation, and complete rollback of both files
+when generation fails. The archive and bundle commands were not run while the
+release-tracking changes were developed.
 
 ## 11. 3.6.1 Release Checklist
 
@@ -322,12 +366,14 @@ developed.
 2. Set every iOS target to version 3.6.1 with the existing iOS version script.
 3. Set Android to version 3.6.1 and the next unused Google Play version code
    with `scripts/set-android-version.sh`.
-4. Run the normal automated and native iPhone/Android release checks.
-5. Commit every intended release file and confirm `git status` is clean.
-6. Create the iPhone archive and Android bundle using the existing packaging
-   commands.
-7. Run the existing archive and bundle validation scripts.
-8. Keep each generated commit-record text file beside its matching store
+4. Confirm `src/appVersion/generatedBuildVersion.ts` contains the intended iOS
+   and Android values.
+5. Run the normal automated and native iPhone/Android release checks.
+6. Commit every intended release file once and confirm `git status` is clean.
+7. Create the iPhone archive and then create the Android bundle without making
+   another commit between them.
+8. Run the existing archive and bundle validation scripts.
+9. Keep each generated commit-record text file beside its matching store
    artifact.
-9. Confirm that the complete commit in each text file is the release commit
-   intended for MovieApp 3.6.1 before uploading.
+10. Confirm that the complete commit in both text files is the same release
+    commit intended for MovieApp 3.6.1 before uploading.

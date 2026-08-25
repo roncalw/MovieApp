@@ -147,6 +147,13 @@ APP_ROOT="${0:A:h:h}"
 # Build the absolute path to the file that stores Xcode's build settings.
 PROJECT_FILE="$APP_ROOT/ios/MovieApp.xcodeproj/project.pbxproj"
 
+# The Settings page reads a generated TypeScript snapshot instead of reaching
+# into Xcode or Gradle while the app is running. Update that snapshot during
+# release preparation so the version change and the file consumed by the app
+# can be reviewed and committed together before either store build starts.
+GENERATED_VERSION_FILE="$APP_ROOT/src/appVersion/generatedBuildVersion.ts"
+GENERATOR_SCRIPT="$APP_ROOT/scripts/generate-app-build-version.js"
+
 # Within [[ ... ]], -f is true only when the path is an existing regular file;
 # ! reverses that test. If the expected Xcode project file is missing, print the
 # exact path and stop because there is no project file to update.
@@ -155,6 +162,27 @@ if [[ ! -f "$PROJECT_FILE" ]]; then
   echo "Error: Xcode project file not found at $PROJECT_FILE" >&2
 
   # Stop because there is no project file that can be updated safely.
+  exit 1
+fi
+
+# Both files are required before editing starts. Requiring the existing
+# generated snapshot lets the rollback path restore its exact prior contents if
+# generation fails after the Xcode project has already been changed.
+if [[ ! -f "$GENERATED_VERSION_FILE" ]]; then
+  echo "Error: Generated app-version snapshot not found at $GENERATED_VERSION_FILE" >&2
+  exit 1
+fi
+
+if [[ ! -f "$GENERATOR_SCRIPT" ]]; then
+  echo "Error: App-version generator not found at $GENERATOR_SCRIPT" >&2
+  exit 1
+fi
+
+# The generator is a Node.js program. Confirm Node is available before making
+# either file dirty, then keep the exact executable path for the later command.
+NODE_BINARY="$(command -v node || true)"
+if [[ -z "$NODE_BINARY" ]]; then
+  echo "Error: Node.js is required to refresh the Settings-page version snapshot." >&2
   exit 1
 fi
 
@@ -276,15 +304,23 @@ fi
 # commands know where the temporary copy is located.
 BACKUP_FILE="$(mktemp "${TMPDIR:-/tmp}/movieapp-project.XXXXXX")"
 
+# Create a second temporary file for the generated Settings-page snapshot. The
+# two backups allow the native version settings and their app-facing snapshot
+# to succeed or fail as one release-preparation operation.
+GENERATED_VERSION_BACKUP_FILE="$(mktemp "${TMPDIR:-/tmp}/movieapp-generated-version.XXXXXX")"
+
 # The temporary file is currently empty. Copy the entire, unchanged Xcode
 # project file into it. BACKUP_FILE is now a safety copy of PROJECT_FILE as it
 # existed before any version-setting edits began.
 cp "$PROJECT_FILE" "$BACKUP_FILE"
 
-# Record that no version edits have been checked yet. A value of 0 means "the
-# script has not proved that all eight requested changes succeeded." This is set
-# before editing because the script must assume an edit is unsafe until the
-# later verification counts all four versions and all four build numbers.
+# Save the generated snapshot exactly as it existed before this command.
+cp "$GENERATED_VERSION_FILE" "$GENERATED_VERSION_BACKUP_FILE"
+
+# Record that the complete version update has not been checked yet. A value of
+# 0 means the script has not proved that all eight native changes succeeded and
+# regenerated the Settings-page snapshot. The script must assume the operation
+# is unsafe until both parts finish.
 VERSION_EDITS_VERIFIED=0
 
 # Define a function named cleanup. Defining it only records these instructions;
@@ -296,16 +332,17 @@ cleanup() {
   # requested edit succeeded. This could happen after the upcoming sed commands
   # started changing the project file but before verification finished.
   if [[ "$VERSION_EDITS_VERIFIED" -eq 0 ]]; then
-    # Replace the possibly incomplete project file with the unchanged copy made
-    # above. If no edit happened before the failure, this simply copies identical
-    # contents and causes no project change.
+    # Restore both files. This prevents a generator error from leaving the Xcode
+    # project updated while the Settings page still contains older information.
     cp "$BACKUP_FILE" "$PROJECT_FILE"
+    cp "$GENERATED_VERSION_BACKUP_FILE" "$GENERATED_VERSION_FILE"
   fi
 
   # At this point either the verified edit was kept or the original contents
   # were put back. Remove the temporary copy because it is no longer needed.
   # rm -f also treats an already-missing file as a successful cleanup.
   rm -f "$BACKUP_FILE"
+  rm -f "$GENERATED_VERSION_BACKUP_FILE"
 }
 
 # trap is a command built into zsh. It tells the shell, "when a particular event
@@ -324,11 +361,11 @@ cleanup() {
 # error that ends the script because set -e is active. The two important paths
 # through this script are therefore:
 #
-# 1. All edits pass verification. VERSION_EDITS_VERIFIED becomes 1. At normal
-#    exit, cleanup sees 1, keeps the edited project, and deletes BACKUP_FILE.
-# 2. An editing or verification step fails. VERSION_EDITS_VERIFIED remains 0.
-#    Before the error exit completes, cleanup sees 0, copies BACKUP_FILE over the
-#    incomplete project edit, and then deletes BACKUP_FILE.
+# 1. All edits and snapshot generation pass. VERSION_EDITS_VERIFIED becomes 1.
+#    At normal exit, cleanup keeps both updated files and deletes both backups.
+# 2. An edit, verification, or generation step fails. VERSION_EDITS_VERIFIED
+#    remains 0. Before the error exit completes, cleanup restores both original
+#    files and then deletes both temporary backups.
 #
 # Register the rule immediately before the first editing command so every edit
 # attempted after this point has that cleanup behavior. Like most software
@@ -454,18 +491,26 @@ UPDATED_BUILD_COUNT="$({ grep -Ec "^[[:space:]]*CURRENT_PROJECT_VERSION[[:space:
 # if the edited file does not contain exactly four requested versions or exactly
 # four requested build numbers.
 if [[ "$UPDATED_MARKETING_COUNT" -ne 4 || "$UPDATED_BUILD_COUNT" -ne 4 ]]; then
-  # Report the failed check. exit 1 then ends the script with
-  # VERSION_EDITS_VERIFIED still set to 0. The EXIT trap calls cleanup, which
-  # replaces the incomplete edit with the original contents from BACKUP_FILE.
-  echo "Error: Could not verify all 8 version settings. Original project file restored." >&2
+  # Report the failed check. exit 1 leaves VERSION_EDITS_VERIFIED at 0, so the
+  # EXIT trap restores the Xcode project and the generated snapshot.
+  echo "Error: Could not verify all 8 version settings. Original version files restored." >&2
 
   exit 1
 fi
 
-# Reaching this line proves that all eight requested assignments were found in
-# the edited file. Change the state to 1, meaning "the edits were verified."
-# When cleanup runs at normal exit, it will now skip copying the original
-# contents back and will only delete BACKUP_FILE.
+# Regenerate the tracked snapshot before declaring success. The generator reads
+# both native version files and writes the exact iOS and Android values consumed
+# by the Settings page. Running it here means the snapshot is committed with the
+# native version changes rather than appearing as a surprise after archiving.
+(
+  cd "$APP_ROOT"
+  "$NODE_BINARY" "$GENERATOR_SCRIPT"
+)
+
+# Reaching this line proves that all eight requested assignments were found and
+# the Settings-page snapshot was generated successfully. Change the state to 1,
+# meaning the complete update is safe to keep. At normal exit, cleanup now keeps
+# both edited files and deletes only their temporary backups.
 VERSION_EDITS_VERIFIED=1
 
 # Confirm that all four version and four build-number entries were updated.
@@ -476,3 +521,7 @@ echo "  Version: $MARKETING_VERSION"
 
 # Display the build number that was written to the four configurations.
 echo "  Build:   $BUILD_NUMBER"
+
+# Confirm that the app-facing snapshot was refreshed before the release commit.
+echo "Updated the Settings-page version snapshot:"
+echo "  $GENERATED_VERSION_FILE"
