@@ -6,7 +6,7 @@ source code, dependencies, tests, build scripts, or other development work.
 
 As of August 23, 2026, both public store listings show MovieApp 3.5.2. The
 customer-facing changes below cover the MovieApp work completed after that
-release through commit `cdf655adbc40fd651a77e62239c05ac932d476c2`.
+release through commit `d33b8e62088e8fbfa1841b36a483b5351cf65090`.
 
 ## Apple App Store
 
@@ -29,6 +29,8 @@ release through commit `cdf655adbc40fd651a77e62239c05ac932d476c2`.
   * Return to a steady Favorites or Movies I Have Seen grid without a delayed jump.
   * See a movie disappear from its saved list after removing its Favorite or Seen selection in Movie Details.
   * Keep already-loaded movie cards in place when the saved list has not changed.
+
+* Open Favorites and Movies I Have Seen faster, including large saved collections.
 ```
 
 ## Google Play
@@ -42,5 +44,6 @@ console's limited What's New field.
 * See United States and standard titles together when their names differ.
 * See movie names when poster artwork is unavailable.
 * Return smoothly to Favorites and Movies I Have Seen while keeping saved changes current.
+* Open Favorites and Movies I Have Seen faster, including large saved collections.
 * Close the side menu by tapping the open area beside it on Android.
 ```

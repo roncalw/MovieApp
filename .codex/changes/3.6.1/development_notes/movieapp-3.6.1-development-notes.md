@@ -12,8 +12,9 @@ store artifacts.
 | Previous store version                      | `3.5.2`                                    |
 | Previous production commit                  | `410496f68a985526af7eb15f6d5665d67421a0d6` |
 | First included feature commit               | `f098846924cc93fdf1e31b47f45482a8dcac0243` |
-| Last feature/process commit documented here | `cdf655adbc40fd651a77e62239c05ac932d476c2` |
-| Git comparison used                         | `410496f..cdf655a`                         |
+| Last feature/process commit documented here | `d33b8e62088e8fbfa1841b36a483b5351cf65090` |
+| Git comparison used                         | `410496f..d33b8e6`                         |
+| Required Cloudflare feature commit          | `b81edb68486c6d102e411d067044fc06c020ebd5` |
 | Planned store version                       | `3.6.1`                                    |
 
 The Apple App Store lookup and the public Google Play page both listed version
@@ -24,15 +25,15 @@ remains complete.
 
 ## 2. Included Change Areas
 
-| Area                   | Customer result                                                                            | Primary maintenance location                           |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| Search by Movie Title  | Exact titles appear first across a broader result set.                                     | `src/search/title/titleSearchResults.ts`               |
-| Movie Detail title     | A different United States title appears before the normal TMDb title.                      | `src/movie/movieDetailTitle.ts`                        |
-| Missing posters        | The movie title is visible on the yellow placeholder artwork.                              | `src/search/results/MovieCard.tsx`                     |
-| Favorites and Seen     | Returning from Movie Detail does not reload and rearrange an unchanged grid.               | `src/drawer/StoredMovieListScreen.tsx`                 |
-| Streaming Now          | Home shows popular United States subscription movies and opens a matching Advanced Search. | `src/home/homeAdvancedSearchSections.ts`               |
-| Android drawer         | Tapping outside the open drawer closes it again.                                           | `package-lock.json`                                    |
-| Store release tracking | Each successful store build gets a separate record of the exact source commit.             | `scripts/iosarchive.sh` and `scripts/androidbundle.sh` |
+| Area                   | Customer result                                                                             | Primary maintenance location                           |
+| ---------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Search by Movie Title  | Exact titles appear first across a broader result set.                                      | `src/search/title/titleSearchResults.ts`               |
+| Movie Detail title     | A different United States title appears before the normal TMDb title.                       | `src/movie/movieDetailTitle.ts`                        |
+| Missing posters        | The movie title is visible on the yellow placeholder artwork.                               | `src/search/results/MovieCard.tsx`                     |
+| Favorites and Seen     | Large saved lists open quickly and returning from Movie Detail does not rearrange the grid. | `src/drawer/StoredMovieListScreen.tsx`                 |
+| Streaming Now          | Home shows popular United States subscription movies and opens a matching Advanced Search.  | `src/home/homeAdvancedSearchSections.ts`               |
+| Android drawer         | Tapping outside the open drawer closes it again.                                            | `package-lock.json`                                    |
+| Store release tracking | Each successful store build gets a separate record of the exact source commit.              | `scripts/iosarchive.sh` and `scripts/androidbundle.sh` |
 
 ## 3. Search by Movie Title
 
@@ -153,6 +154,128 @@ card data. A normal return from Movie Detail now compares saved membership only:
 This preserves the existing grid and native scroll position when nothing
 changed while still reflecting a Favorite or Seen change made inside Movie
 Detail.
+
+### 6.3 Faster card-data loading
+
+Favorites and Seen cards need three values that are not guaranteed to be in the
+movie object saved when the customer selected the movie:
+
+- the current IMDb rating used for sorting;
+- whether the movie is available through a United States subscription; and
+- whether it is available through either a subscription or an ad-supported
+  stream, which controls the shopping-bag badge.
+
+The previous implementation requested those values from the Cloudflare Worker
+one movie at a time. A list containing 220 movies therefore created 220
+requests from the phone to the Worker before the complete IMDb-sorted list was
+ready.
+
+The Cloudflare Worker now exposes `POST /movies/card-data/batch`. MovieApp sends
+at most 50 unique TMDb movie IDs per request, and the Worker answers each batch
+with one indexed D1 query. MovieApp runs no more than two batches concurrently.
+For a 220-movie list, the normal full refresh is therefore five Worker requests
+instead of 220.
+
+Each batch has a 15-second timeout and one retry. MovieApp verifies that the
+response contains every requested movie ID and no unexpected IDs. If either
+attempt fails or the response is incomplete, the refresh fails as one unit;
+partial results are never saved as though the complete list had refreshed.
+
+The implementation is maintained in:
+
+```text
+src/api/tmdb/services/movieService.ts
+fetchMovieCardDataBatch
+
+src/utils/storage/movieCardData.ts
+loadMovieCardDataForMovies
+MOVIE_CARD_DATA_BATCH_SIZE = 50
+MOVIE_CARD_DATA_BATCH_CONCURRENCY = 2
+```
+
+The matching Worker endpoint is maintained in the separate
+`movieapp-cloudflare` project and is included in Worker commit
+`b81edb68486c6d102e411d067044fc06c020ebd5`. Its primary files are:
+
+```text
+src/httpRouting/httpRoutes.ts
+src/httpRouting/movieSearch.ts
+```
+
+### 6.4 One complete saved list and the same-day rule
+
+Favorites and Seen still use one AsyncStorage record per list. No second local
+table or joined data source was introduced. Each record now stores:
+
+```text
+movies: the complete saved movie array, including card data
+cardDataRefreshedLocalDate: YYYY-MM-DD, or null before the first refresh
+```
+
+Older app versions stored only the movie array. The reader accepts that legacy
+shape, assigns it a null refresh date, and upgrades it safely during the next
+successful visit. Existing Favorite and Seen IDs are not deleted or replaced
+during migration.
+
+The refresh decision follows these rules:
+
+1. On the first visit for a new local calendar day, refresh the complete list
+   using batches, sort it by IMDb rating, and save the complete result.
+2. On another visit during that same local day, use the complete saved list and
+   make no card-data request.
+3. After a same-day removal, remove that card without requesting data or
+   re-sorting the remaining cards because their order is already valid.
+4. After a same-day addition, request only the newly added movie or movies,
+   then rebuild the IMDb order.
+5. A deliberate pull-to-refresh always requests the complete list, regardless
+   of the saved date.
+
+The date is built from the phone's local year, month, and day. It does not use
+the UTC date returned by `toISOString()`. For example, 11:30 PM Eastern on
+August 25 remains local date `2026-08-25` even though UTC is already August 26.
+This prevents a late-evening page visit from being incorrectly treated as a
+new day.
+
+The local date and storage behavior are maintained in:
+
+```text
+src/utils/storage/localCalendarDate.ts
+src/utils/storage/movieUserListsStorage.ts
+```
+
+### 6.5 Concurrent-change protection
+
+A card-data refresh can overlap with the customer adding or removing a movie.
+Before saving a completed refresh, MovieApp reads the current saved IDs again.
+If membership changed while the requests were running, the older result is not
+allowed to overwrite the newer customer action. The screen reads the latest
+membership and retries once. If it still cannot obtain one complete result, it
+keeps the previously saved list rather than writing partial or stale data.
+
+### 6.6 Measured performance and device verification
+
+The performance test used 220 saved Favorites on both platforms. Android was
+measured with the same internal list-load timing before and after the change:
+
+| Platform | Previous load | First refresh on a new day | Same-day reopen |
+| -------- | ------------: | -------------------------: | --------------: |
+| Android  |      4,537 ms |                     115 ms |           86 ms |
+| iPhone   |      2,858 ms |                     502 ms |           14 ms |
+
+The Android result is approximately 39 times faster for the daily refresh and
+53 times faster for a same-day reopen. The iPhone previous measurement was
+taken at the visible screen boundary because the old implementation had no
+internal timer; the two new iPhone values are exact app data-load timings, so
+they demonstrate the reduction but are not the same measurement boundary as
+the old value.
+
+Final simulator verification confirmed:
+
+- 220 Android Favorites and 220 Android Seen movies were complete and sorted;
+- 220 iPhone Favorites were complete and sorted;
+- Favorites and Seen opened and rendered on both Android and iPhone; and
+- every saved test record contained the IMDb and availability values plus the
+  correct local refresh date.
 
 ## 7. Streaming Now
 
@@ -343,15 +466,17 @@ outside the Gradle workspace.
 
 The included changes have focused coverage in:
 
-| Test file                                         | Behavior protected                                                             |
-| ------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `__tests__/titleSearchResults.test.ts`            | Five-page limit, early stopping, duplicate removal, and exact-match ordering.  |
-| `__tests__/movieDetailTitle.test.ts`              | US title selection, duplicate suppression, and fallback behavior.              |
-| `__tests__/movieCardData.test.tsx`                | Missing-poster title and shopping-bag coexistence.                             |
-| `__tests__/storedMovieListReconciliation.test.ts` | No-change identity, removal, addition, and rating order.                       |
-| `__tests__/storedMovieListScreen.test.tsx`        | Initial loading and return-from-detail synchronization for Favorites and Seen. |
-| `__tests__/homeStreamingSection.test.ts`          | Home placement, TMDb subscription request, and Advanced Search preset.         |
-| `__tests__/homeRefresh.test.tsx`                  | Streaming Now participation in Home refresh behavior.                          |
+| Test file                                         | Behavior protected                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `__tests__/titleSearchResults.test.ts`            | Five-page limit, early stopping, duplicate removal, and exact-match ordering.   |
+| `__tests__/movieDetailTitle.test.ts`              | US title selection, duplicate suppression, and fallback behavior.               |
+| `__tests__/movieCardData.test.tsx`                | Missing-poster UI plus batching, concurrency, retries, and response validation. |
+| `__tests__/storedMovieListReconciliation.test.ts` | No-change identity, removal, addition, and rating order.                        |
+| `__tests__/storedMovieListScreen.test.tsx`        | Same-day reuse, additions, removals, new-day refresh, and manual refresh.       |
+| `__tests__/movieUserListsStorage.test.ts`         | Legacy migration, enriched persistence, and concurrent membership protection.   |
+| `__tests__/localCalendarDate.test.ts`             | Local-day comparison, including the Eastern-time/UTC date boundary.             |
+| `__tests__/homeStreamingSection.test.ts`          | Home placement, TMDb subscription request, and Advanced Search preset.          |
+| `__tests__/homeRefresh.test.tsx`                  | Streaming Now participation in Home refresh behavior.                           |
 
 The release scripts were also checked with zsh syntax validation. Both version
 scripts were exercised against disposable copies to confirm successful native
@@ -359,9 +484,14 @@ updates, Settings-page snapshot generation, and complete rollback of both files
 when generation fails. The archive and bundle commands were not run while the
 release-tracking changes were developed.
 
+Final validation for the Favorites and Seen speed work passed all 123 MovieApp
+tests across 32 suites, TypeScript checking, lint, the Android debug build, and
+the iOS simulator build. The matching Cloudflare change passed all 101 Worker
+tests across nine suites plus Worker TypeScript checking.
+
 ## 11. 3.6.1 Release Checklist
 
-1. Review commits added after `cdf655a` and update both 3.6.1 documents if any
+1. Review commits added after `d33b8e6` and update both 3.6.1 documents if any
    customer-visible or release-process behavior changed.
 2. Set every iOS target to version 3.6.1 with the existing iOS version script.
 3. Set Android to version 3.6.1 and the next unused Google Play version code
