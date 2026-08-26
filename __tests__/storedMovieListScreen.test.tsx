@@ -3,12 +3,14 @@ import { Text } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
 import { StoredMovieListScreen } from '../src/drawer/StoredMovieListScreen';
 import { loadMovieCardDataForMovies } from '../src/utils/storage/movieCardData';
-import { getStoredMovieList } from '../src/utils/storage/movieUserListsStorage';
+import {
+  getStoredMovieListData,
+  saveRefreshedStoredMovieList,
+} from '../src/utils/storage/movieUserListsStorage';
+import { getLocalCalendarDate } from '../src/utils/storage/localCalendarDate';
 import type { movieType } from '../src/types/movie/MovieTypes';
 
-let mockFocusEffectCallback:
-  | (() => void | (() => void))
-  | undefined;
+let mockFocusEffectCallback: (() => void | (() => void)) | undefined;
 
 jest.mock('@react-navigation/native', () => ({
   DrawerActions: { openDrawer: jest.fn() },
@@ -24,10 +26,19 @@ jest.mock('../src/hooks/useDetailNavigation', () => ({
 
 jest.mock('../src/utils/storage/movieCardData', () => ({
   loadMovieCardDataForMovies: jest.fn(),
+  sortMoviesByImdbRating: (movies: movieType[]) =>
+    [...movies].sort(
+      (left, right) => (right.imdb_rating ?? -1) - (left.imdb_rating ?? -1),
+    ),
 }));
 
 jest.mock('../src/utils/storage/movieUserListsStorage', () => ({
-  getStoredMovieList: jest.fn(),
+  getStoredMovieListData: jest.fn(),
+  saveRefreshedStoredMovieList: jest.fn(),
+  storedMovieHasCompleteCardData: (movie: movieType) =>
+    (typeof movie.imdb_rating === 'number' || movie.imdb_rating === null) &&
+    typeof movie.available_with_subscription === 'boolean' &&
+    typeof movie.available_without_rent_or_purchase === 'boolean',
   storedMovieToMovieType: (movie: movieType) => movie,
 }));
 
@@ -80,8 +91,24 @@ jest.mock('../src/shared/header/HeaderNavButton', () => ({
   HeaderNavButton: () => null,
 }));
 
-function movie(id: number) {
-  return { id, title: `Movie ${id}`, vote_average: 7 } as movieType;
+function movie(id: number, imdbRating = 7) {
+  return {
+    id,
+    title: `Movie ${id}`,
+    vote_average: imdbRating,
+    imdb_rating: imdbRating,
+    available_with_subscription: true,
+    available_without_rent_or_purchase: true,
+  } as movieType;
+}
+
+const today = getLocalCalendarDate();
+
+function storedData(movies: movieType[], date: string | null = today) {
+  return {
+    movies: movies as any[],
+    cardDataRefreshedLocalDate: date,
+  };
 }
 
 async function runCurrentFocusEffect(): Promise<(() => void) | undefined> {
@@ -114,6 +141,7 @@ describe('StoredMovieListScreen focus synchronization', () => {
     jest
       .mocked(loadMovieCardDataForMovies)
       .mockImplementation(async movies => movies);
+    jest.mocked(saveRefreshedStoredMovieList).mockResolvedValue(true);
   });
 
   test.each([
@@ -123,7 +151,9 @@ describe('StoredMovieListScreen focus synchronization', () => {
     'keeps the populated %s grid unchanged when its saved IDs did not change',
     async (_label, storageKey) => {
       const savedMovie = movie(1);
-      jest.mocked(getStoredMovieList).mockResolvedValue([savedMovie as any]);
+      jest
+        .mocked(getStoredMovieListData)
+        .mockResolvedValue(storedData([savedMovie]));
 
       let component!: TestRenderer.ReactTestRenderer;
       act(() => {
@@ -142,7 +172,7 @@ describe('StoredMovieListScreen focus synchronization', () => {
       }).props.movies;
 
       expect(hasLoadingMessage(component)).toBe(false);
-      expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
+      expect(loadMovieCardDataForMovies).not.toHaveBeenCalled();
 
       act(() => firstCleanup?.());
       const secondCleanup = await runCurrentFocusEffect();
@@ -152,7 +182,7 @@ describe('StoredMovieListScreen focus synchronization', () => {
 
       expect(secondMovies).toBe(firstMovies);
       expect(hasLoadingMessage(component)).toBe(false);
-      expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
+      expect(loadMovieCardDataForMovies).not.toHaveBeenCalled();
 
       act(() => secondCleanup?.());
       act(() => component.unmount());
@@ -163,9 +193,9 @@ describe('StoredMovieListScreen focus synchronization', () => {
     const firstMovie = movie(1);
     const removedMovie = movie(2);
     jest
-      .mocked(getStoredMovieList)
-      .mockResolvedValueOnce([firstMovie as any, removedMovie as any])
-      .mockResolvedValueOnce([firstMovie as any]);
+      .mocked(getStoredMovieListData)
+      .mockResolvedValueOnce(storedData([firstMovie, removedMovie]))
+      .mockResolvedValueOnce(storedData([firstMovie]));
 
     let component!: TestRenderer.ReactTestRenderer;
     act(() => {
@@ -186,7 +216,7 @@ describe('StoredMovieListScreen focus synchronization', () => {
     }).props.movies as movieType[];
 
     expect(renderedMovies.map(renderedMovie => renderedMovie.id)).toEqual([1]);
-    expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
+    expect(loadMovieCardDataForMovies).not.toHaveBeenCalled();
     expect(hasLoadingMessage(component)).toBe(false);
 
     act(() => secondCleanup?.());
@@ -195,11 +225,21 @@ describe('StoredMovieListScreen focus synchronization', () => {
 
   test('loads card data only for a newly added saved movie', async () => {
     const firstMovie = movie(1);
-    const addedMovie = { ...movie(2), vote_average: 8 };
+    const addedMovie = {
+      ...movie(2, 8),
+      imdb_rating: undefined,
+      available_with_subscription: undefined,
+      available_without_rent_or_purchase: undefined,
+    };
     jest
-      .mocked(getStoredMovieList)
-      .mockResolvedValueOnce([firstMovie as any])
-      .mockResolvedValueOnce([firstMovie as any, addedMovie as any]);
+      .mocked(getStoredMovieListData)
+      .mockResolvedValueOnce(storedData([firstMovie]))
+      .mockResolvedValue(storedData([firstMovie, addedMovie as movieType]));
+    jest
+      .mocked(loadMovieCardDataForMovies)
+      .mockImplementation(async movies =>
+        movies.map(loadedMovie => movie(loadedMovie.id, 8)),
+      );
 
     let component!: TestRenderer.ReactTestRenderer;
     act(() => {
@@ -219,11 +259,11 @@ describe('StoredMovieListScreen focus synchronization', () => {
       testID: 'stored-movie-results',
     }).props.movies as movieType[];
 
-    expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(2);
+    expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
     expect(
-      jest.mocked(loadMovieCardDataForMovies).mock.calls[1][0].map(
-        loadedMovie => loadedMovie.id,
-      ),
+      jest
+        .mocked(loadMovieCardDataForMovies)
+        .mock.calls[0][0].map(loadedMovie => loadedMovie.id),
     ).toEqual([2]);
     expect(renderedMovies.map(renderedMovie => renderedMovie.id)).toEqual([
       2, 1,
@@ -231,6 +271,90 @@ describe('StoredMovieListScreen focus synchronization', () => {
     expect(hasLoadingMessage(component)).toBe(false);
 
     act(() => secondCleanup?.());
+    act(() => component.unmount());
+  });
+
+  test('refreshes every saved movie when the saved local date is older', async () => {
+    const savedMovies = [movie(1, 7), movie(2, 8)];
+    jest
+      .mocked(getStoredMovieListData)
+      .mockResolvedValue(storedData(savedMovies, '2026-08-24'));
+    jest
+      .mocked(loadMovieCardDataForMovies)
+      .mockResolvedValue([movie(2, 8), movie(1, 7)]);
+
+    let component!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      component = TestRenderer.create(
+        <StoredMovieListScreen
+          title="My Movie Favorites"
+          emptyMessage="No favorite movies yet."
+          storageKey="movieFavoritesData"
+        />,
+      );
+    });
+
+    const cleanup = await runCurrentFocusEffect();
+    const renderedMovies = component.root.findByProps({
+      testID: 'stored-movie-results',
+    }).props.movies as movieType[];
+
+    expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
+    expect(
+      jest
+        .mocked(loadMovieCardDataForMovies)
+        .mock.calls[0][0].map(loadedMovie => loadedMovie.id),
+    ).toEqual([1, 2]);
+    expect(renderedMovies.map(renderedMovie => renderedMovie.id)).toEqual([
+      2, 1,
+    ]);
+    expect(saveRefreshedStoredMovieList).toHaveBeenCalledWith(
+      'movieFavoritesData',
+      expect.any(Array),
+      today,
+    );
+
+    act(() => cleanup?.());
+    act(() => component.unmount());
+  });
+
+  test('pull-to-refresh reloads the complete list even on the same day', async () => {
+    const savedMovies = [movie(1, 7), movie(2, 8)];
+    jest
+      .mocked(getStoredMovieListData)
+      .mockResolvedValue(storedData(savedMovies));
+    jest
+      .mocked(loadMovieCardDataForMovies)
+      .mockResolvedValue([movie(2, 8), movie(1, 7)]);
+
+    let component!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      component = TestRenderer.create(
+        <StoredMovieListScreen
+          title="Movies I Have Seen"
+          emptyMessage="No seen movies yet."
+          storageKey="movieSeenData"
+        />,
+      );
+    });
+
+    const cleanup = await runCurrentFocusEffect();
+    const results = component.root.findByProps({
+      testID: 'stored-movie-results',
+    });
+
+    expect(loadMovieCardDataForMovies).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await results.props.onRefresh();
+    });
+
+    expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
+    expect(
+      jest.mocked(loadMovieCardDataForMovies).mock.calls[0][0],
+    ).toHaveLength(2);
+
+    act(() => cleanup?.());
     act(() => component.unmount());
   });
 });

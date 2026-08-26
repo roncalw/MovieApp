@@ -62,6 +62,10 @@ export type CloudflareMovieCardData = {
   available_without_rent_or_purchase: boolean;
 };
 
+export type CloudflareMovieCardDataBatchResponse = {
+  results: CloudflareMovieCardData[];
+};
+
 export type ImdbWebsiteRatingScrapeStatus =
   | 'rating_found'
   | 'imdb_challenge'

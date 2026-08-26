@@ -25,4 +25,20 @@ export type StoredMovieListItem = {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  imdb_rating?: number | null;
+  available_with_subscription?: boolean | null;
+  available_without_rent_or_purchase?: boolean | null;
+};
+
+/**
+ * One complete local-storage record for either Favorites or Seen.
+ *
+ * Older app versions saved only the movie array. The storage reader accepts
+ * that old shape and treats it as not yet refreshed. New versions keep the
+ * same one-record design, but wrap the array with the local calendar date of
+ * the last complete IMDb/availability refresh.
+ */
+export type StoredMovieListData = {
+  movies: StoredMovieListItem[];
+  cardDataRefreshedLocalDate: string | null;
 };

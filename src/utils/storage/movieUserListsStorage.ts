@@ -2,23 +2,60 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { movieType } from '../../types/movie/MovieTypes';
 import type {
   MovieUserListStorageKey,
+  StoredMovieListData,
   StoredMovieListItem,
 } from '../../types/movie/movieUserListTypes';
 
 export const MOVIE_FAVORITES_STORAGE_KEY = 'movieFavoritesData';
 export const MOVIE_SEEN_STORAGE_KEY = 'movieSeenData';
 
-function parseStoredMovieList(value: string | null): StoredMovieListItem[] {
+const EMPTY_STORED_MOVIE_LIST_DATA: StoredMovieListData = {
+  movies: [],
+  cardDataRefreshedLocalDate: null,
+};
+
+function isStoredMovieListItemArray(
+  value: unknown,
+): value is StoredMovieListItem[] {
+  return Array.isArray(value);
+}
+
+export function parseStoredMovieListData(
+  value: string | null,
+): StoredMovieListData {
   if (!value) {
-    return [];
+    return EMPTY_STORED_MOVIE_LIST_DATA;
   }
 
   try {
     const parsedValue = JSON.parse(value);
 
-    return Array.isArray(parsedValue) ? parsedValue : [];
+    // Versions before this change stored the movie array directly. Returning a
+    // null refresh date safely upgrades that record on its next screen visit.
+    if (isStoredMovieListItemArray(parsedValue)) {
+      return {
+        movies: parsedValue,
+        cardDataRefreshedLocalDate: null,
+      };
+    }
+
+    if (
+      typeof parsedValue === 'object' &&
+      parsedValue !== null &&
+      isStoredMovieListItemArray(parsedValue.movies)
+    ) {
+      return {
+        movies: parsedValue.movies,
+        cardDataRefreshedLocalDate:
+          typeof parsedValue.cardDataRefreshedLocalDate === 'string'
+            ? parsedValue.cardDataRefreshedLocalDate
+            : null,
+      };
+    }
+
+    return EMPTY_STORED_MOVIE_LIST_DATA;
   } catch {
-    return [];
+    return EMPTY_STORED_MOVIE_LIST_DATA;
   }
 }
 
@@ -38,6 +75,10 @@ export function toStoredMovieListItem(movie: movieType): StoredMovieListItem {
     video: movie.video,
     vote_average: movie.vote_average,
     vote_count: movie.vote_count,
+    imdb_rating: movie.imdb_rating,
+    available_with_subscription: movie.available_with_subscription,
+    available_without_rent_or_purchase:
+      movie.available_without_rent_or_purchase,
   };
 }
 
@@ -55,8 +96,12 @@ export function storedMovieToMovieType(movie: StoredMovieListItem): movieType {
     release_date: movie.release_date,
     title: movie.title,
     video: movie.video,
-    vote_average: movie.vote_average,
+    vote_average: movie.imdb_rating ?? movie.vote_average,
     vote_count: movie.vote_count,
+    imdb_rating: movie.imdb_rating,
+    available_with_subscription: movie.available_with_subscription,
+    available_without_rent_or_purchase:
+      movie.available_without_rent_or_purchase,
     genreIds: movie.genres ?? [],
     budget: 0,
     revenue: 0,
@@ -69,16 +114,32 @@ export function storedMovieToMovieType(movie: StoredMovieListItem): movieType {
   };
 }
 
-export async function getStoredMovieList(
-  storageKey: MovieUserListStorageKey
-): Promise<StoredMovieListItem[]> {
+export function storedMovieHasCompleteCardData(movie: StoredMovieListItem) {
+  return (
+    (typeof movie.imdb_rating === 'number' || movie.imdb_rating === null) &&
+    typeof movie.available_with_subscription === 'boolean' &&
+    typeof movie.available_without_rent_or_purchase === 'boolean'
+  );
+}
+
+export async function getStoredMovieListData(
+  storageKey: MovieUserListStorageKey,
+): Promise<StoredMovieListData> {
   const value = await AsyncStorage.getItem(storageKey);
 
-  return parseStoredMovieList(value);
+  return parseStoredMovieListData(value);
+}
+
+export async function getStoredMovieList(
+  storageKey: MovieUserListStorageKey,
+): Promise<StoredMovieListItem[]> {
+  const data = await getStoredMovieListData(storageKey);
+
+  return data.movies;
 }
 
 export async function getStoredMovieListCount(
-  storageKey: MovieUserListStorageKey
+  storageKey: MovieUserListStorageKey,
 ): Promise<number> {
   const movies = await getStoredMovieList(storageKey);
 
@@ -87,7 +148,7 @@ export async function getStoredMovieListCount(
 
 export async function isMovieInStoredList(
   storageKey: MovieUserListStorageKey,
-  movieId: number
+  movieId: number,
 ): Promise<boolean> {
   const movies = await getStoredMovieList(storageKey);
 
@@ -96,34 +157,71 @@ export async function isMovieInStoredList(
 
 export async function saveMovieToStoredList(
   storageKey: MovieUserListStorageKey,
-  movie: StoredMovieListItem
+  movie: StoredMovieListItem,
 ): Promise<void> {
-  const movies = await getStoredMovieList(storageKey);
-  const nextMovies = movies.some(savedMovie => savedMovie.id === movie.id)
-    ? movies.map(savedMovie => (savedMovie.id === movie.id ? movie : savedMovie))
-    : [...movies, movie];
+  const data = await getStoredMovieListData(storageKey);
+  const nextMovies = data.movies.some(savedMovie => savedMovie.id === movie.id)
+    ? data.movies.map(savedMovie =>
+        savedMovie.id === movie.id ? movie : savedMovie,
+      )
+    : [...data.movies, movie];
 
-  await AsyncStorage.setItem(storageKey, JSON.stringify(nextMovies));
+  await AsyncStorage.setItem(
+    storageKey,
+    JSON.stringify({ ...data, movies: nextMovies }),
+  );
 }
 
 export async function removeMovieFromStoredList(
   storageKey: MovieUserListStorageKey,
-  movieId: number
+  movieId: number,
 ): Promise<void> {
-  const movies = await getStoredMovieList(storageKey);
-  const nextMovies = movies.filter(movie => movie.id !== movieId);
+  const data = await getStoredMovieListData(storageKey);
+  const nextMovies = data.movies.filter(movie => movie.id !== movieId);
 
-  await AsyncStorage.setItem(storageKey, JSON.stringify(nextMovies));
+  await AsyncStorage.setItem(
+    storageKey,
+    JSON.stringify({ ...data, movies: nextMovies }),
+  );
+}
+
+export async function saveRefreshedStoredMovieList(
+  storageKey: MovieUserListStorageKey,
+  movies: movieType[],
+  cardDataRefreshedLocalDate: string,
+): Promise<boolean> {
+  const currentData = await getStoredMovieListData(storageKey);
+  const currentMovieIds = currentData.movies.map(movie => movie.id);
+  const refreshedMovieIds = movies.map(movie => movie.id);
+
+  if (
+    currentMovieIds.length !== refreshedMovieIds.length ||
+    currentMovieIds.some(movieId => !refreshedMovieIds.includes(movieId))
+  ) {
+    // A Favorite/Seen action changed the list while its card-data request was
+    // running. Never overwrite that newer add/remove action with stale IDs.
+    return false;
+  }
+
+  await AsyncStorage.setItem(
+    storageKey,
+    JSON.stringify({
+      movies: movies.map(toStoredMovieListItem),
+      cardDataRefreshedLocalDate,
+    } satisfies StoredMovieListData),
+  );
+
+  return true;
 }
 
 export async function clearStoredMovieList(
-  storageKey: MovieUserListStorageKey
+  storageKey: MovieUserListStorageKey,
 ): Promise<void> {
   await AsyncStorage.removeItem(storageKey);
 }
 
 export async function getStoredMovieIds(
-  storageKey: MovieUserListStorageKey
+  storageKey: MovieUserListStorageKey,
 ): Promise<Set<number>> {
   const movies = await getStoredMovieList(storageKey);
 

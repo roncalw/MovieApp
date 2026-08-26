@@ -25,6 +25,7 @@ import type {
 import type { MovieSearchParams } from '../../../types/search/movieSearchParams';
 import type {
   CloudflareMovieCardData,
+  CloudflareMovieCardDataBatchResponse,
   CloudflareMovieListImdbRating,
   CloudflareMovieSearchItem,
   CloudflareMovieSearchResponse,
@@ -279,6 +280,47 @@ export async function fetchMovieCardData(
   }
 
   return (await response.json()) as CloudflareMovieCardData;
+}
+
+const MOVIE_CARD_DATA_BATCH_TIMEOUT_MS = 15_000;
+
+export async function fetchMovieCardDataBatch(
+  movieIds: number[],
+): Promise<CloudflareMovieCardData[]> {
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    MOVIE_CARD_DATA_BATCH_TIMEOUT_MS,
+  );
+
+  try {
+    const response = await fetch(
+      `${CLOUDFLARE_MOVIE_LIST_BASE_URL}/card-data/batch`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tmdb_ids: movieIds }),
+        signal: abortController.signal,
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Cloudflare movie card batch lookup failed: ${response.status}`,
+      );
+    }
+
+    const data =
+      (await response.json()) as CloudflareMovieCardDataBatchResponse;
+
+    if (!Array.isArray(data.results)) {
+      throw new Error('Cloudflare movie card batch response was malformed.');
+    }
+
+    return data.results;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function fetchMovieLanguages(): Promise<MovieLanguagesResponse> {

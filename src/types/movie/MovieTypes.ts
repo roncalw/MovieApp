@@ -289,18 +289,25 @@ export type movieType = {
   vote_average: number;
   vote_count: number;
   /**
-   * This value is added only while preparing poster cards. It is not written
-   * into Favorites or Seen storage. False means Cloudflare successfully
-   * checked the current US provider rows and found no subscription option;
-   * null or undefined means the app does not have a dependable answer.
+   * The IMDb rating returned by the MovieApp Worker for poster cards. This is
+   * separate from TMDB's vote_average so Favorites and Seen can persist the
+   * exact value used for their IMDb sorting without misidentifying a TMDB
+   * rating as an IMDb rating.
+   */
+  imdb_rating?: number | null;
+  /**
+   * False means Cloudflare successfully checked the current US provider rows
+   * and found no subscription option. Favorites and Seen persist this answer
+   * with their daily card-data refresh. Null or undefined means the app does
+   * not have a dependable answer.
    */
   available_with_subscription?: boolean | null;
   /**
    * False means Cloudflare confirmed that the movie has neither a current US
    * subscription provider nor an ad-supported stream. The poster card uses
    * only this broader answer for the rent-or-purchase shopping-bag badge.
-   * Null or undefined means the app does not have a dependable answer and must
-   * not display the badge.
+   * Favorites and Seen persist the daily answer. Null or undefined means the
+   * app does not have a dependable answer and must not display the badge.
    */
   available_without_rent_or_purchase?: boolean | null;
   genreIds: number[];

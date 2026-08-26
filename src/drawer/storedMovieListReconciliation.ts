@@ -33,8 +33,8 @@ export function findStoredMovieListMembershipChanges(
 /**
  * Apply only confirmed additions and removals while preserving the existing
  * card objects. This keeps an unchanged list and its native scroll position
- * completely untouched. New cards are sorted into the same IMDb-rating order
- * used by the initial Favorites and Seen load.
+ * completely untouched. A removal preserves the existing order without
+ * sorting. Only an addition needs to be inserted into IMDb-rating order.
  */
 export function reconcileStoredMovieListMembership(
   currentMovies: movieType[],
@@ -62,12 +62,17 @@ export function reconcileStoredMovieListMembership(
     movie => storedMovieIds.has(movie.id) && !retainedMovieIds.has(movie.id),
   );
 
+  if (addedMovies.length === 0) {
+    return retainedMovies;
+  }
+
   return [...retainedMovies, ...addedMovies].sort(compareStoredMovieCards);
 }
 
 function compareStoredMovieCards(left: movieType, right: movieType) {
   const ratingDifference =
-    (right.vote_average ?? -1) - (left.vote_average ?? -1);
+    (right.imdb_rating ?? right.vote_average ?? -1) -
+    (left.imdb_rating ?? left.vote_average ?? -1);
 
   if (ratingDifference !== 0) {
     return ratingDifference;

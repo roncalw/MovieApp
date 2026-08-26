@@ -11,20 +11,26 @@ import { DrawerScreenHeader } from '../shared/header/DrawerScreenHeader';
 import { HeaderNavButton } from '../shared/header/HeaderNavButton';
 import { useDetailNavigation } from '../hooks/useDetailNavigation';
 import { drawerScreenStyles as styles } from '../styles/drawer/drawerScreenStyles';
-import { loadMovieCardDataForMovies } from '../utils/storage/movieCardData';
 import {
-  getStoredMovieList,
+  loadMovieCardDataForMovies,
+  sortMoviesByImdbRating,
+} from '../utils/storage/movieCardData';
+import {
+  getStoredMovieListData,
+  saveRefreshedStoredMovieList,
+  storedMovieHasCompleteCardData,
   storedMovieToMovieType,
 } from '../utils/storage/movieUserListsStorage';
+import {
+  getLocalCalendarDate,
+  isCurrentLocalCalendarDate,
+} from '../utils/storage/localCalendarDate';
 import type { movieType } from '../types/movie/MovieTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import type { StoredMovieListScreenProps } from '../types/drawer/drawerScreenTypes';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
-import {
-  findStoredMovieListMembershipChanges,
-  reconcileStoredMovieListMembership,
-} from './storedMovieListReconciliation';
+import { findStoredMovieListMembershipChanges } from './storedMovieListReconciliation';
 
 export function StoredMovieListScreen({
   title,
@@ -44,17 +50,78 @@ export function StoredMovieListScreen({
     setMovies(nextMovies);
   }, []);
 
-  const loadAllMovies = useCallback(async () => {
-    const storedMovies = await getStoredMovieList(storageKey);
+  const loadAllMovies = useCallback(
+    async (forceCardDataRefresh = false) => {
+      const today = getLocalCalendarDate();
 
-    return loadMovieCardDataForMovies(
-      storedMovies.map(storedMovieToMovieType),
-    );
-  }, [storageKey]);
+      async function loadCurrentStoredMovies(retriesRemaining: number) {
+        const storedData = await getStoredMovieListData(storageKey);
+        const storedMovies = storedData.movies.map(storedMovieToMovieType);
+        const canReuseTodaysCardData =
+          !forceCardDataRefresh &&
+          isCurrentLocalCalendarDate(storedData.cardDataRefreshedLocalDate);
+        let loadedMovies: movieType[];
+
+        if (canReuseTodaysCardData) {
+          const incompleteStoredMovieIds = new Set(
+            storedData.movies
+              .filter(movie => !storedMovieHasCompleteCardData(movie))
+              .map(movie => movie.id),
+          );
+
+          if (incompleteStoredMovieIds.size === 0) {
+            return sortMoviesByImdbRating(storedMovies);
+          }
+
+          // A same-day add from Movie Detail may not yet have the card fields.
+          // Only those newly incomplete movies are requested; every already
+          // refreshed Favorite/Seen card is reused from the one saved list.
+          const newlyLoadedMovies = await loadMovieCardDataForMovies(
+            storedMovies.filter(movie =>
+              incompleteStoredMovieIds.has(movie.id),
+            ),
+            false,
+          );
+          const newlyLoadedMoviesById = new Map(
+            newlyLoadedMovies.map(movie => [movie.id, movie]),
+          );
+
+          loadedMovies = sortMoviesByImdbRating(
+            storedMovies.map(
+              movie => newlyLoadedMoviesById.get(movie.id) ?? movie,
+            ),
+          );
+        } else {
+          loadedMovies = await loadMovieCardDataForMovies(storedMovies);
+        }
+
+        const saved = await saveRefreshedStoredMovieList(
+          storageKey,
+          loadedMovies,
+          today,
+        );
+
+        if (!saved && retriesRemaining > 0) {
+          // A Favorite/Seen add or remove happened during the request. Read the
+          // new list and rerun once rather than displaying or saving stale IDs.
+          return loadCurrentStoredMovies(retriesRemaining - 1);
+        }
+
+        if (!saved) {
+          throw new Error(`${title} changed while its card data was loading.`);
+        }
+
+        return loadedMovies;
+      }
+
+      return loadCurrentStoredMovies(1);
+    },
+    [storageKey, title],
+  );
 
   const refreshAllMovies = useCallback(async () => {
     const runId = ++dataLoadRunIdRef.current;
-    const moviesWithCardData = await loadAllMovies();
+    const moviesWithCardData = await loadAllMovies(true);
 
     if (dataLoadRunIdRef.current !== runId) {
       return;
@@ -85,7 +152,8 @@ export function StoredMovieListScreen({
             console.error(`Error loading ${title}:`, error);
 
             if (isActive && dataLoadRunIdRef.current === runId) {
-              commitMovies([]);
+              const fallbackData = await getStoredMovieListData(storageKey);
+              commitMovies(fallbackData.movies.map(storedMovieToMovieType));
             }
           } finally {
             if (isActive && dataLoadRunIdRef.current === runId) {
@@ -97,8 +165,22 @@ export function StoredMovieListScreen({
         }
 
         try {
-          const storedMovies = await getStoredMovieList(storageKey);
+          const storedData = await getStoredMovieListData(storageKey);
+          const storedMovies = storedData.movies;
           const currentMovies = moviesRef.current;
+
+          if (
+            !isCurrentLocalCalendarDate(storedData.cardDataRefreshedLocalDate)
+          ) {
+            const moviesWithCardData = await loadAllMovies();
+
+            if (isActive && dataLoadRunIdRef.current === runId) {
+              commitMovies(moviesWithCardData);
+            }
+
+            return;
+          }
+
           const changes = findStoredMovieListMembershipChanges(
             currentMovies,
             storedMovies,
@@ -111,39 +193,25 @@ export function StoredMovieListScreen({
             return;
           }
 
-          const shouldShowEmptyListLoading =
-            currentMovies.length === 0 &&
-            changes.addedStoredMovies.length > 0;
-
-          if (shouldShowEmptyListLoading) {
-            setIsLoading(true);
-          }
-
-          const addedMoviesWithCardData =
-            changes.addedStoredMovies.length > 0
-              ? await loadMovieCardDataForMovies(
-                  changes.addedStoredMovies.map(storedMovieToMovieType),
-                )
-              : [];
-
-          if (isActive && dataLoadRunIdRef.current === runId) {
-            const nextMovies = reconcileStoredMovieListMembership(
-              moviesRef.current,
-              storedMovies,
-              addedMoviesWithCardData,
+          if (changes.addedStoredMovies.length === 0) {
+            // Removing a movie cannot disturb the order of the remaining
+            // IMDb-sorted cards, so this path performs no query and no sort.
+            const storedMovieIds = new Set(storedMovies.map(movie => movie.id));
+            const nextMovies = currentMovies.filter(movie =>
+              storedMovieIds.has(movie.id),
             );
 
-            if (nextMovies !== moviesRef.current) {
+            if (isActive && dataLoadRunIdRef.current === runId) {
               commitMovies(nextMovies);
             }
+
+            return;
           }
 
-          if (
-            shouldShowEmptyListLoading &&
-            isActive &&
-            dataLoadRunIdRef.current === runId
-          ) {
-            setIsLoading(false);
+          const moviesWithCardData = await loadAllMovies();
+
+          if (isActive && dataLoadRunIdRef.current === runId) {
+            commitMovies(moviesWithCardData);
           }
         } catch (error) {
           console.error(`Error synchronizing ${title}:`, error);
@@ -203,9 +271,7 @@ export function StoredMovieListScreen({
         <MovieResults
           movies={movies}
           cardVariant="posterRating"
-          ListHeaderComponent={
-            <>{screenHeader}</>
-          }
+          ListHeaderComponent={<>{screenHeader}</>}
           ListHeaderComponentStyle={styles.storedMovieListHeader}
           {...pageRefresh}
           onMoviePress={openMovieDetail}
