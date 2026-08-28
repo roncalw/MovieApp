@@ -8,7 +8,7 @@ import {
   useStreamingMoviesQuery,
   useUpcomingMoviesQuery,
 } from '../src/hooks/useMovieSearchQuery';
-import { prepareMovieImages } from '../src/utils/movieImageLoading';
+import { prepareMovieImageUris } from '../src/utils/movieImageLoading';
 import type { movieType } from '../src/types/movie/MovieTypes';
 
 jest.mock('@react-navigation/native', () => ({
@@ -29,7 +29,14 @@ jest.mock('../src/hooks/useMovieSearchQuery', () => ({
 }));
 
 jest.mock('../src/utils/movieImageLoading', () => ({
-  prepareMovieImages: jest.fn(() => Promise.resolve()),
+  prepareMovieImageUris: jest.fn(() =>
+    Promise.resolve({
+      requestedCount: 0,
+      prefetchCount: 0,
+      failedUris: [],
+      timedOut: false,
+    }),
+  ),
 }));
 
 jest.mock('../src/shared/refresh/usePageRefresh', () => ({
@@ -58,8 +65,8 @@ jest.mock('../src/home/HomeHeroCarousel', () => {
   const { View: MockView } = require('react-native');
 
   return {
-    HomeHeroCarousel: () =>
-      MockReact.createElement(MockView, { testID: 'home-hero' }),
+    HomeHeroCarousel: (props: any) =>
+      MockReact.createElement(MockView, { ...props, testID: 'home-hero' }),
   };
 });
 
@@ -68,8 +75,11 @@ jest.mock('../src/home/HomeMoviePosterRow', () => {
   const { View: MockView } = require('react-native');
 
   return {
-    HomeMoviePosterRow: () =>
-      MockReact.createElement(MockView, { testID: 'home-row' }),
+    HomeMoviePosterRow: (props: any) =>
+      MockReact.createElement(MockView, {
+        ...props,
+        testID: `home-row-${props.title}`,
+      }),
   };
 });
 
@@ -83,14 +93,27 @@ jest.mock('../src/shared/header/HeaderNavButton', () => ({
 
 type QueryResult = {
   data: movieType[];
-  error: null;
-  isError: false;
-  isLoading: false;
+  error: unknown;
+  isError: boolean;
+  isLoading: boolean;
   refetch: jest.Mock<Promise<QueryResult>, []>;
 };
 
 function movie(id: number) {
-  return { id, title: `Movie ${id}` } as movieType;
+  return {
+    id,
+    title: `Movie ${id}`,
+    poster_path: `/movie-${id}.jpg`,
+  } as movieType;
+}
+
+function preparationResult(failedUris: string[] = []) {
+  return {
+    requestedCount: 1,
+    prefetchCount: 1,
+    failedUris,
+    timedOut: false,
+  };
 }
 
 function createQueryResult(id: number) {
@@ -118,6 +141,24 @@ function createQueryResult(id: number) {
   };
 }
 
+function configureHomeQueries(queries: Array<{ result: QueryResult }>) {
+  jest
+    .mocked(useUpcomingMoviesQuery)
+    .mockReturnValue(queries[0].result as any);
+  jest
+    .mocked(usePopularMoviesQuery)
+    .mockReturnValue(queries[1].result as any);
+  jest
+    .mocked(useStreamingMoviesQuery)
+    .mockReturnValue(queries[2].result as any);
+  jest
+    .mocked(useHomeGenreMoviesQuery)
+    .mockImplementation((_rowKey, genreId) => {
+      const genreIds = [10751, 35, 18, 80, 27, 10402, 99];
+      return queries[genreIds.indexOf(genreId) + 3].result as any;
+    });
+}
+
 function countRenderedViews(
   component: TestRenderer.ReactTestRenderer,
   testID: string,
@@ -128,26 +169,52 @@ function countRenderedViews(
 }
 
 describe('Home pull-to-refresh', () => {
-  test('clears the entire page before rebuilding all Home collections', async () => {
+  beforeEach(() => {
+    jest
+      .spyOn(globalThis, 'requestAnimationFrame')
+      .mockImplementation((callback: (timestamp: number) => void) => {
+        callback(0);
+        return 1;
+      });
+    jest.mocked(prepareMovieImageUris).mockReset();
+    jest
+      .mocked(prepareMovieImageUris)
+      .mockResolvedValue(preparationResult() as any);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('finishes hero and Popular before starting the offscreen rows', async () => {
+    const frameCallbacks: Array<(timestamp: number) => void> = [];
+    jest
+      .mocked(requestAnimationFrame)
+      .mockImplementation(callback => {
+        frameCallbacks.push(callback);
+        return frameCallbacks.length;
+      });
     const queries = Array.from({ length: 10 }, (_, index) =>
       createQueryResult(index + 1),
     );
+    queries[2].result.isLoading = true;
+    queries[2].result.data = [];
+    configureHomeQueries(queries);
+    const preparationResolvers = new Map<
+      number,
+      (result: ReturnType<typeof preparationResult>) => void
+    >();
 
-    jest
-      .mocked(useUpcomingMoviesQuery)
-      .mockReturnValue(queries[0].result as any);
-    jest
-      .mocked(usePopularMoviesQuery)
-      .mockReturnValue(queries[1].result as any);
-    jest
-      .mocked(useStreamingMoviesQuery)
-      .mockReturnValue(queries[2].result as any);
-    jest
-      .mocked(useHomeGenreMoviesQuery)
-      .mockImplementation((_rowKey, genreId) => {
-        const genreIds = [10751, 35, 18, 80, 27, 10402, 99];
-        return queries[genreIds.indexOf(genreId) + 3].result as any;
+    jest.mocked(prepareMovieImageUris).mockImplementation(imageUris => {
+      const movieIdMatch = imageUris[0]?.match(/movie-(\d+)\.jpg$/);
+      const movieId = movieIdMatch ? Number(movieIdMatch[1]) : undefined;
+
+      return new Promise(resolve => {
+        if (movieId !== undefined) {
+          preparationResolvers.set(movieId, resolve);
+        }
       });
+    });
 
     let component!: TestRenderer.ReactTestRenderer;
     await act(async () => {
@@ -155,8 +222,110 @@ describe('Home pull-to-refresh', () => {
       await Promise.resolve();
     });
 
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(2);
     expect(countRenderedViews(component, 'home-hero')).toBe(1);
-    expect(countRenderedViews(component, 'home-row')).toBe(9);
+    expect(component.root.findByProps({ testID: 'home-hero' }).props.isLoading)
+      .toBe(true);
+    expect(countRenderedViews(component, 'home-row-Popular Movies')).toBe(1);
+    expect(
+      component.root.findByProps({ testID: 'home-row-Popular Movies' }).props
+        .isLoading,
+    ).toBe(true);
+    expect(countRenderedViews(component, 'home-row-Streaming Now')).toBe(0);
+    expect(countRenderedViews(component, 'home-row-Family Movies')).toBe(0);
+
+    await act(async () => {
+      preparationResolvers.get(2)?.(
+        preparationResult([
+          'https://image.tmdb.org/t/p/w342/movie-2.jpg',
+        ]),
+      );
+      await Promise.resolve();
+    });
+
+    expect(
+      component.root.findByProps({ testID: 'home-row-Popular Movies' }).props
+        .isLoading,
+    ).toBe(true);
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(2);
+    expect(countRenderedViews(component, 'home-row-Streaming Now')).toBe(0);
+
+    await act(async () => {
+      preparationResolvers.get(1)?.(preparationResult());
+      await Promise.resolve();
+    });
+
+    expect(component.root.findByProps({ testID: 'home-hero' }).props.isLoading)
+      .toBe(false);
+    expect(
+      component.root.findByProps({ testID: 'home-row-Popular Movies' }).props
+        .isLoading,
+    ).toBe(false);
+    expect(
+      component.root
+        .findByProps({ testID: 'home-row-Popular Movies' })
+        .props.unavailableImageUris.has(
+          'https://image.tmdb.org/t/p/w342/movie-2.jpg',
+        ),
+    ).toBe(true);
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(2);
+    expect(countRenderedViews(component, 'home-row-Streaming Now')).toBe(0);
+
+    await act(async () => {
+      frameCallbacks.shift()?.(0);
+      await Promise.resolve();
+    });
+
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(2);
+    expect(countRenderedViews(component, 'home-row-Streaming Now')).toBe(0);
+
+    await act(async () => {
+      frameCallbacks.shift()?.(0);
+      await Promise.resolve();
+    });
+
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(9);
+    expect(countRenderedViews(component, 'home-row-Streaming Now')).toBe(1);
+    expect(
+      component.root.findByProps({ testID: 'home-row-Streaming Now' }).props
+        .isLoading,
+    ).toBe(true);
+    expect(
+      component.root.findByProps({ testID: 'home-row-Family Movies' }).props
+        .isLoading,
+    ).toBe(true);
+
+    await act(async () => {
+      preparationResolvers.forEach((resolve, movieId) => {
+        if (movieId !== 1 && movieId !== 2) {
+          resolve(preparationResult());
+        }
+      });
+      await Promise.resolve();
+    });
+
+    act(() => component.unmount());
+  });
+
+  test('clears the entire page before rebuilding all Home collections', async () => {
+    const queries = Array.from({ length: 10 }, (_, index) =>
+      createQueryResult(index + 1),
+    );
+    configureHomeQueries(queries);
+
+    let component!: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      component = TestRenderer.create(<HomeScreen />);
+      await Promise.resolve();
+    });
+
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(10);
+    expect(countRenderedViews(component, 'home-hero')).toBe(1);
+    expect(
+      component.root
+        .findAllByType(View)
+        .filter(node => String(node.props.testID).startsWith('home-row-')),
+    ).toHaveLength(9);
 
     const refresh = component.root.findByProps({ testID: 'home-scroll' }).props
       .onRefresh as () => Promise<void>;
@@ -171,18 +340,27 @@ describe('Home pull-to-refresh', () => {
       queries.every(query => query.result.refetch.mock.calls.length === 1),
     ).toBe(true);
     expect(countRenderedViews(component, 'home-hero')).toBe(0);
-    expect(countRenderedViews(component, 'home-row')).toBe(0);
+    expect(
+      component.root
+        .findAllByType(View)
+        .filter(node => String(node.props.testID).startsWith('home-row-')),
+    ).toHaveLength(0);
     expect(component.root.findAllByType(ActivityIndicator)).toHaveLength(1);
     expect(component.root.findAllByType(Text)).toHaveLength(0);
 
     await act(async () => {
       queries.forEach(query => query.resolveRefresh());
       await refreshPromise;
+      await Promise.resolve();
     });
 
-    expect(prepareMovieImages).toHaveBeenCalledTimes(2);
+    expect(prepareMovieImageUris).toHaveBeenCalledTimes(20);
     expect(countRenderedViews(component, 'home-hero')).toBe(1);
-    expect(countRenderedViews(component, 'home-row')).toBe(9);
+    expect(
+      component.root
+        .findAllByType(View)
+        .filter(node => String(node.props.testID).startsWith('home-row-')),
+    ).toHaveLength(9);
 
     act(() => component.unmount());
   });

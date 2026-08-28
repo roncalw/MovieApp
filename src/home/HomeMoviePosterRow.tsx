@@ -7,10 +7,11 @@ Purpose:
    * Renders one horizontal poster row for the Home page, matching the legacy carousel shape while keeping the tap action owned
      by HomeScreen.
 */
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   View,
   Pressable,
   StyleSheet,
@@ -24,18 +25,22 @@ import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 import { MovieRemoteImage } from '../shared/images/MovieRemoteImage';
 import { imageAssets } from '../styles/assets';
+import { HOME_POSTER_ROW_IMAGE_SIZE } from './homeImageSizes';
 
-export function HomeMoviePosterRow({
+function HomeMoviePosterRowComponent({
   title,
   movies,
   isLoading,
   isError,
   imageRefreshGeneration,
+  unavailableImageUris,
   onMoviePress,
   onTitlePress,
 }: HomeMoviePosterRowProps) {
-  const posterMovies =
-    movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [];
+  const posterMovies = useMemo(
+    () => movies?.filter(movie => Boolean(getMovieImagePath(movie))) ?? [],
+    [movies],
+  );
 
   return (
     <View style={styles.rowSection}>
@@ -76,7 +81,10 @@ export function HomeMoviePosterRow({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.posterListContent}
           renderItem={({ item }) => {
-            const movieImageUri = getMovieImageUri(item);
+            const movieImageUri = getMovieImageUri(
+              item,
+              HOME_POSTER_ROW_IMAGE_SIZE,
+            );
 
             return (
               <Pressable
@@ -85,7 +93,14 @@ export function HomeMoviePosterRow({
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.title || item.original_title}`}
               >
-                {movieImageUri ? (
+                {movieImageUri && unavailableImageUris?.has(movieImageUri) ? (
+                  <Image
+                    source={imageAssets.missingMovie}
+                    style={styles.posterImage}
+                    resizeMode="cover"
+                    fadeDuration={0}
+                  />
+                ) : movieImageUri ? (
                   <MovieRemoteImage
                     uri={movieImageUri}
                     fallbackSource={imageAssets.missingMovie}
@@ -94,6 +109,7 @@ export function HomeMoviePosterRow({
                     refreshGeneration={imageRefreshGeneration}
                     style={styles.posterImage}
                     resizeMode="cover"
+                    fadeDuration={0}
                   />
                 ) : null}
               </Pressable>
@@ -104,6 +120,13 @@ export function HomeMoviePosterRow({
     </View>
   );
 }
+
+/**
+ * Query and image-preparation updates arrive one category at a time. Once this
+ * row's own inputs are unchanged, it does not need to rebuild its FlatList just
+ * because another Home category finished loading.
+ */
+export const HomeMoviePosterRow = memo(HomeMoviePosterRowComponent);
 
 const styles = StyleSheet.create({
   rowSection: {

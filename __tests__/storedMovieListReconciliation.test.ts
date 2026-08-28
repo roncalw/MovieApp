@@ -1,30 +1,30 @@
-import {
-  findStoredMovieListMembershipChanges,
-  reconcileStoredMovieListMembership,
-} from '../src/drawer/storedMovieListReconciliation';
+import { findStoredMovieListMembershipChanges } from '../src/drawer/storedMovieListReconciliation';
 import type { movieType } from '../src/types/movie/MovieTypes';
 import type { StoredMovieListItem } from '../src/types/movie/movieUserListTypes';
 
-function movie(id: number, rating: number, title = `Movie ${id}`) {
-  return { id, title, vote_average: rating } as movieType;
+function movie(id: number, title = `Movie ${id}`) {
+  return { id, title } as movieType;
 }
 
 function storedMovie(id: number, title = `Movie ${id}`) {
   return { id, title } as StoredMovieListItem;
 }
 
-describe('stored movie list membership reconciliation', () => {
-  test('returns the existing list object when no Favorite or Seen ID changed', () => {
-    const currentMovies = [movie(1, 8), movie(2, 7)];
+describe('stored movie list membership changes', () => {
+  test('reports no changes when the Favorite or Seen IDs are unchanged', () => {
+    const currentMovies = [movie(1), movie(2)];
     const storedMovies = [storedMovie(1), storedMovie(2)];
+    const changes = findStoredMovieListMembershipChanges(
+      currentMovies,
+      storedMovies,
+    );
 
-    expect(
-      reconcileStoredMovieListMembership(currentMovies, storedMovies, []),
-    ).toBe(currentMovies);
+    expect(changes.addedStoredMovies).toEqual([]);
+    expect([...changes.removedMovieIds]).toEqual([]);
   });
 
-  test('removes only the movie no longer present in local storage', () => {
-    const currentMovies = [movie(1, 8), movie(2, 7), movie(3, 6)];
+  test('reports only the movie no longer present in local storage', () => {
+    const currentMovies = [movie(1), movie(2), movie(3)];
     const storedMovies = [storedMovie(1), storedMovie(3)];
     const changes = findStoredMovieListMembershipChanges(
       currentMovies,
@@ -32,15 +32,11 @@ describe('stored movie list membership reconciliation', () => {
     );
 
     expect([...changes.removedMovieIds]).toEqual([2]);
-    expect(
-      reconcileStoredMovieListMembership(currentMovies, storedMovies, []).map(
-        currentMovie => currentMovie.id,
-      ),
-    ).toEqual([1, 3]);
+    expect(changes.addedStoredMovies).toEqual([]);
   });
 
-  test('inserts only new movies and preserves the rating order', () => {
-    const currentMovies = [movie(1, 8), movie(3, 6)];
+  test('reports only movies newly added to local storage', () => {
+    const currentMovies = [movie(1), movie(3)];
     const storedMovies = [storedMovie(1), storedMovie(2), storedMovie(3)];
     const changes = findStoredMovieListMembershipChanges(
       currentMovies,
@@ -50,12 +46,6 @@ describe('stored movie list membership reconciliation', () => {
     expect(changes.addedStoredMovies.map(addedMovie => addedMovie.id)).toEqual([
       2,
     ]);
-    expect(
-      reconcileStoredMovieListMembership(
-        currentMovies,
-        storedMovies,
-        [movie(2, 7)],
-      ).map(currentMovie => currentMovie.id),
-    ).toEqual([1, 2, 3]);
+    expect([...changes.removedMovieIds]).toEqual([]);
   });
 });

@@ -35,11 +35,12 @@ jest.mock('../src/utils/storage/movieCardData', () => ({
 jest.mock('../src/utils/storage/movieUserListsStorage', () => ({
   getStoredMovieListData: jest.fn(),
   saveRefreshedStoredMovieList: jest.fn(),
-  storedMovieHasCompleteCardData: (movie: movieType) =>
-    (typeof movie.imdb_rating === 'number' || movie.imdb_rating === null) &&
-    typeof movie.available_with_subscription === 'boolean' &&
-    typeof movie.available_without_rent_or_purchase === 'boolean',
-  storedMovieToMovieType: (movie: movieType) => movie,
+  storedMovieHasCompleteCardData: (storedMovie: movieType) =>
+    (typeof storedMovie.imdb_rating === 'number' ||
+      storedMovie.imdb_rating === null) &&
+    typeof storedMovie.available_with_subscription === 'boolean' &&
+    typeof storedMovie.available_without_rent_or_purchase === 'boolean',
+  storedMovieToMovieType: (storedMovie: movieType) => storedMovie,
 }));
 
 jest.mock('../src/shared/refresh/usePageRefresh', () => ({

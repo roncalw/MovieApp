@@ -10,7 +10,12 @@ Purpose:
    * Recreates the legacy Home entry point with an upcoming-movie hero carousel, TMDB poster rows, and the same
      local movie-detail overlay behavior used by Advanced Search.
 */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   DrawerActions,
@@ -36,15 +41,12 @@ import type { HomeAdvancedSearchSectionId } from '../types/home/homeTypes';
 import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
-import { prepareMovieImages } from '../utils/movieImageLoading';
 import {
-  buildHomeSnapshot,
-  getHomeSnapshotCollections,
   refreshHomeQueryStates,
   toHomeQueryState,
   type HomeQueryState,
-  type HomeSnapshot,
 } from './homeLoading';
+import { useHomeImagePreparations } from './useHomeImagePreparations';
 
 export function HomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
@@ -73,10 +75,10 @@ export function HomeScreen() {
   const refetchHorrorMovies = horrorMoviesQuery.refetch;
   const refetchMusicMovies = musicMoviesQuery.refetch;
   const refetchDocumentaryMovies = documentaryMoviesQuery.refetch;
-  const [homeSnapshot, setHomeSnapshot] = useState<HomeSnapshot | null>(null);
   const [isRebuildingHome, setIsRebuildingHome] = useState(false);
+  const [isSecondaryPhaseAllowed, setIsSecondaryPhaseAllowed] =
+    useState(false);
   const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
-  const initialPreparationRef = useRef<Promise<HomeSnapshot> | null>(null);
   const homeQueryStates = useMemo<HomeQueryState[]>(
     () => [
       toHomeQueryState(upcomingMoviesQuery),
@@ -103,54 +105,66 @@ export function HomeScreen() {
       upcomingMoviesQuery,
     ],
   );
-  const initialQueriesHaveSettled = homeQueryStates.every(
-    query => !query.isLoading,
+  const homeImagePreparations = useHomeImagePreparations(
+    homeQueryStates,
+    imageRefreshGeneration,
+    isSecondaryPhaseAllowed,
   );
+  const heroImagePreparation = homeImagePreparations[0];
+  const popularImagePreparation = homeImagePreparations[1];
+  const isFirstViewportReady =
+    heroImagePreparation.isReady && popularImagePreparation.isReady;
 
+  /*
+   * Phase one is not complete merely because its data and image promises have
+   * resolved. React still needs an opportunity to commit those elements and
+   * the native screen still needs an opportunity to paint them.
+   *
+   * The first animation frame lets the completed hero and Popular row reach
+   * the native view hierarchy. The second lets that hierarchy appear on the
+   * display. Only then does phase two begin preparing the offscreen rows. This
+   * keeps lower-page image work from delaying what the customer can already
+   * see, without introducing a timer or changing any movie content.
+   */
   useEffect(() => {
     if (
-      homeSnapshot ||
       isRebuildingHome ||
-      !initialQueriesHaveSettled
+      isSecondaryPhaseAllowed ||
+      !isFirstViewportReady
     ) {
-      return;
+      return undefined;
     }
 
-    let isCancelled = false;
-    if (!initialPreparationRef.current) {
-      const nextSnapshot = buildHomeSnapshot(homeQueryStates);
-
-      initialPreparationRef.current = prepareMovieImages(
-        getHomeSnapshotCollections(nextSnapshot),
-      ).then(() => nextSnapshot);
-    }
-
-    void initialPreparationRef.current.then(nextSnapshot => {
-      if (!isCancelled) {
-        setHomeSnapshot(nextSnapshot);
-      }
+    let secondFrameId: number | undefined;
+    const firstFrameId = requestAnimationFrame(() => {
+      secondFrameId = requestAnimationFrame(() => {
+        setIsSecondaryPhaseAllowed(true);
+      });
     });
 
     return () => {
-      isCancelled = true;
+      cancelAnimationFrame(firstFrameId);
+
+      if (secondFrameId !== undefined) {
+        cancelAnimationFrame(secondFrameId);
+      }
     };
   }, [
-    homeQueryStates,
-    homeSnapshot,
-    initialQueriesHaveSettled,
+    isFirstViewportReady,
     isRebuildingHome,
+    isSecondaryPhaseAllowed,
   ]);
 
   const refreshHome = useCallback(async () => {
-    // Removing the snapshot unmounts every Home section immediately. The page
-    // then follows the same sequence as its first visit: request every Home
-    // collection together, prepare their posters, and publish one full snapshot.
+    // A Home refresh intentionally remains a full page rebuild. The existing
+    // content is removed while every small movie-data request runs together.
+    // Poster preparation then restarts in the same two phases as a first visit,
+    // instead of mixing old and refreshed sections on one screen.
     setIsRebuildingHome(true);
-    initialPreparationRef.current = null;
-    setHomeSnapshot(null);
+    setIsSecondaryPhaseAllowed(false);
 
     try {
-      const nextQueryStates = await refreshHomeQueryStates(homeQueryStates, [
+      await refreshHomeQueryStates(homeQueryStates, [
         refetchUpcomingMovies,
         refetchPopularMovies,
         refetchStreamingMovies,
@@ -162,10 +176,6 @@ export function HomeScreen() {
         refetchMusicMovies,
         refetchDocumentaryMovies,
       ]);
-      const nextSnapshot = buildHomeSnapshot(nextQueryStates);
-
-      await prepareMovieImages(getHomeSnapshotCollections(nextSnapshot));
-      setHomeSnapshot(nextSnapshot);
       setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
     } finally {
       setIsRebuildingHome(false);
@@ -184,12 +194,32 @@ export function HomeScreen() {
     refetchUpcomingMovies,
   ]);
   const pageRefresh = usePageRefresh(refreshHome);
-  const moviePosterRows = homeSnapshot
-    ? HOME_ADVANCED_SEARCH_SECTIONS.map(section => ({
-        ...section,
-        query: homeSnapshot.rows[section.id],
-      }))
-    : [];
+  const handleOpenAdvancedSearchSection = useCallback(
+    (homeSectionId: HomeAdvancedSearchSectionId) => {
+      navigation.navigate('AdvancedSearch', {
+        homeSectionId,
+        presetRequestId: `${homeSectionId}:${Date.now()}`,
+      });
+    },
+    [navigation],
+  );
+  const sectionTitlePressHandlers = useMemo(
+    () =>
+      new Map(
+        HOME_ADVANCED_SEARCH_SECTIONS.map(section => [
+          section.id,
+          () => handleOpenAdvancedSearchSection(section.id),
+        ]),
+      ),
+    [handleOpenAdvancedSearchSection],
+  );
+  const moviePosterRows = HOME_ADVANCED_SEARCH_SECTIONS.map(
+    (section, index) => ({
+      ...section,
+      query: homeQueryStates[index + 1],
+      imagePreparation: homeImagePreparations[index + 1],
+    }),
+  );
 
   function handleOpenDrawer() {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -199,16 +229,7 @@ export function HomeScreen() {
     navigation.navigate('SearchByMovieTitle', { returnTo: 'Home' });
   }
 
-  function handleOpenAdvancedSearchSection(
-    homeSectionId: HomeAdvancedSearchSectionId,
-  ) {
-    navigation.navigate('AdvancedSearch', {
-      homeSectionId,
-      presetRequestId: `${homeSectionId}:${Date.now()}`,
-    });
-  }
-
-  if (!homeSnapshot) {
+  if (isRebuildingHome) {
     return (
       <View style={styles.preparingHome}>
         <ActivityIndicator size="large" />
@@ -226,12 +247,17 @@ export function HomeScreen() {
       >
         <View style={styles.heroStage}>
           <HomeHeroCarousel
-            movies={homeSnapshot.upcoming.data}
-            isLoading={false}
-            isError={homeSnapshot.upcoming.isError}
-            error={homeSnapshot.upcoming.error}
+            movies={upcomingMoviesQuery.data}
+            isLoading={
+              upcomingMoviesQuery.isLoading || !heroImagePreparation.isReady
+            }
+            isError={upcomingMoviesQuery.isError}
+            error={upcomingMoviesQuery.error}
             isAutoPlayPaused={!isFocused}
             imageRefreshGeneration={imageRefreshGeneration}
+            unavailableImageUris={
+              heroImagePreparation.unavailableImageUris
+            }
             onMoviePress={openMovieDetail}
           />
           <HeaderActionRow
@@ -253,18 +279,31 @@ export function HomeScreen() {
           />
         </View>
 
-        {moviePosterRows.map(row => (
-          <HomeMoviePosterRow
-            key={row.title}
-            title={row.title}
-            movies={row.query.data}
-            isLoading={false}
-            isError={row.query.isError}
-            imageRefreshGeneration={imageRefreshGeneration}
-            onMoviePress={openMovieDetail}
-            onTitlePress={() => handleOpenAdvancedSearchSection(row.id)}
-          />
-        ))}
+        {moviePosterRows.map((row, index) =>
+          index === 0 || isSecondaryPhaseAllowed ? (
+            <HomeMoviePosterRow
+              key={row.title}
+              title={row.title}
+              movies={row.query.data}
+              isLoading={
+                row.query.isLoading ||
+                !heroImagePreparation.isReady ||
+                !row.imagePreparation.isReady
+              }
+              isError={
+                heroImagePreparation.isReady &&
+                row.imagePreparation.isReady &&
+                row.query.isError
+              }
+              imageRefreshGeneration={imageRefreshGeneration}
+              unavailableImageUris={
+                row.imagePreparation.unavailableImageUris
+              }
+              onMoviePress={openMovieDetail}
+              onTitlePress={sectionTitlePressHandlers.get(row.id)}
+            />
+          ) : null,
+        )}
       </RefreshableScrollView>
     </View>
   );

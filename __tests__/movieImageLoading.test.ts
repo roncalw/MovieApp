@@ -61,6 +61,63 @@ describe('movie image preparation', () => {
     );
   });
 
+  test('combines concurrent cache checks and downloads a shared URL only once', async () => {
+    const sharedUri = 'https://image.tmdb.org/t/p/w500/shared.jpg';
+    const popularOnlyUri =
+      'https://image.tmdb.org/t/p/w500/popular-only.jpg';
+    const horrorOnlyUri =
+      'https://image.tmdb.org/t/p/w500/horror-only.jpg';
+    Image.queryCache = jest.fn(async () => ({}));
+    Image.prefetch = jest.fn(async () => true);
+
+    const [popularPreparation, horrorPreparation] = await Promise.all([
+      prepareMovieImageUris([sharedUri, popularOnlyUri]),
+      prepareMovieImageUris([sharedUri, horrorOnlyUri]),
+    ]);
+
+    expect(Image.queryCache).toHaveBeenCalledTimes(1);
+    expect(Image.queryCache).toHaveBeenCalledWith([
+      sharedUri,
+      popularOnlyUri,
+      horrorOnlyUri,
+    ]);
+    expect(Image.prefetch).toHaveBeenCalledTimes(3);
+    expect(jest.mocked(Image.prefetch).mock.calls).toEqual([
+      [sharedUri],
+      [popularOnlyUri],
+      [horrorOnlyUri],
+    ]);
+    expect(popularPreparation).toEqual({
+      requestedCount: 2,
+      prefetchCount: 2,
+      failedUris: [],
+      timedOut: false,
+    });
+    expect(horrorPreparation).toEqual({
+      requestedCount: 2,
+      prefetchCount: 2,
+      failedUris: [],
+      timedOut: false,
+    });
+  });
+
+  test('shares one failed download while reporting it to every category', async () => {
+    const sharedUri = 'https://image.tmdb.org/t/p/w500/shared-failure.jpg';
+    Image.queryCache = jest.fn(async () => ({}));
+    Image.prefetch = jest.fn(async () => false);
+    jest.spyOn(console, 'info').mockImplementation(() => undefined);
+
+    const [firstPreparation, secondPreparation] = await Promise.all([
+      prepareMovieImageUris([sharedUri]),
+      prepareMovieImageUris([sharedUri]),
+    ]);
+
+    expect(Image.queryCache).toHaveBeenCalledTimes(1);
+    expect(Image.prefetch).toHaveBeenCalledTimes(1);
+    expect(firstPreparation.failedUris).toEqual([sharedUri]);
+    expect(secondPreparation.failedUris).toEqual([sharedUri]);
+  });
+
   test('returns after the safety timeout when native prefetch never settles', async () => {
     jest.useFakeTimers();
     Image.queryCache = jest.fn(async () => ({}));
@@ -81,5 +138,21 @@ describe('movie image preparation', () => {
       failedUris: ['https://image.tmdb.org/t/p/w500/hanging.jpg'],
       timedOut: true,
     });
+
+    // The timed-out native promise cannot be cancelled, but it must not remain
+    // registered forever and prevent a later explicit retry of the same URL.
+    Image.prefetch = jest.fn(async () => true);
+
+    await expect(
+      prepareMovieImageUris([
+        'https://image.tmdb.org/t/p/w500/hanging.jpg',
+      ]),
+    ).resolves.toEqual({
+      requestedCount: 1,
+      prefetchCount: 1,
+      failedUris: [],
+      timedOut: false,
+    });
+    expect(Image.prefetch).toHaveBeenCalledTimes(1);
   });
 });

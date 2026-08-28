@@ -2,6 +2,8 @@ import type { MovieImageFields } from '../types/movie/movieImageTypes';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
+export type MovieImageSize = 'w342' | 'w500';
+
 export function getMovieImagePath(
   movie: MovieImageFields | null | undefined
 ): string | undefined {
@@ -10,7 +12,7 @@ export function getMovieImagePath(
 
 export function getMovieImageUri(
   movie: MovieImageFields | null | undefined,
-  size: 'w500' = 'w500'
+  size: MovieImageSize = 'w500'
 ): string | undefined {
   const imagePath = getMovieImagePath(movie);
 

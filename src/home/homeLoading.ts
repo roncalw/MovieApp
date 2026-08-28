@@ -1,19 +1,9 @@
-import { HOME_ADVANCED_SEARCH_SECTIONS } from './homeAdvancedSearchSections';
-import type { HomeAdvancedSearchSectionId } from '../types/home/homeTypes';
 import type { movieType } from '../types/movie/MovieTypes';
 
-export type HomeCollectionSnapshot = {
+export type HomeQueryState = {
   data: movieType[] | undefined;
   isError: boolean;
   error: unknown;
-};
-
-export type HomeSnapshot = {
-  upcoming: HomeCollectionSnapshot;
-  rows: Record<HomeAdvancedSearchSectionId, HomeCollectionSnapshot>;
-};
-
-export type HomeQueryState = HomeCollectionSnapshot & {
   isLoading: boolean;
 };
 
@@ -54,27 +44,4 @@ export async function refreshHomeQueryStates(
 
     return toHomeQueryState(result.value);
   });
-}
-
-export function buildHomeSnapshot(queryStates: HomeQueryState[]): HomeSnapshot {
-  const [upcoming, ...rowStates] = queryStates;
-  const rows = {} as Record<
-    HomeAdvancedSearchSectionId,
-    HomeCollectionSnapshot
-  >;
-
-  HOME_ADVANCED_SEARCH_SECTIONS.forEach((section, index) => {
-    rows[section.id] = rowStates[index];
-  });
-
-  return { upcoming, rows };
-}
-
-export function getHomeSnapshotCollections(snapshot: HomeSnapshot) {
-  return [
-    snapshot.upcoming.data,
-    ...HOME_ADVANCED_SEARCH_SECTIONS.map(
-      section => snapshot.rows[section.id].data,
-    ),
-  ];
 }

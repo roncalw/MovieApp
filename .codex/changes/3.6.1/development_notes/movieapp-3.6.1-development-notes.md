@@ -12,7 +12,8 @@ store artifacts.
 | Previous store version                      | `3.5.2`                                    |
 | Previous production commit                  | `410496f68a985526af7eb15f6d5665d67421a0d6` |
 | First included feature commit               | `f098846924cc93fdf1e31b47f45482a8dcac0243` |
-| Last feature/process commit documented here | `d33b8e62088e8fbfa1841b36a483b5351cf65090` |
+| Last committed feature boundary              | `d33b8e62088e8fbfa1841b36a483b5351cf65090` |
+| Current uncommitted addition                 | Home first-view performance                |
 | Git comparison used                         | `410496f..d33b8e6`                         |
 | Required Cloudflare feature commit          | `b81edb68486c6d102e411d067044fc06c020ebd5` |
 | Planned store version                       | `3.6.1`                                    |
@@ -21,7 +22,8 @@ The Apple App Store lookup and the public Google Play page both listed version
 3.5.2 on August 23, 2026. If more MovieApp changes are committed before the
 3.6.1 archive or bundle is created, both this document and
 `Deployment Features.md` must be reviewed again so the recorded release range
-remains complete.
+remains complete. After the Home performance work is committed, replace the
+temporary uncommitted entry above with its complete commit ID.
 
 ## 2. Included Change Areas
 
@@ -32,6 +34,7 @@ remains complete.
 | Missing posters        | The movie title is visible on the yellow placeholder artwork.                               | `src/search/results/MovieCard.tsx`                     |
 | Favorites and Seen     | Large saved lists open quickly and returning from Movie Detail does not rearrange the grid. | `src/drawer/StoredMovieListScreen.tsx`                 |
 | Streaming Now          | Home shows popular United States subscription movies and opens a matching Advanced Search.  | `src/home/homeAdvancedSearchSections.ts`               |
+| Home loading           | The first visible Home content appears sooner without reducing or partially drawing rows.   | `src/home/HomeScreen.tsx`                              |
 | Android drawer         | Tapping outside the open drawer closes it again.                                            | `package-lock.json`                                    |
 | Store release tracking | Each successful store build gets a separate record of the exact source commit.              | `scripts/iosarchive.sh` and `scripts/androidbundle.sh` |
 
@@ -353,9 +356,89 @@ already contains the needed Android and React Native compatibility behavior.
 The iPhone drawer already closed on an outside tap and continues using the same
 navigation code.
 
-## 9. Store Version and Source-Commit Tracking
+## 9. Home First-View Performance
 
-### 9.1 Version-setting scripts and Settings-page snapshot
+### 9.1 Previous loading bottleneck
+
+Home contains one hero collection and nine horizontally scrolling movie rows.
+The movie-data requests were already small and ran concurrently, but the page
+previously prepared the artwork for every collection before allowing the
+complete Home content to appear. Posters located several screens below the
+customer's current view therefore competed with the hero and Popular Movies for
+network transfers, image decoding, memory, and native rendering time.
+
+The customer could not use the first visible portion of Home until work for the
+entire page had finished. This was especially noticeable on Android when the
+image cache was empty.
+
+### 9.2 Two-phase loading sequence
+
+Home now separates data fetching from the more expensive poster preparation and
+screen rendering:
+
+1. All ten movie-data requests still begin together. The change does not delay
+   or serialize the small TMDb requests.
+2. The first image phase prepares only the hero and Popular Movies, which are
+   the two collections visible when Home opens.
+3. Both collections remain in their loading state until their required artwork
+   has been prepared. The app does not expose unfinished poster cards merely to
+   make the screen appear faster.
+4. After the hero and Popular Movies are ready, Home waits for two native
+   animation frames. The first gives React an opportunity to commit the views;
+   the second gives the device an opportunity to paint that completed first
+   view.
+5. Only after that first view has painted does Home enable poster preparation
+   and rendering for Streaming Now and the remaining seven lower collections.
+6. Each lower row keeps the existing all-at-once readiness rule: its complete
+   poster row replaces its loading state when that row is ready.
+
+This scheduling change does not remove movies, change their ordering, reduce
+the number of Home collections, or replace missing artwork with blank cards.
+The shared image coordinator continues deduplicating the same poster when it is
+used by more than one collection.
+
+The phase controller is maintained in:
+
+```text
+src/home/HomeScreen.tsx
+src/home/useHomeImagePreparations.ts
+src/home/HomeHeroCarousel.tsx
+src/home/HomeMoviePosterRow.tsx
+```
+
+### 9.3 Full pull-to-refresh behavior
+
+An intentional Home pull-to-refresh remains a complete page rebuild. MovieApp
+removes the existing Home content, refreshes all ten movie collections, resets
+poster preparation, and then follows the same hero-and-Popular-first sequence
+used on a first visit. Old and newly refreshed sections are never mixed on the
+same page.
+
+### 9.4 Measured first-view results
+
+These measurements stop when the page framework, hero, and complete Popular
+Movies row are ready and painted. They do **not** measure how long it takes to
+finish every category farther down Home.
+
+| Platform and condition | Before | After | Result |
+| ---------------------- | -----: | ----: | ------ |
+| Android Release, cold image cache | 4.468 seconds | 2.807 seconds | 37% faster |
+| Android Release, warm image cache | 1.460 seconds | 0.974 seconds | 33% faster and below one second in the measured run |
+| iPhone Debug, cold image cache | 0.761 seconds | 1.083-1.132 seconds | The live-network samples varied; the first view remained around one second |
+| iPhone Debug, warm image cache | 0.447 seconds | 0.288 seconds | 36% faster |
+
+Android Release and iPhone Debug are reported separately because build modes and
+platforms must not be compared directly. The cold measurements include live
+network and supplier variability, so they are observations from the controlled
+test runs rather than a guarantee for every device or connection.
+
+Native review confirmed the complete first view on Android and iPhone. Android
+was also scrolled through the lower categories to confirm that phase two still
+rendered complete poster rows without blank-card regressions.
+
+## 10. Store Version and Source-Commit Tracking
+
+### 10.1 Version-setting scripts and Settings-page snapshot
 
 The release versions are prepared with the two platform-specific commands:
 
@@ -400,7 +483,7 @@ The intended release order is:
 
 Both artifact records should then contain the same complete Git commit.
 
-### 9.2 Clean source requirement
+### 10.2 Clean source requirement
 
 Both packaging scripts now stop before Xcode or Gradle starts when Git reports
 tracked or untracked changes. This prevents a store artifact from containing
@@ -411,7 +494,7 @@ The scripts capture the complete 40-character commit once immediately before
 the build begins. They do not perform a second commit comparison after the
 build.
 
-### 9.3 iPhone archive record
+### 10.3 iPhone archive record
 
 After a successful archive, `scripts/iosarchive.sh` reads the version and build
 from the finished app's `Info.plist` and creates a separate text file beside the
@@ -427,7 +510,7 @@ Archive: <archive-filename>.xcarchive
 
 The record is not inserted into or allowed to modify the Xcode archive.
 
-### 9.4 Android bundle record
+### 10.4 Android bundle record
 
 Gradle always writes the normal bundle as `app-release.aab`. After a successful
 build, `scripts/androidbundle.sh` creates a permanent Android archive outside
@@ -462,7 +545,7 @@ Google Play upload workflow. The permanent archived copy survives
 `./gradlew clean` and deletion of `android/app/build` because it is stored
 outside the Gradle workspace.
 
-## 10. Automated Coverage
+## 11. Automated Coverage
 
 The included changes have focused coverage in:
 
@@ -476,7 +559,8 @@ The included changes have focused coverage in:
 | `__tests__/movieUserListsStorage.test.ts`         | Legacy migration, enriched persistence, and concurrent membership protection.   |
 | `__tests__/localCalendarDate.test.ts`             | Local-day comparison, including the Eastern-time/UTC date boundary.             |
 | `__tests__/homeStreamingSection.test.ts`          | Home placement, TMDb subscription request, and Advanced Search preset.          |
-| `__tests__/homeRefresh.test.tsx`                  | Streaming Now participation in Home refresh behavior.                           |
+| `__tests__/homeRefresh.test.tsx`                  | First-view phase order, two-frame paint boundary, and complete Home refresh.     |
+| `__tests__/homeMoviePosterRow.test.tsx`           | Complete-row poster readiness and unavailable-artwork handling.                 |
 
 The release scripts were also checked with zsh syntax validation. Both version
 scripts were exercised against disposable copies to confirm successful native
@@ -484,12 +568,12 @@ updates, Settings-page snapshot generation, and complete rollback of both files
 when generation fails. The archive and bundle commands were not run while the
 release-tracking changes were developed.
 
-Final validation for the Favorites and Seen speed work passed all 123 MovieApp
-tests across 32 suites, TypeScript checking, lint, the Android debug build, and
-the iOS simulator build. The matching Cloudflare change passed all 101 Worker
-tests across nine suites plus Worker TypeScript checking.
+Final MovieApp validation through the Home performance work passed all 128 tests
+across 33 suites, TypeScript checking, lint, the Android Release build, and the
+iOS Debug simulator build. The matching Favorites and Seen Cloudflare change
+passed all 101 Worker tests across nine suites plus Worker TypeScript checking.
 
-## 11. 3.6.1 Release Checklist
+## 12. 3.6.1 Release Checklist
 
 1. Review commits added after `d33b8e6` and update both 3.6.1 documents if any
    customer-visible or release-process behavior changed.

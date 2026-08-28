@@ -6,10 +6,11 @@ Imported by:
 Purpose:
    * Renders the legacy-style top movie carousel from TMDB upcoming movies without adding the old image-slider package.
 */
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -27,17 +28,19 @@ import { typography } from '../theme/typography';
 import { getMovieImagePath, getMovieImageUri } from '../utils/movieImages';
 import { MovieRemoteImage } from '../shared/images/MovieRemoteImage';
 import { imageAssets } from '../styles/assets';
+import { HOME_HERO_IMAGE_SIZE } from './homeImageSizes';
 
 const AUTO_PLAY_INTERVAL_MS = 3000;
 const FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS = false;
 
-export function HomeHeroCarousel({
+function HomeHeroCarouselComponent({
   movies,
   isLoading,
   isError,
   error,
   isAutoPlayPaused = false,
   imageRefreshGeneration,
+  unavailableImageUris,
   onMoviePress,
 }: HomeHeroCarouselProps) {
   const listRef = useRef<FlatList<movieType>>(null);
@@ -140,7 +143,7 @@ export function HomeHeroCarousel({
         onScrollToIndexFailed={handleScrollToIndexFailed}
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => {
-          const movieImageUri = getMovieImageUri(item);
+          const movieImageUri = getMovieImageUri(item, HOME_HERO_IMAGE_SIZE);
 
           return (
             <Pressable
@@ -153,7 +156,14 @@ export function HomeHeroCarousel({
               accessibilityRole="button"
               accessibilityLabel={`Open ${item.title || item.original_title}`}
             >
-              {movieImageUri ? (
+              {movieImageUri && unavailableImageUris?.has(movieImageUri) ? (
+                <Image
+                  source={imageAssets.missingMovie}
+                  style={styles.heroImage}
+                  resizeMode={isIPad ? 'contain' : 'cover'}
+                  fadeDuration={0}
+                />
+              ) : movieImageUri ? (
                 <MovieRemoteImage
                   uri={movieImageUri}
                   fallbackSource={imageAssets.missingMovie}
@@ -162,6 +172,7 @@ export function HomeHeroCarousel({
                   refreshGeneration={imageRefreshGeneration}
                   style={styles.heroImage}
                   resizeMode={isIPad ? 'contain' : 'cover'}
+                  fadeDuration={0}
                 />
               ) : null}
             </Pressable>
@@ -171,6 +182,13 @@ export function HomeHeroCarousel({
     </View>
   );
 }
+
+/**
+ * Keep the prepared hero stable while unrelated Home rows finish. The carousel
+ * still updates normally when its movies, focus state, or image preparation
+ * actually changes.
+ */
+export const HomeHeroCarousel = memo(HomeHeroCarouselComponent);
 
 const styles = StyleSheet.create({
   hero: {

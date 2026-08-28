@@ -31,7 +31,7 @@ type MovieRemoteImageProps = Omit<
   refreshGeneration?: number;
 };
 
-type MovieImageStatus = 'loading' | 'loaded' | 'failed';
+type MovieImageStatus = 'active' | 'failed';
 
 export function MovieRemoteImage({
   uri,
@@ -43,7 +43,7 @@ export function MovieRemoteImage({
 }: MovieRemoteImageProps) {
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<MovieImageStatus>(
-    uri ? 'loading' : 'failed',
+    uri ? 'active' : 'failed',
   );
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousRefreshGenerationRef = useRef(refreshGeneration);
@@ -58,7 +58,7 @@ export function MovieRemoteImage({
   useEffect(() => {
     clearRetryTimer();
     setAttempt(0);
-    setStatus(uri ? 'loading' : 'failed');
+    setStatus(uri ? 'active' : 'failed');
   }, [clearRetryTimer, uri]);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export function MovieRemoteImage({
     if (uri && status === 'failed') {
       clearRetryTimer();
       setAttempt(currentAttempt => currentAttempt + 1);
-      setStatus('loading');
+      setStatus('active');
     }
   }, [clearRetryTimer, refreshGeneration, status, uri]);
 
@@ -97,7 +97,9 @@ export function MovieRemoteImage({
 
     clearRetryTimer();
     recordMovieImageSuccess(uri);
-    setStatus('loaded');
+    // The active and successfully loaded states render the same native Image.
+    // Recording success is enough; a state update here would needlessly render
+    // every successful poster a second time while Home is being assembled.
     reportMovieImageDiagnostic('load-success', {
       attempt,
       context: diagnosticContext,
@@ -143,7 +145,7 @@ export function MovieRemoteImage({
       retryTimerRef.current = setTimeout(() => {
         retryTimerRef.current = null;
         setAttempt(currentAttempt => currentAttempt + 1);
-        setStatus('loading');
+        setStatus('active');
       }, RETRY_DELAY_MS);
     },
     [attempt, clearRetryTimer, diagnosticContext, movieId, uri],

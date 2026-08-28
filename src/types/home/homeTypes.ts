@@ -33,6 +33,7 @@ export type HomeHeroCarouselProps = {
   error: unknown;
   isAutoPlayPaused?: boolean;
   imageRefreshGeneration?: number;
+  unavailableImageUris?: ReadonlySet<string>;
   onMoviePress: (movie: movieType) => void;
 };
 
@@ -42,6 +43,7 @@ export type HomeMoviePosterRowProps = {
   isLoading: boolean;
   isError: boolean;
   imageRefreshGeneration?: number;
+  unavailableImageUris?: ReadonlySet<string>;
   onMoviePress: (movie: movieType) => void;
   onTitlePress?: () => void;
 };

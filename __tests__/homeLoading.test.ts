@@ -17,7 +17,7 @@ describe('coordinated Home loading', () => {
   test('starts every category before waiting for any category to finish', async () => {
     const started: number[] = [];
     const resolvers: Array<(value: HomeQueryState) => void> = [];
-    const currentStates = Array.from({ length: 9 }, (_, index) =>
+    const currentStates = Array.from({ length: 10 }, (_, index) =>
       createState(index),
     );
     const refetchers = currentStates.map((_, index) => () => {
@@ -27,11 +27,11 @@ describe('coordinated Home loading', () => {
 
     const refresh = refreshHomeQueryStates(currentStates, refetchers);
 
-    expect(started).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(started).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     resolvers.forEach((resolve, index) => resolve(createState(index + 100)));
 
     await expect(refresh).resolves.toEqual(
-      Array.from({ length: 9 }, (_, index) => createState(index + 100)),
+      Array.from({ length: 10 }, (_, index) => createState(index + 100)),
     );
   });
 
