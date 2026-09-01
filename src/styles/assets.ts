@@ -15,4 +15,6 @@ export const imageAssets = {
   imdbLogo: require('../assets/images/imdb.png'),
   tmdbLogo: require('../assets/images/TMDB_Logo.png'),
   justWatchLogo: require('../assets/images/JustWatch_Logo.png'),
+  // Official icon: https://www.movieofthenight.com/apple-touch-icon.png
+  movieOfTheNightLogo: require('../assets/images/MovieOfTheNight_Logo.png'),
 } as const;

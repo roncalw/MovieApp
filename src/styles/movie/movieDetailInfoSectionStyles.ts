@@ -1,5 +1,5 @@
 /**
- * Styles for the non-interactive MovieDetail information sections.
+ * Styles for MovieDetail information sections and provider links.
  *
  * Imported by:
  * - src/movie/components/MovieDetailInfoSections.tsx
@@ -58,6 +58,20 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     alignItems: 'center',
     marginTop: scaleSize(7),
   },
+  subscriptionGroup: {
+    marginTop: scaleSize(14),
+  },
+  subscriptionGroupLabel: {
+    color: colors.textPrimary,
+    fontSize: scaleSize(14),
+    lineHeight: scaleSize(20),
+  },
+  subscriptionGroupRows: {
+    paddingLeft: scaleSize(10),
+    borderLeftWidth: scaleSize(2),
+    borderLeftColor: colors.borderSubtle,
+    marginLeft: scaleSize(2),
+  },
   watchProviderLogo: {
     width: scaleSize(30),
     height: scaleSize(30),
@@ -77,6 +91,24 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     fontSize: scaleSize(14),
     lineHeight: scaleSize(20),
     letterSpacing: 0,
+  },
+  providerOpenAction: {
+    width: scaleSize(114),
+    alignItems: 'center',
+    marginHorizontal: scaleSize(6),
+  },
+  providerOpenLabel: {
+    color: colors.brandText,
+    fontSize: scaleSize(13),
+    lineHeight: scaleSize(20),
+    fontStyle: 'italic',
+  },
+  streamingMessage: {
+    color: colors.textPrimary,
+    fontSize: scaleSize(13),
+    lineHeight: scaleSize(18),
+    marginHorizontal: scaleSize(12),
+    marginBottom: scaleSize(10),
   },
   companyRow: {
     minHeight: scaleSize(34),
@@ -141,17 +173,41 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceLight,
-    paddingTop: scaleSize(10),
-    paddingHorizontal: scaleSize(14),
+    paddingVertical: scaleSize(8),
+    paddingHorizontal: scaleSize(11),
   },
   tmdbLogo: {
-    width: scaleSize(48),
-    height: scaleSize(35),
+    width: scaleSize(41),
+    height: scaleSize(30),
+    transform: [{ scale: 1.1 }],
   },
   justWatchLogo: {
-    width: scaleSize(48),
-    height: scaleSize(48),
-    marginLeft: scaleSize(35),
+    width: scaleSize(41),
+    height: scaleSize(41),
+    marginLeft: scaleSize(26),
+    transform: [{ scale: 1.1 }],
+  },
+  movieOfTheNightLink: {
+    width: scaleSize(72),
+    height: scaleSize(50),
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginLeft: scaleSize(26),
+    transform: [{ scale: 1.1 }],
+  },
+  movieOfTheNightLogo: {
+    width: scaleSize(36),
+    height: scaleSize(36),
+    borderRadius: scaleSize(4),
+  },
+  movieOfTheNightName: {
+    color: colors.textPrimary,
+    fontSize: scaleSize(7),
+    lineHeight: scaleSize(11),
+    fontWeight: '400',
+    letterSpacing: 0,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   footerImdbLogo: {
     width: scaleSize(70),

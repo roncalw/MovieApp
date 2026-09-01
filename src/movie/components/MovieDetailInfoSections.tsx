@@ -12,7 +12,7 @@
  *    distinguishes loading, temporary failure, and a successful empty result.
  */
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Text, View } from 'react-native';
 import { useMovieWatchProvidersQuery } from '../../hooks/useMovieSearchQuery';
 import type {
   movieType,
@@ -28,6 +28,15 @@ import {
 } from '../../shared/DetailResourceState';
 import { imageAssets } from '../../styles/assets';
 import { movieDetailInfoSectionStyles as styles } from '../../styles/movie/movieDetailInfoSectionStyles';
+import { ScrollFriendlyTapTarget } from '../../shared/ScrollFriendlyTapTarget';
+import { isStreamingProvider } from '../../api/cloudflare/streamingLinkService';
+import { useStreamingProviderLaunch } from '../streaming/useStreamingProviderLaunch';
+import { colors } from '../../styles/colors';
+import {
+  groupSubscriptionProviders,
+  type RoutedWatchProvider,
+} from '../streaming/groupSubscriptionProviders';
+import { subscriptionRouteLabel } from '../../api/cloudflare/subscriptionRoutes';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
@@ -64,6 +73,7 @@ export function MovieDetailInfoSections({
       </View>
 
       <StreamingSection
+        movieId={movieId}
         error={watchProvidersQuery.error}
         failed={watchProvidersQuery.isError}
         isLoading={watchProvidersQuery.isLoading}
@@ -100,6 +110,7 @@ export function MovieDetailInfoSections({
 }
 
 function StreamingSection({
+  movieId,
   error,
   failed,
   isLoading,
@@ -107,6 +118,7 @@ function StreamingSection({
   onRetry,
   providers,
 }: {
+  movieId: number;
   error: unknown;
   failed: boolean;
   isLoading: boolean;
@@ -114,6 +126,9 @@ function StreamingSection({
   onRetry: () => void;
   providers?: streamTypes;
 }) {
+  // The existing provider list is US-only. Send that same country to the
+  // resolver; cached destinations never add providers to this TMDB list.
+  const streamingLaunch = useStreamingProviderLaunch(movieId, 'US');
   return (
     <>
       <Text allowFontScaling={false} style={styles.sectionLabel}>
@@ -141,9 +156,19 @@ function StreamingSection({
             providers={providers?.ads}
           />
           <WatchProviderCategory
-            label="Subscription:"
+            label="Direct Subscriptions"
             providers={providers?.flatrate}
+            streamingLaunch={streamingLaunch}
           />
+          {streamingLaunch.message ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              allowFontScaling={false}
+              style={styles.streamingMessage}
+            >
+              {streamingLaunch.message}
+            </Text>
+          ) : null}
           <WatchProviderCategory label="Rent:" providers={providers?.rent} />
         </>
       )}
@@ -154,11 +179,14 @@ function StreamingSection({
 function WatchProviderCategory({
   label,
   providers,
+  streamingLaunch,
 }: {
   label: string;
   providers?: movieWatchProviderType[];
+  streamingLaunch?: ReturnType<typeof useStreamingProviderLaunch>;
 }) {
   const hasProviders = providers && providers.length > 0;
+  const groups = streamingLaunch ? groupSubscriptionProviders(providers) : [];
 
   return (
     <View style={styles.watchProviderPanel}>
@@ -167,8 +195,69 @@ function WatchProviderCategory({
       </Text>
 
       {hasProviders ? (
-        providers.map(provider => (
-          <View key={provider.provider_id} style={styles.watchProviderRow}>
+        streamingLaunch ? (
+          groups.map(group => (
+            <View
+              key={group.key}
+              style={
+                group.key === 'direct' ? undefined : styles.subscriptionGroup
+              }
+            >
+              {group.key !== 'direct' ? (
+                <Text
+                  allowFontScaling={false}
+                  accessibilityRole="header"
+                  style={styles.subscriptionGroupLabel}
+                >
+                  {group.label}
+                </Text>
+              ) : null}
+              <View
+                style={
+                  group.key === 'direct'
+                    ? undefined
+                    : styles.subscriptionGroupRows
+                }
+              >
+                <WatchProviderRows
+                  providers={group.providers}
+                  streamingLaunch={streamingLaunch}
+                />
+              </View>
+            </View>
+          ))
+        ) : (
+          <WatchProviderRows providers={providers} />
+        )
+      ) : (
+        <Text allowFontScaling={false} style={styles.watchProviderUnavailable}>
+          (Not available)
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function WatchProviderRows({
+  providers,
+  streamingLaunch,
+}: {
+  providers: (movieWatchProviderType &
+    Partial<Pick<RoutedWatchProvider, 'route'>>)[];
+  streamingLaunch?: ReturnType<typeof useStreamingProviderLaunch>;
+}) {
+  return (
+    <>
+      {providers.map(provider => {
+        const routeLabel = provider.route
+          ? subscriptionRouteLabel(provider.route)
+          : provider.provider_name;
+        const canOpen =
+          streamingLaunch && isStreamingProvider(provider.provider_id);
+        const isOpening =
+          streamingLaunch?.openingProviderId === provider.provider_id;
+        const content = (
+          <>
             <Image
               source={getLogoSource(provider.logo_path)}
               style={styles.watchProviderLogo}
@@ -176,20 +265,54 @@ function WatchProviderCategory({
             />
             <Text
               allowFontScaling={false}
-              adjustsFontSizeToFit
-              numberOfLines={1}
+              adjustsFontSizeToFit={!provider.route}
+              numberOfLines={provider.route ? 2 : 1}
               style={styles.watchProviderName}
             >
-              {provider.provider_name}
+              {provider.route?.displayServiceName ?? provider.provider_name}
             </Text>
+            {canOpen ? (
+              <View style={styles.providerOpenAction}>
+                {isOpening ? (
+                  <ActivityIndicator color={colors.brandText} size="small" />
+                ) : (
+                  <Text
+                    allowFontScaling={false}
+                    numberOfLines={1}
+                    style={styles.providerOpenLabel}
+                  >
+                    Watch Movie Now
+                  </Text>
+                )}
+              </View>
+            ) : null}
+          </>
+        );
+        return canOpen ? (
+          <ScrollFriendlyTapTarget
+            key={provider.provider_id}
+            accessibilityLabel={
+              isOpening
+                ? `Opening ${routeLabel}`
+                : `Open movie on ${routeLabel}`
+            }
+            accessibilityRole="link"
+            accessibilityState={{ busy: isOpening }}
+            disabled={streamingLaunch.openingProviderId !== null}
+            onPress={() => {
+              void streamingLaunch.openProvider(provider.provider_id);
+            }}
+            style={styles.watchProviderRow}
+          >
+            {content}
+          </ScrollFriendlyTapTarget>
+        ) : (
+          <View key={provider.provider_id} style={styles.watchProviderRow}>
+            {content}
           </View>
-        ))
-      ) : (
-        <Text allowFontScaling={false} style={styles.watchProviderUnavailable}>
-          (Not available)
-        </Text>
-      )}
-    </View>
+        );
+      })}
+    </>
   );
 }
 
@@ -265,6 +388,41 @@ function LegacyFooter() {
           style={styles.justWatchLogo}
           resizeMode="contain"
         />
+        <ScrollFriendlyTapTarget
+          accessibilityLabel="Movie of the Night streaming availability credits"
+          onPress={() => {
+            Alert.alert(
+              'Movie of the Night',
+              'Streaming availability information provided by Streaming Availability API by Movie of the Night.',
+              [
+                { text: 'Close', style: 'cancel' },
+                {
+                  text: 'Visit Website',
+                  onPress: () => {
+                    void Linking.openURL(
+                      'https://www.movieofthenight.com/about/api',
+                    ).catch(() => {});
+                  },
+                },
+              ],
+            );
+          }}
+          style={styles.movieOfTheNightLink}
+        >
+          <Image
+            source={imageAssets.movieOfTheNightLogo}
+            style={styles.movieOfTheNightLogo}
+            resizeMode="contain"
+            accessible={false}
+          />
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            style={styles.movieOfTheNightName}
+          >
+            Movie of the Night
+          </Text>
+        </ScrollFriendlyTapTarget>
       </View>
 
       <Text allowFontScaling={false} style={styles.footerText}>
