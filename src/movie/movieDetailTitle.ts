@@ -10,7 +10,12 @@ function normalizeTitleForComparison(title: string) {
  * unlabelled US entry is preferred because labelled entries can be working or
  * festival titles rather than the normal US release title.
  */
-export function getMovieDetailDisplayTitle(movie: movieType) {
+export type MovieDetailTitles = {
+  primaryTitle: string;
+  alternateTitles: string[];
+};
+
+export function getMovieDetailTitles(movie: movieType): MovieDetailTitles {
   const currentTitle = movie.title;
   const usTitles = (movie.alternative_titles?.titles ?? []).filter(
     alternativeTitle =>
@@ -22,7 +27,7 @@ export function getMovieDetailDisplayTitle(movie: movieType) {
     usTitles[0];
 
   if (!usTitleEntry) {
-    return currentTitle;
+    return { primaryTitle: currentTitle, alternateTitles: [] };
   }
 
   const usTitle = usTitleEntry.title.trim();
@@ -31,8 +36,8 @@ export function getMovieDetailDisplayTitle(movie: movieType) {
     normalizeTitleForComparison(usTitle) ===
     normalizeTitleForComparison(currentTitle)
   ) {
-    return currentTitle;
+    return { primaryTitle: currentTitle, alternateTitles: [] };
   }
 
-  return `${usTitle} / ${currentTitle}`;
+  return { primaryTitle: usTitle, alternateTitles: [currentTitle] };
 }

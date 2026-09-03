@@ -50,7 +50,7 @@ import { useMovieUserListActions } from './useMovieUserListActions';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { queryKeys } from '../query/queryKeys';
-import { getMovieDetailDisplayTitle } from './movieDetailTitle';
+import { getMovieDetailTitles } from './movieDetailTitle';
 
 export function MovieDetail({
   movieId,
@@ -132,7 +132,7 @@ function LoadedMovieDetail({
 }) {
   const movieRating = getUsCertification(movie);
   const releaseDate = formatReleaseDate(movie.release_date);
-  const displayTitle = getMovieDetailDisplayTitle(movie);
+  const { primaryTitle, alternateTitles } = getMovieDetailTitles(movie);
   const cast = movie.credits?.cast ?? [];
   const crew = useMemo(
     () => sortMovieDetailCrew(movie.credits?.crew ?? []),
@@ -186,10 +186,21 @@ function LoadedMovieDetail({
           allowFontScaling={false}
           adjustsFontSizeToFit
           numberOfLines={2}
-          style={styles.movieTitle}
+          style={[
+            styles.movieTitle,
+            alternateTitles.length > 0
+              ? styles.movieTitleWithAlternates
+              : null,
+          ]}
         >
-          {displayTitle}
+          {primaryTitle}
         </Text>
+
+        {alternateTitles.length > 0 ? (
+          <Text allowFontScaling={false} style={styles.alternateMovieTitles}>
+            (a.k.a. {alternateTitles.join(', ')})
+          </Text>
+        ) : null}
 
         <GenreList genres={movie.genres ?? []} />
         <MovieImdbStarRating />

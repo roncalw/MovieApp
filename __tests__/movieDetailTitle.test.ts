@@ -1,4 +1,4 @@
-import { getMovieDetailDisplayTitle } from '../src/movie/movieDetailTitle';
+import { getMovieDetailTitles } from '../src/movie/movieDetailTitle';
 import type { movieType } from '../src/types/movie/MovieTypes';
 
 function createMovie(
@@ -12,12 +12,15 @@ function createMovie(
 }
 
 describe('Movie Detail title', () => {
-  test('shows a different US title before the current title', () => {
+  test('returns a different US title with the current title as an alternate', () => {
     const movie = createMovie('Good Boy', {
       titles: [{ iso_3166_1: 'US', title: 'Heel', type: '' }],
     });
 
-    expect(getMovieDetailDisplayTitle(movie)).toBe('Heel / Good Boy');
+    expect(getMovieDetailTitles(movie)).toEqual({
+      primaryTitle: 'Heel',
+      alternateTitles: ['Good Boy'],
+    });
   });
 
   test('does not duplicate the title when the US and current titles match', () => {
@@ -25,7 +28,10 @@ describe('Movie Detail title', () => {
       titles: [{ iso_3166_1: 'US', title: '  good   boy  ', type: '' }],
     });
 
-    expect(getMovieDetailDisplayTitle(movie)).toBe('Good Boy');
+    expect(getMovieDetailTitles(movie)).toEqual({
+      primaryTitle: 'Good Boy',
+      alternateTitles: [],
+    });
   });
 
   test('leaves the current title unchanged when no US title exists', () => {
@@ -33,7 +39,10 @@ describe('Movie Detail title', () => {
       titles: [{ iso_3166_1: 'GB', title: 'The Good Boy', type: '' }],
     });
 
-    expect(getMovieDetailDisplayTitle(movie)).toBe('Good Boy');
+    expect(getMovieDetailTitles(movie)).toEqual({
+      primaryTitle: 'Good Boy',
+      alternateTitles: [],
+    });
   });
 
   test('prefers the normal US title over a labelled working title', () => {
@@ -44,8 +53,9 @@ describe('Movie Detail title', () => {
       ],
     });
 
-    expect(getMovieDetailDisplayTitle(movie)).toBe(
-      'US Release Name / Current Title',
-    );
+    expect(getMovieDetailTitles(movie)).toEqual({
+      primaryTitle: 'US Release Name',
+      alternateTitles: ['Current Title'],
+    });
   });
 });

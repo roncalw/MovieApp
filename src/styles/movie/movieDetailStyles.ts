@@ -105,6 +105,18 @@ export const movieDetailStyles = StyleSheet.create({
     paddingHorizontal: scaleSize(16),
     textAlign: 'center',
   },
+  movieTitleWithAlternates: {
+    marginBottom: 0,
+  },
+  alternateMovieTitles: {
+    ...typography.detailBody,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
+    fontWeight: '400',
+    marginBottom: scaleSize(8),
+    paddingHorizontal: scaleSize(16),
+    textAlign: 'center',
+  },
   genresContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -50,7 +50,7 @@
       "problemMatcher": []
     },
     {
-      "label": "IOS - iPhone 16 Pro Max - Device - Run App",
+      "label": "IOS - iPhone 16 Pro Max - Device - Run DEV App Beside App Store App",
       "type": "shell",
       "command": "/bin/zsh",
       "args": [
@@ -61,7 +61,7 @@
         "cwd": "/Users/croncallo/repo/MovieApp",
         "env": {
           "TASK_EXPLORER_SHOW": "true",
-          "TASK_EXPLORER_NAME": "IOS - iPhone 16 Pro Max - Device - Run App",
+          "TASK_EXPLORER_NAME": "IOS - iPhone 16 Pro Max - Device - Run DEV App",
           "TASK_EXPLORER_ORDER": "130"
         }
       },

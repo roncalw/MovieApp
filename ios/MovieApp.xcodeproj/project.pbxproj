@@ -403,7 +403,7 @@
 				DEVELOPMENT_TEAM = KL6M72PXJ6;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MovieApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Movie Time";
+				INFOPLIST_KEY_CFBundleDisplayName = "Movie Time Dev";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -416,7 +416,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.codefest.movieapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codefest.movieapp.dev;
 				PRODUCT_NAME = MovieApp;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -494,7 +494,7 @@
 				MARKETING_VERSION = 3.6.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.codefest.movieapp.OneSignalNotificationServiceExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codefest.movieapp.dev.OneSignalNotificationServiceExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
