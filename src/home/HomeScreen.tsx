@@ -78,7 +78,7 @@ export function HomeScreen() {
   const [isRebuildingHome, setIsRebuildingHome] = useState(false);
   const [isSecondaryPhaseAllowed, setIsSecondaryPhaseAllowed] =
     useState(false);
-  const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
+  const [homeRefreshGeneration, setHomeRefreshGeneration] = useState(0);
   const homeQueryStates = useMemo<HomeQueryState[]>(
     () => [
       toHomeQueryState(upcomingMoviesQuery),
@@ -107,7 +107,7 @@ export function HomeScreen() {
   );
   const homeImagePreparations = useHomeImagePreparations(
     homeQueryStates,
-    imageRefreshGeneration,
+    homeRefreshGeneration,
     isSecondaryPhaseAllowed,
   );
   const heroImagePreparation = homeImagePreparations[0];
@@ -176,7 +176,7 @@ export function HomeScreen() {
         refetchMusicMovies,
         refetchDocumentaryMovies,
       ]);
-      setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
+      setHomeRefreshGeneration(currentGeneration => currentGeneration + 1);
     } finally {
       setIsRebuildingHome(false);
     }
@@ -240,6 +240,7 @@ export function HomeScreen() {
   return (
     <View style={styles.container}>
       <RefreshableScrollView
+        key={homeRefreshGeneration}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         directionalLockEnabled
@@ -254,7 +255,7 @@ export function HomeScreen() {
             isError={upcomingMoviesQuery.isError}
             error={upcomingMoviesQuery.error}
             isAutoPlayPaused={!isFocused}
-            imageRefreshGeneration={imageRefreshGeneration}
+            imageRefreshGeneration={homeRefreshGeneration}
             unavailableImageUris={
               heroImagePreparation.unavailableImageUris
             }
@@ -295,7 +296,7 @@ export function HomeScreen() {
                 row.imagePreparation.isReady &&
                 row.query.isError
               }
-              imageRefreshGeneration={imageRefreshGeneration}
+              imageRefreshGeneration={homeRefreshGeneration}
               unavailableImageUris={
                 row.imagePreparation.unavailableImageUris
               }

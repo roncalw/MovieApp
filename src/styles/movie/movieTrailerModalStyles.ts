@@ -11,9 +11,12 @@ import { scaleSize } from '../scale';
 export const movieTrailerModalStyles = StyleSheet.create({
   trailerModal: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.actionPrimary,
   },
   trailerModalBackButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
     height: scaleSize(58),
     width: scaleSize(58),
     alignItems: 'center',
@@ -23,9 +26,6 @@ export const movieTrailerModalStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  trailerPlayerFrameLandscape: {
     backgroundColor: colors.actionPrimary,
   },
 });

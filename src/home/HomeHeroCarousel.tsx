@@ -6,7 +6,7 @@ Imported by:
 Purpose:
    * Renders the legacy-style top movie carousel from TMDB upcoming movies without adding the old image-slider package.
 */
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -45,6 +45,7 @@ function HomeHeroCarouselComponent({
 }: HomeHeroCarouselProps) {
   const listRef = useRef<FlatList<movieType>>(null);
   const currentIndexRef = useRef(0);
+  const [hasUserSwiped, setHasUserSwiped] = useState(false);
   const { width, height } = useWindowDimensions();
   const isIPad = Platform.OS === 'ios' && Platform.isPad;
   // Keep the hero dominant, but leave just enough room for the next row title
@@ -63,6 +64,7 @@ function HomeHeroCarouselComponent({
     if (
       FORCE_HOME_HERO_AUTO_PLAY_PAUSED_FOR_SCREENSHOTS ||
       isAutoPlayPaused ||
+      hasUserSwiped ||
       heroMovies.length <= 1
     ) {
       return undefined;
@@ -77,7 +79,11 @@ function HomeHeroCarouselComponent({
     return () => {
       clearInterval(interval);
     };
-  }, [heroMovies.length, isAutoPlayPaused]);
+  }, [hasUserSwiped, heroMovies.length, isAutoPlayPaused]);
+
+  function handleScrollBeginDrag() {
+    setHasUserSwiped(true);
+  }
 
   function handleMomentumScrollEnd(
     event: NativeSyntheticEvent<NativeScrollEvent>,
@@ -139,6 +145,7 @@ function HomeHeroCarouselComponent({
           offset: width * index,
           index,
         })}
+        onScrollBeginDrag={handleScrollBeginDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         onScrollToIndexFailed={handleScrollToIndexFailed}
         showsHorizontalScrollIndicator={false}

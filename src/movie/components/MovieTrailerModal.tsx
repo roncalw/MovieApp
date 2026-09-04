@@ -13,8 +13,10 @@
 import React from 'react';
 import {
   Modal,
+  NativeModules,
   Platform,
   Pressable,
+  StatusBar,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -25,23 +27,48 @@ import type { TrailerModalProps } from '../../types/movie/movieDetailTypes';
 import { colors } from '../../styles/colors';
 import { scaleSize } from '../../styles/scale';
 import { movieTrailerModalStyles as styles } from '../../styles/movie/movieTrailerModalStyles';
+import {
+  getTrailerPlayerSize,
+  getTrailerWebViewProps,
+} from '../trailerPlayback';
 
 export function MovieTrailerModal({ trailerKey, onClose }: TrailerModalProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isVisible = trailerKey !== null;
-  const isLandscape = width > height;
-  const playerHeight = isLandscape ? height : Math.min(height * 0.62, width * 0.64);
+  const playerSize = getTrailerPlayerSize(width, height);
   const backButtonTopOffset =
     Platform.OS === 'ios'
       ? Math.max(insets.top, scaleSize(50))
       : Math.max(insets.top, scaleSize(32));
 
+  React.useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      return () => NativeModules.TrailerFullscreen?.setEnabled(false);
+    }
+
+    StatusBar.setHidden(true, 'fade');
+
+    return () => StatusBar.setHidden(false, 'fade');
+  }, [isVisible]);
+
   return (
     <Modal
       animationType="slide"
+      navigationBarTranslucent
+      presentationStyle="fullScreen"
+      statusBarTranslucent
       supportedOrientations={['portrait', 'landscape']}
       visible={isVisible}
+      onShow={() => {
+        if (Platform.OS === 'android') {
+          NativeModules.TrailerFullscreen?.setEnabled(true);
+        }
+      }}
       onRequestClose={onClose}
     >
       <View style={styles.trailerModal}>
@@ -57,22 +84,19 @@ export function MovieTrailerModal({ trailerKey, onClose }: TrailerModalProps) {
           <Ionicons
             name="chevron-back"
             size={scaleSize(40)}
-            color={colors.textPrimary}
+            color={colors.actionOnPrimary}
           />
         </Pressable>
 
-        <View
-          style={[
-            styles.trailerPlayerFrame,
-            isLandscape ? styles.trailerPlayerFrameLandscape : null,
-          ]}
-        >
+        <View style={styles.trailerPlayerFrame}>
           {trailerKey ? (
             <YoutubePlayer
-              height={playerHeight}
-              width={width}
+              height={playerSize.height}
+              width={playerSize.width}
               play
               videoId={trailerKey}
+              forceAndroidAutoplay
+              webViewProps={getTrailerWebViewProps(Platform.OS)}
               onChangeState={(state: string) => {
                 if (state === 'ended') {
                   onClose();
