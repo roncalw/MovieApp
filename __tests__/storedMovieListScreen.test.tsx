@@ -275,14 +275,18 @@ describe('StoredMovieListScreen focus synchronization', () => {
     act(() => component.unmount());
   });
 
-  test('refreshes every saved movie when the saved local date is older', async () => {
+  test('shows saved movies before an older daily card-data refresh finishes', async () => {
     const savedMovies = [movie(1, 7), movie(2, 8)];
+    let finishCardDataRefresh!: (movies: movieType[]) => void;
+    const pendingCardDataRefresh = new Promise<movieType[]>(resolve => {
+      finishCardDataRefresh = resolve;
+    });
     jest
       .mocked(getStoredMovieListData)
       .mockResolvedValue(storedData(savedMovies, '2026-08-24'));
     jest
       .mocked(loadMovieCardDataForMovies)
-      .mockResolvedValue([movie(2, 8), movie(1, 7)]);
+      .mockReturnValue(pendingCardDataRefresh);
 
     let component!: TestRenderer.ReactTestRenderer;
     act(() => {
@@ -296,22 +300,41 @@ describe('StoredMovieListScreen focus synchronization', () => {
     });
 
     const cleanup = await runCurrentFocusEffect();
-    const renderedMovies = component.root.findByProps({
+    const immediatelyRenderedMovies = component.root.findByProps({
       testID: 'stored-movie-results',
     }).props.movies as movieType[];
 
+    expect(
+      immediatelyRenderedMovies.map(renderedMovie => renderedMovie.id),
+    ).toEqual([2, 1]);
+    expect(hasLoadingMessage(component)).toBe(false);
     expect(loadMovieCardDataForMovies).toHaveBeenCalledTimes(1);
     expect(
       jest
         .mocked(loadMovieCardDataForMovies)
         .mock.calls[0][0].map(loadedMovie => loadedMovie.id),
     ).toEqual([1, 2]);
-    expect(renderedMovies.map(renderedMovie => renderedMovie.id)).toEqual([
-      2, 1,
+
+    await act(async () => {
+      finishCardDataRefresh([movie(1, 9), movie(2, 8)]);
+      await pendingCardDataRefresh;
+      await Promise.resolve();
+    });
+
+    const refreshedMovies = component.root.findByProps({
+      testID: 'stored-movie-results',
+    }).props.movies as movieType[];
+
+    expect(refreshedMovies.map(renderedMovie => renderedMovie.id)).toEqual([
+      2,
+      1,
     ]);
+    expect(
+      refreshedMovies.map(renderedMovie => renderedMovie.imdb_rating),
+    ).toEqual([8, 9]);
     expect(saveRefreshedStoredMovieList).toHaveBeenCalledWith(
       'movieFavoritesData',
-      expect.any(Array),
+      [expect.objectContaining({ id: 1 }), expect.objectContaining({ id: 2 })],
       today,
     );
 

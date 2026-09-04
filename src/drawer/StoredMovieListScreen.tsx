@@ -142,19 +142,55 @@ export function StoredMovieListScreen({
           setIsLoading(true);
 
           try {
+            const storedData = await getStoredMovieListData(storageKey);
+            const storedMovies = storedData.movies.map(storedMovieToMovieType);
+            const storedMoviesInRatingOrder =
+              sortMoviesByImdbRating(storedMovies);
+
+            if (isActive && dataLoadRunIdRef.current === runId) {
+              // Favorites and Seen are complete local lists. Display that saved
+              // list as soon as AsyncStorage returns instead of holding an
+              // already-known collection behind a daily network refresh.
+              commitMovies(storedMoviesInRatingOrder);
+              hasCompletedInitialLoadRef.current = true;
+              setIsLoading(false);
+            }
+
+            const needsCardDataRefresh =
+              !isCurrentLocalCalendarDate(
+                storedData.cardDataRefreshedLocalDate,
+              ) ||
+              storedData.movies.some(
+                movie => !storedMovieHasCompleteCardData(movie),
+              );
+
+            if (!needsCardDataRefresh || storedMovies.length === 0) {
+              return;
+            }
+
+            // Ratings and availability can become stale, so update and save
+            // them after the local list is visible. A slow or failed request
+            // must never make the customer wait to see saved movies.
             const moviesWithCardData = await loadAllMovies();
 
             if (isActive && dataLoadRunIdRef.current === runId) {
-              commitMovies(moviesWithCardData);
-              hasCompletedInitialLoadRef.current = true;
+              const refreshedMoviesById = new Map(
+                moviesWithCardData.map(movie => [movie.id, movie]),
+              );
+
+              // Update the visible ratings and availability answers without
+              // moving cards after the customer has started using the list.
+              // loadAllMovies already saved the newly sorted order, so a later
+              // screen mount receives that order. An intentional pull-to-
+              // refresh still updates the visible order immediately.
+              commitMovies(
+                moviesRef.current.map(
+                  movie => refreshedMoviesById.get(movie.id) ?? movie,
+                ),
+              );
             }
           } catch (error) {
             console.error(`Error loading ${title}:`, error);
-
-            if (isActive && dataLoadRunIdRef.current === runId) {
-              const fallbackData = await getStoredMovieListData(storageKey);
-              commitMovies(fallbackData.movies.map(storedMovieToMovieType));
-            }
           } finally {
             if (isActive && dataLoadRunIdRef.current === runId) {
               setIsLoading(false);
