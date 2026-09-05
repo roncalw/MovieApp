@@ -134,9 +134,15 @@ export const movieSearchFieldSharedStyles = StyleSheet.create({
   streamerTileSelected: {
     backgroundColor: colors.favoriteActive,
   },
+  streamerWideTile: {
+    width: scaleSize(246),
+  },
   streamerLogo: {
     width: scaleSize(70),
     height: scaleSize(35),
+  },
+  streamerWideLogo: {
+    width: scaleSize(238),
   },
   bulkSelectionRow: {
     width: '100%',

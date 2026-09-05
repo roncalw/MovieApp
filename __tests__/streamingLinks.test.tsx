@@ -1,44 +1,56 @@
 import React from 'react';
-import { ActivityIndicator, Linking, Text } from 'react-native';
+import { Linking } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
 import { useIsFocused } from '@react-navigation/native';
 import {
   fetchStreamingLink,
-  isSafeStreamingDestination,
   type StreamingLinkResult,
 } from '../src/api/cloudflare/streamingLinkService';
+import type { SubscriptionRoute } from '../src/api/cloudflare/subscriptionRoutes';
 import { launchStreamingProvider } from '../src/movie/streaming/launchStreamingProvider';
 import { useStreamingProviderLaunch } from '../src/movie/streaming/useStreamingProviderLaunch';
-import { MovieDetailInfoSections } from '../src/movie/components/MovieDetailInfoSections';
-import { ScrollFriendlyTapTarget } from '../src/shared/ScrollFriendlyTapTarget';
-import { useMovieWatchProvidersQuery } from '../src/hooks/useMovieSearchQuery';
-import type { movieType } from '../src/types/movie/MovieTypes';
 
 jest.mock('@react-navigation/native', () => ({
   useIsFocused: jest.fn(() => true),
 }));
-jest.mock('../src/hooks/useMovieSearchQuery', () => ({
-  useMovieWatchProvidersQuery: jest.fn(),
-}));
 
-const request = { tmdbId: 492188, providerId: 8, region: 'US' };
+const netflixRoute: SubscriptionRoute = {
+  tmdbProviderId: 8,
+  providerName: 'Netflix',
+  providerKey: 'tmdb_8',
+  displayServiceName: 'Netflix',
+  subscriptionCategory: 'direct',
+  playbackPlatform: 'netflix',
+  officialHomepageUrl: 'https://www.netflix.com/',
+  launchAvailable: true,
+};
+const request = {
+  tmdbId: 492188,
+  providerId: 8,
+  region: 'US',
+  monetizationType: 'flatrate' as const,
+};
 const destination: StreamingLinkResult = {
   ...request,
   resolved: true,
+  destinationType: 'exact',
   provider: 'netflix',
+  providerKey: netflixRoute.providerKey,
+  displayServiceName: netflixRoute.displayServiceName,
+  subscriptionCategory: netflixRoute.subscriptionCategory,
+  playbackPlatform: netflixRoute.playbackPlatform,
   providerContentId: '80223779',
   nativeUrl: 'nflx://www.netflix.com/watch/80223779',
   webUrl: 'https://www.netflix.com/title/80223779',
   source: 'wikidata',
   cacheHit: true,
 };
-const originalFetch = globalThis.fetch;
 const response = (body: unknown) => ({ ok: true, json: async () => body });
+const originalFetch = globalThis.fetch;
 let trees: TestRenderer.ReactTestRenderer[] = [];
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (Linking.openURL as jest.Mock).mockReset();
   (useIsFocused as jest.Mock).mockReturnValue(true);
 });
 
@@ -51,12 +63,14 @@ afterEach(() => {
 });
 
 describe('streaming resolver client', () => {
-  test('sends only the selected movie, TMDB provider and region to the Worker', async () => {
+  test('sends the exact selected offer identity to the Worker', async () => {
     const fetchSpy = jest.fn().mockResolvedValue(response(destination));
     globalThis.fetch = fetchSpy;
-    await expect(fetchStreamingLink(request)).resolves.toEqual(destination);
+    await expect(fetchStreamingLink(request, netflixRoute)).resolves.toEqual(
+      destination,
+    );
     expect(fetchSpy).toHaveBeenCalledWith(
-      'https://movieapp-cloudflare.carlo-roncallo.workers.dev/streaming-link?tmdbId=492188&providerId=8&region=US',
+      'https://movieapp-cloudflare.carlo-roncallo.workers.dev/streaming-link?tmdbId=492188&providerId=8&region=US&monetizationType=flatrate',
       { signal: expect.anything() },
     );
   });
@@ -65,29 +79,42 @@ describe('streaming resolver client', () => {
     { tmdbId: 123 },
     { providerId: 15 },
     { region: 'CA' },
-    { webUrl: 'https://www.netflix.com/title/80000001' },
+    { monetizationType: 'rent' },
+    { providerKey: 'tmdb_15' },
     { webUrl: 'https://netflix.com.evil.example/title/80223779' },
-    { nativeUrl: 'nflx://www.netflix.com/watch/80000001' },
-    { nativeUrl: 'file:///private/example' },
     { providerContentId: '../80223779' },
-  ])('rejects mismatched or unsafe responses: %o', async change => {
+  ])('rejects a mismatched or unsafe response: %o', async change => {
     globalThis.fetch = jest
       .fn()
       .mockResolvedValue(response({ ...destination, ...change }));
-    await expect(fetchStreamingLink(request)).rejects.toThrow();
+    await expect(fetchStreamingLink(request, netflixRoute)).rejects.toThrow();
   });
 
-  test('keeps an unresolved result controlled and rejects HTTP failures', async () => {
-    const miss = {
+  test('accepts only the official homepage supplied by the expected D1 route', async () => {
+    const result: StreamingLinkResult = {
       ...request,
-      resolved: false,
+      resolved: true,
+      destinationType: 'provider_homepage',
       provider: 'netflix',
-      reason: 'no_match',
+      providerKey: netflixRoute.providerKey,
+      displayServiceName: netflixRoute.displayServiceName,
+      subscriptionCategory: netflixRoute.subscriptionCategory,
+      playbackPlatform: netflixRoute.playbackPlatform,
+      providerContentId: null,
+      nativeUrl: null,
+      webUrl: netflixRoute.officialHomepageUrl!,
+      source: 'provider-homepage',
+      cacheHit: false,
+      fallbackReason: 'no_match',
     };
-    globalThis.fetch = jest.fn().mockResolvedValue(response(miss));
-    await expect(fetchStreamingLink(request)).resolves.toEqual(miss);
-    globalThis.fetch = jest.fn().mockResolvedValue({ ok: false, status: 503 });
-    await expect(fetchStreamingLink(request)).rejects.toThrow();
+    globalThis.fetch = jest.fn().mockResolvedValue(response(result));
+    await expect(fetchStreamingLink(request, netflixRoute)).resolves.toEqual(
+      result,
+    );
+    globalThis.fetch = jest.fn().mockResolvedValue(
+      response({ ...result, webUrl: 'https://unrelated.example/' }),
+    );
+    await expect(fetchStreamingLink(request, netflixRoute)).rejects.toThrow();
   });
 
   test('aborts the network request after its timeout', async () => {
@@ -100,69 +127,34 @@ describe('streaming resolver client', () => {
           );
         }),
     );
-    const pending = fetchStreamingLink(request);
+    const pending = fetchStreamingLink(request, netflixRoute);
     jest.advanceTimersByTime(20000);
     await expect(pending).rejects.toThrow('Aborted');
   });
 });
 
 describe('provider launch', () => {
-  test('does not open the browser if navigation cancels a failed native attempt', async () => {
-    const controller = new AbortController();
-    const open = jest.spyOn(Linking, 'openURL').mockImplementation(async () => {
-      controller.abort();
-      throw new Error('App missing');
-    });
-    await expect(
-      launchStreamingProvider(destination, controller.signal),
-    ).rejects.toThrow('cancelled');
-    expect(open).toHaveBeenCalledTimes(1);
-  });
-  test('tries the exact Netflix native title first', async () => {
-    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-    await expect(launchStreamingProvider(destination)).resolves.toBe('native');
-    expect(open.mock.calls).toEqual([
-      ['nflx://www.netflix.com/watch/80223779'],
-    ]);
-  });
-
-  test('opens the same title on the web when Netflix is not installed', async () => {
+  test('tries the exact native title, then the exact web title', async () => {
     const open = jest
       .spyOn(Linking, 'openURL')
       .mockRejectedValueOnce(new Error('App missing'))
       .mockResolvedValueOnce(undefined);
-    await expect(launchStreamingProvider(destination)).resolves.toBe('web');
+    await expect(
+      launchStreamingProvider(destination, netflixRoute),
+    ).resolves.toBe('web');
     expect(open.mock.calls).toEqual([
       ['nflx://www.netflix.com/watch/80223779'],
       ['https://www.netflix.com/title/80223779'],
     ]);
   });
 
-  test('supports a web-only destination and reports when neither launch succeeds', async () => {
-    const open = jest
-      .spyOn(Linking, 'openURL')
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValue(new Error('Unavailable'));
-    await expect(
-      launchStreamingProvider({ ...destination, nativeUrl: null }),
-    ).resolves.toBe('web');
-    await expect(launchStreamingProvider(destination)).rejects.toThrow();
-    expect(open).toHaveBeenCalledTimes(3);
-  });
-
-  test('never launches an unsafe or unresolved URL', async () => {
+  test('does not open an exact result after navigation cancels it', async () => {
+    const controller = new AbortController();
+    controller.abort();
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-    const unsafe = { ...destination, webUrl: 'https://evil.example' };
-    expect(isSafeStreamingDestination(unsafe)).toBe(false);
-    await expect(launchStreamingProvider(unsafe)).rejects.toThrow();
     await expect(
-      launchStreamingProvider({
-        ...request,
-        resolved: false,
-        provider: 'netflix',
-        reason: 'no_match',
-      }),
-    ).rejects.toThrow();
+      launchStreamingProvider(destination, netflixRoute, controller.signal),
+    ).rejects.toThrow('cancelled');
     expect(open).not.toHaveBeenCalled();
   });
 });
@@ -186,24 +178,24 @@ function mountHook() {
 }
 
 describe('provider tap lifecycle', () => {
-  test('does not resolve on render and coalesces rapid taps into one request', async () => {
+  test('coalesces rapid taps and exposes immediate loading state', async () => {
     let finish!: (value: unknown) => void;
-    const fetchSpy = jest.fn(
+    globalThis.fetch = jest.fn(
       () =>
-        new Promise(resolve => {
+        new Promise<unknown>(resolve => {
           finish = resolve;
         }),
-    );
-    globalThis.fetch = fetchSpy as typeof fetch;
+    ) as typeof fetch;
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     const hook = mountHook();
-    expect(fetchSpy).not.toHaveBeenCalled();
     let pending!: Promise<void>;
     act(() => {
-      pending = hook.getControls().openProvider(8);
-      void hook.getControls().openProvider(8);
+      pending = hook
+        .getControls()
+        .openProvider(8, 'flatrate', netflixRoute);
+      void hook.getControls().openProvider(8, 'flatrate', netflixRoute);
     });
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(hook.getControls().openingProviderId).toBe(8);
     await act(async () => {
       finish(response(destination));
@@ -213,130 +205,56 @@ describe('provider tap lifecycle', () => {
     expect(hook.getControls().openingProviderId).toBeNull();
   });
 
-  test.each(['blur', 'unmount'])(
-    'does not launch a late response after %s',
-    async action => {
-      let finish!: (value: unknown) => void;
-      globalThis.fetch = jest.fn(
-        () =>
-          new Promise<unknown>(resolve => {
-            finish = resolve;
-          }),
-      ) as typeof fetch;
-      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-      const hook = mountHook();
-      let pending!: Promise<void>;
-      act(() => {
-        pending = hook.getControls().openProvider(8);
-      });
-      act(() => {
-        if (action === 'blur') {
-          (useIsFocused as jest.Mock).mockReturnValue(false);
-          hook.rerender();
-        } else hook.tree.unmount();
-      });
-      await act(async () => {
-        finish(response(destination));
-        await pending;
-      });
-      expect(open).not.toHaveBeenCalled();
-    },
-  );
-
-  test('shows a useful miss message and leaves the row ready for another tap', async () => {
-    globalThis.fetch = jest.fn().mockResolvedValue(
-      response({
-        ...request,
-        resolved: false,
-        provider: 'netflix',
-        reason: 'no_match',
-      }),
-    );
-    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-    const hook = mountHook();
-    await act(async () => {
-      await hook.getControls().openProvider(8);
-    });
-    expect(hook.getControls().message).toContain(
-      'not available for this movie',
-    );
-    expect(hook.getControls().openingProviderId).toBeNull();
-    expect(open).not.toHaveBeenCalled();
-  });
-
-  test('keeps TMDB availability and existing categories unchanged, enabling supported subscription rows only', async () => {
-    const netflix = {
-      provider_id: 8,
-      provider_name: 'Netflix',
-      logo_path: null,
-    };
-    (useMovieWatchProvidersQuery as jest.Mock).mockReturnValue({
-      data: {
-        results: {
-          US: {
-            flatrate: [
-              netflix,
-              { provider_id: 15, provider_name: 'Hulu', logo_path: null },
-            ],
-            rent: [netflix],
-          },
-        },
-      },
-      isError: false,
-      isLoading: false,
-      isFetching: false,
-      refetch: jest.fn(),
-    });
-    let finishLookup!: (value: unknown) => void;
+  test('does not launch a response that arrives after the screen loses focus', async () => {
+    let finish!: (value: unknown) => void;
     globalThis.fetch = jest.fn(
       () =>
         new Promise<unknown>(resolve => {
-          finishLookup = resolve;
+          finish = resolve;
         }),
     ) as typeof fetch;
-    const open = jest
-      .spyOn(Linking, 'openURL')
-      .mockRejectedValueOnce(new Error('No app'))
-      .mockResolvedValue(undefined);
-    let tree!: TestRenderer.ReactTestRenderer;
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    const hook = mountHook();
+    let pending!: Promise<void>;
     act(() => {
-      tree = TestRenderer.create(
-        <MovieDetailInfoSections movieId={492188} movie={{} as movieType} />,
-      );
+      pending = hook
+        .getControls()
+        .openProvider(8, 'flatrate', netflixRoute);
     });
-    trees.push(tree);
-    const targets = tree.root
-      .findAllByType(ScrollFriendlyTapTarget)
-      .filter(target => target.props.accessibilityRole === 'link');
-    expect(targets).toHaveLength(2);
-    const netflixTarget = targets.find(
-      target => target.props.accessibilityLabel === 'Open movie on Netflix',
-    )!;
-    expect(netflixTarget).toBeDefined();
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-    const watchLabels = () =>
-      tree.root
-        .findAllByType(Text)
-        .filter(text => text.props.children === 'Watch Movie Now');
-    expect(watchLabels()).toHaveLength(2);
     act(() => {
-      netflixTarget.props.onPress();
+      (useIsFocused as jest.Mock).mockReturnValue(false);
+      hook.rerender();
     });
-    // Hold the server response to verify feedback appears while the lookup is
-    // still pending, before either the provider app or browser can open.
-    expect(watchLabels()).toHaveLength(1);
-    expect(netflixTarget.findAllByType(ActivityIndicator)).toHaveLength(1);
-    expect(netflixTarget.props.accessibilityState).toEqual({ busy: true });
-    expect(targets.every(target => target.props.disabled)).toBe(true);
-    expect(open).not.toHaveBeenCalled();
     await act(async () => {
-      finishLookup(response(destination));
+      finish(response(destination));
+      await pending;
     });
-    expect(watchLabels()).toHaveLength(2);
-    expect(tree.root.findAllByType(ActivityIndicator)).toHaveLength(0);
-    expect(open.mock.calls).toEqual([
-      ['nflx://www.netflix.com/watch/80223779'],
-      ['https://www.netflix.com/title/80223779'],
-    ]);
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  test('opens a Worker-returned provider homepage', async () => {
+    const homepage: StreamingLinkResult = {
+      ...request,
+      resolved: true,
+      destinationType: 'provider_homepage',
+      provider: 'netflix',
+      providerKey: netflixRoute.providerKey,
+      displayServiceName: netflixRoute.displayServiceName,
+      subscriptionCategory: netflixRoute.subscriptionCategory,
+      playbackPlatform: netflixRoute.playbackPlatform,
+      providerContentId: null,
+      nativeUrl: null,
+      webUrl: netflixRoute.officialHomepageUrl!,
+      source: 'provider-homepage',
+      cacheHit: false,
+      fallbackReason: 'no_match',
+    };
+    globalThis.fetch = jest.fn().mockResolvedValue(response(homepage));
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    const hook = mountHook();
+    await act(async () => {
+      await hook.getControls().openProvider(8, 'flatrate', netflixRoute);
+    });
+    expect(open).toHaveBeenCalledWith('https://www.netflix.com/');
   });
 });

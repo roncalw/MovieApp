@@ -81,15 +81,24 @@ export function MovieSearchStreamerTile({
   source,
   selected,
   onPress,
+  wide = false,
 }: MovieSearchStreamerTileProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={[styles.streamerTile, selected && styles.streamerTileSelected]}
+      style={[
+        styles.streamerTile,
+        wide && styles.streamerWideTile,
+        selected && styles.streamerTileSelected,
+      ]}
     >
-      <Image source={source} style={styles.streamerLogo} resizeMode="contain" />
+      <Image
+        source={source}
+        style={[styles.streamerLogo, wide && styles.streamerWideLogo]}
+        resizeMode="contain"
+      />
     </Pressable>
   );
 }

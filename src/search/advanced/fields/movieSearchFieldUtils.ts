@@ -4,7 +4,10 @@ import type {
   SortItem,
   StreamerItem,
 } from '../../../types/search/movieSearchFieldTypes';
-import { MOVIE_STREAMER_PROVIDER_IDS } from '../../shared/movieStreamers';
+import {
+  MOVIE_STREAMER_PROVIDER_IDS,
+  OTHER_DIRECT_STREAMERS_VALUE,
+} from '../../shared/movieStreamers';
 
 export const GENRE_ITEMS: LabelValueItem[] = [
   { label: 'Action', value: '28' },
@@ -35,16 +38,72 @@ export const RATING_ITEMS: RatingItem[] = [
 ];
 
 export const STREAMER_ITEMS: StreamerItem[] = [
-  { label: 'Netflix', value: MOVIE_STREAMER_PROVIDER_IDS.netflix, image: require('../../../assets/images/netflix.png') },
-  { label: 'Hulu', value: MOVIE_STREAMER_PROVIDER_IDS.hulu, image: require('../../../assets/images/hulu.png') },
-  { label: 'Prime', value: MOVIE_STREAMER_PROVIDER_IDS.prime, image: require('../../../assets/images/amazon_prime.png') },
-  { label: 'Max', value: MOVIE_STREAMER_PROVIDER_IDS.max, image: require('../../../assets/images/max.png') },
-  { label: 'YouTube', value: MOVIE_STREAMER_PROVIDER_IDS.youtube, image: require('../../../assets/images/youtube_premium.png') },
-  { label: 'Disney Plus', value: MOVIE_STREAMER_PROVIDER_IDS.disneyPlus, image: require('../../../assets/images/disney_plus.png') },
-  { label: 'Apple TV Plus', value: MOVIE_STREAMER_PROVIDER_IDS.appleTvPlus, image: require('../../../assets/images/apple_tv_plus.png') },
-  { label: 'Peacock', value: MOVIE_STREAMER_PROVIDER_IDS.peacock, image: require('../../../assets/images/peacock.png') },
-  { label: 'AMC+', value: MOVIE_STREAMER_PROVIDER_IDS.amcPlus, image: require('../../../assets/images/amc.png') },
-  { label: 'Paramount+', value: MOVIE_STREAMER_PROVIDER_IDS.paramountPlus, image: require('../../../assets/images/paramount_plus.png') },
+  {
+    label: 'Netflix',
+    value: MOVIE_STREAMER_PROVIDER_IDS.netflix,
+    image: require('../../../assets/images/netflix.png'),
+  },
+  {
+    label: 'Hulu',
+    value: MOVIE_STREAMER_PROVIDER_IDS.hulu,
+    image: require('../../../assets/images/hulu.png'),
+  },
+  {
+    label: 'Prime',
+    value: MOVIE_STREAMER_PROVIDER_IDS.prime,
+    image: require('../../../assets/images/amazon_prime.png'),
+  },
+  {
+    label: 'Max',
+    value: MOVIE_STREAMER_PROVIDER_IDS.max,
+    image: require('../../../assets/images/max.png'),
+  },
+  {
+    label: 'YouTube',
+    value: MOVIE_STREAMER_PROVIDER_IDS.youtube,
+    image: require('../../../assets/images/youtube_premium.png'),
+  },
+  {
+    label: 'Disney Plus',
+    value: MOVIE_STREAMER_PROVIDER_IDS.disneyPlus,
+    image: require('../../../assets/images/disney_plus.png'),
+  },
+  {
+    label: 'Apple TV Plus',
+    value: MOVIE_STREAMER_PROVIDER_IDS.appleTvPlus,
+    image: require('../../../assets/images/apple_tv_plus.png'),
+  },
+  {
+    label: 'Peacock',
+    value: MOVIE_STREAMER_PROVIDER_IDS.peacock,
+    image: require('../../../assets/images/peacock.png'),
+  },
+  {
+    label: 'AMC+',
+    value: MOVIE_STREAMER_PROVIDER_IDS.amcPlus,
+    image: require('../../../assets/images/amc.png'),
+  },
+  {
+    label: 'Paramount+',
+    value: MOVIE_STREAMER_PROVIDER_IDS.paramountPlus,
+    image: require('../../../assets/images/paramount_plus.png'),
+  },
+  {
+    label: 'STARZ',
+    value: MOVIE_STREAMER_PROVIDER_IDS.starz,
+    image: require('../../../assets/images/starz.png'),
+  },
+  {
+    label: 'MGM+',
+    value: MOVIE_STREAMER_PROVIDER_IDS.mgmPlus,
+    image: require('../../../assets/images/mgm_plus.png'),
+  },
+  {
+    label: 'Other Streamers',
+    value: OTHER_DIRECT_STREAMERS_VALUE,
+    image: require('../../../assets/images/other_streamers.png'),
+    wide: true,
+  },
 ];
 
 export const SORT_ITEMS: SortItem[] = [
@@ -55,38 +114,47 @@ export const SORT_ITEMS: SortItem[] = [
   { id: '5', label: 'User Rating (25,000+ Reviews)', value: '25000' },
 ];
 
-export function formatSelectedLabels(selectedValues: string[], items: LabelValueItem[]) {
+export function formatSelectedLabels(
+  selectedValues: string[],
+  items: LabelValueItem[],
+) {
   if (selectedValues.length === 0) {
     return 'Any';
   }
 
   return items
-    .filter((item) => selectedValues.includes(item.value))
-    .map((item) => item.label)
+    .filter(item => selectedValues.includes(item.value))
+    .map(item => item.label)
     .join(', ');
 }
 
-export function formatInlineSummary(selectedValues: string[], items: LabelValueItem[]) {
+export function formatInlineSummary(
+  selectedValues: string[],
+  items: LabelValueItem[],
+) {
   if (selectedValues.length === 0) {
     return '';
   }
 
   return items
-    .filter((item) => selectedValues.includes(item.value))
-    .map((item) => item.label)
+    .filter(item => selectedValues.includes(item.value))
+    .map(item => item.label)
     .sort()
     .join(' | ');
 }
 
 export function toggleArrayValue(currentValues: string[], nextValue: string) {
   if (currentValues.includes(nextValue)) {
-    return currentValues.filter((value) => value !== nextValue);
+    return currentValues.filter(value => value !== nextValue);
   }
 
   return [...currentValues, nextValue];
 }
 
-export function getInitialSortValue(appliedSortBy: string, appliedVoteCount: string) {
+export function getInitialSortValue(
+  appliedSortBy: string,
+  appliedVoteCount: string,
+) {
   if (appliedSortBy === 'popularity.desc') {
     return '0';
   }
@@ -99,10 +167,19 @@ export function getInitialSortValue(appliedSortBy: string, appliedVoteCount: str
 }
 
 export function getSelectedSortLabel(selectedSortValue: string) {
-  return SORT_ITEMS.find((item) => item.value === selectedSortValue)?.label ?? '';
+  return SORT_ITEMS.find(item => item.value === selectedSortValue)?.label ?? '';
 }
 
-export function getAppliedSortLabel(appliedSortBy: string, appliedVoteCount: string) {
-  const selectedSortValue = getInitialSortValue(appliedSortBy, appliedVoteCount);
-  return SORT_ITEMS.find((item) => item.value === selectedSortValue)?.label ?? 'Popular';
+export function getAppliedSortLabel(
+  appliedSortBy: string,
+  appliedVoteCount: string,
+) {
+  const selectedSortValue = getInitialSortValue(
+    appliedSortBy,
+    appliedVoteCount,
+  );
+  return (
+    SORT_ITEMS.find(item => item.value === selectedSortValue)?.label ??
+    'Popular'
+  );
 }

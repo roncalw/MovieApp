@@ -12,8 +12,19 @@
  *    distinguishes loading, temporary failure, and a successful empty result.
  */
 import React from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Text, View } from 'react-native';
-import { useMovieWatchProvidersQuery } from '../../hooks/useMovieSearchQuery';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Text,
+  View,
+} from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons/static';
+import {
+  useMovieWatchProvidersQuery,
+  useStreamingProviderCatalogQuery,
+} from '../../hooks/useMovieSearchQuery';
 import type {
   movieType,
   movieWatchProviderType,
@@ -29,14 +40,20 @@ import {
 import { imageAssets } from '../../styles/assets';
 import { movieDetailInfoSectionStyles as styles } from '../../styles/movie/movieDetailInfoSectionStyles';
 import { ScrollFriendlyTapTarget } from '../../shared/ScrollFriendlyTapTarget';
-import { isStreamingProvider } from '../../api/cloudflare/streamingLinkService';
 import { useStreamingProviderLaunch } from '../streaming/useStreamingProviderLaunch';
 import { colors } from '../../styles/colors';
+import { scaleSize } from '../../styles/scale';
 import {
   groupSubscriptionProviders,
   type RoutedWatchProvider,
 } from '../streaming/groupSubscriptionProviders';
-import { subscriptionRouteLabel } from '../../api/cloudflare/subscriptionRoutes';
+import {
+  subscriptionRouteForProviderId,
+  subscriptionRouteLabel,
+  unconfiguredSubscriptionRoute,
+  type SubscriptionRoute,
+  type WatchMonetizationType,
+} from '../../api/cloudflare/subscriptionRoutes';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
@@ -129,6 +146,7 @@ function StreamingSection({
   // The existing provider list is US-only. Send that same country to the
   // resolver; cached destinations never add providers to this TMDB list.
   const streamingLaunch = useStreamingProviderLaunch(movieId, 'US');
+  const providerCatalog = useStreamingProviderCatalogQuery('US').data ?? [];
   return (
     <>
       <Text allowFontScaling={false} style={styles.sectionLabel}>
@@ -152,12 +170,25 @@ function StreamingSection({
       ) : (
         <>
           <WatchProviderCategory
+            catalog={providerCatalog}
             label="Free (With Ads):"
+            monetizationType="ads"
             providers={providers?.ads}
+            streamingLaunch={streamingLaunch}
           />
           <WatchProviderCategory
+            catalog={providerCatalog}
+            groupSubscriptions
             label="Direct Subscriptions"
+            monetizationType="flatrate"
             providers={providers?.flatrate}
+            streamingLaunch={streamingLaunch}
+          />
+          <WatchProviderCategory
+            catalog={providerCatalog}
+            label="Rent:"
+            monetizationType="rent"
+            providers={providers?.rent}
             streamingLaunch={streamingLaunch}
           />
           {streamingLaunch.message ? (
@@ -169,7 +200,6 @@ function StreamingSection({
               {streamingLaunch.message}
             </Text>
           ) : null}
-          <WatchProviderCategory label="Rent:" providers={providers?.rent} />
         </>
       )}
     </>
@@ -177,16 +207,27 @@ function StreamingSection({
 }
 
 function WatchProviderCategory({
+  catalog,
+  groupSubscriptions = false,
   label,
+  monetizationType,
   providers,
   streamingLaunch,
 }: {
+  catalog: readonly SubscriptionRoute[];
+  groupSubscriptions?: boolean;
   label: string;
+  monetizationType: WatchMonetizationType;
   providers?: movieWatchProviderType[];
-  streamingLaunch?: ReturnType<typeof useStreamingProviderLaunch>;
+  streamingLaunch: ReturnType<typeof useStreamingProviderLaunch>;
 }) {
   const hasProviders = providers && providers.length > 0;
-  const groups = streamingLaunch ? groupSubscriptionProviders(providers) : [];
+  const groups = groupSubscriptions
+    ? groupSubscriptionProviders(providers, catalog)
+    : [];
+  const routedProviders = groupSubscriptions
+    ? []
+    : routeWatchProviders(providers, catalog);
 
   return (
     <View style={styles.watchProviderPanel}>
@@ -195,7 +236,7 @@ function WatchProviderCategory({
       </Text>
 
       {hasProviders ? (
-        streamingLaunch ? (
+        groupSubscriptions ? (
           groups.map(group => (
             <View
               key={group.key}
@@ -220,6 +261,7 @@ function WatchProviderCategory({
                 }
               >
                 <WatchProviderRows
+                  monetizationType={monetizationType}
                   providers={group.providers}
                   streamingLaunch={streamingLaunch}
                 />
@@ -227,7 +269,11 @@ function WatchProviderCategory({
             </View>
           ))
         ) : (
-          <WatchProviderRows providers={providers} />
+          <WatchProviderRows
+            monetizationType={monetizationType}
+            providers={routedProviders}
+            streamingLaunch={streamingLaunch}
+          />
         )
       ) : (
         <Text allowFontScaling={false} style={styles.watchProviderUnavailable}>
@@ -239,23 +285,21 @@ function WatchProviderCategory({
 }
 
 function WatchProviderRows({
+  monetizationType,
   providers,
   streamingLaunch,
 }: {
-  providers: (movieWatchProviderType &
-    Partial<Pick<RoutedWatchProvider, 'route'>>)[];
-  streamingLaunch?: ReturnType<typeof useStreamingProviderLaunch>;
+  monetizationType: WatchMonetizationType;
+  providers: RoutedWatchProvider[];
+  streamingLaunch: ReturnType<typeof useStreamingProviderLaunch>;
 }) {
   return (
     <>
       {providers.map(provider => {
-        const routeLabel = provider.route
-          ? subscriptionRouteLabel(provider.route)
-          : provider.provider_name;
-        const canOpen =
-          streamingLaunch && isStreamingProvider(provider.provider_id);
+        const routeLabel = subscriptionRouteLabel(provider.route);
+        const canOpen = provider.route.launchAvailable;
         const isOpening =
-          streamingLaunch?.openingProviderId === provider.provider_id;
+          streamingLaunch.openingProviderId === provider.provider_id;
         const content = (
           <>
             <Image
@@ -265,27 +309,51 @@ function WatchProviderRows({
             />
             <Text
               allowFontScaling={false}
-              adjustsFontSizeToFit={!provider.route}
-              numberOfLines={provider.route ? 2 : 1}
+              adjustsFontSizeToFit
+              numberOfLines={2}
               style={styles.watchProviderName}
             >
-              {provider.route?.displayServiceName ?? provider.provider_name}
+              {provider.route.displayServiceName}
             </Text>
-            {canOpen ? (
-              <View style={styles.providerOpenAction}>
-                {isOpening ? (
+            <View style={styles.providerOpenAction}>
+              {isOpening ? (
                   <ActivityIndicator color={colors.brandText} size="small" />
                 ) : (
-                  <Text
-                    allowFontScaling={false}
-                    numberOfLines={1}
-                    style={styles.providerOpenLabel}
+                  <View
+                    accessible={!canOpen}
+                    accessibilityLabel={
+                      canOpen
+                        ? undefined
+                        : `Watch now unavailable on ${routeLabel}`
+                    }
+                    accessibilityRole={canOpen ? undefined : 'button'}
+                    accessibilityState={
+                      canOpen ? undefined : { disabled: true }
+                    }
+                    style={[
+                      styles.providerOpenButton,
+                      !canOpen && styles.providerOpenButtonDisabled,
+                    ]}
                   >
-                    Watch Movie Now
-                  </Text>
-                )}
-              </View>
-            ) : null}
+                    <Ionicons
+                      color={canOpen ? colors.brandText : colors.disabledText}
+                      name="play"
+                      size={scaleSize(11)}
+                      style={styles.providerOpenIcon}
+                    />
+                    <Text
+                      allowFontScaling={false}
+                      numberOfLines={1}
+                      style={[
+                        styles.providerOpenLabel,
+                        !canOpen && styles.providerOpenLabelDisabled,
+                      ]}
+                    >
+                      Watch Now
+                    </Text>
+                  </View>
+              )}
+            </View>
           </>
         );
         return canOpen ? (
@@ -300,7 +368,11 @@ function WatchProviderRows({
             accessibilityState={{ busy: isOpening }}
             disabled={streamingLaunch.openingProviderId !== null}
             onPress={() => {
-              void streamingLaunch.openProvider(provider.provider_id);
+              void streamingLaunch.openProvider(
+                provider.provider_id,
+                monetizationType,
+                provider.route,
+              );
             }}
             style={styles.watchProviderRow}
           >
@@ -314,6 +386,26 @@ function WatchProviderRows({
       })}
     </>
   );
+}
+
+function routeWatchProviders(
+  providers: readonly movieWatchProviderType[] = [],
+  catalog: readonly SubscriptionRoute[],
+): RoutedWatchProvider[] {
+  const unique = new Map<number, RoutedWatchProvider>();
+  for (const provider of providers) {
+    if (unique.has(provider.provider_id)) continue;
+    unique.set(provider.provider_id, {
+      ...provider,
+      route:
+        subscriptionRouteForProviderId(provider.provider_id, catalog) ??
+        unconfiguredSubscriptionRoute(
+          provider.provider_id,
+          provider.provider_name,
+        ),
+    });
+  }
+  return [...unique.values()];
 }
 
 function DetailInfoRow({ label, value }: DetailInfoRowProps) {

@@ -4,7 +4,13 @@ import {
   fetchStreamingMovies,
 } from '../src/api/tmdb/services/movieService';
 import { HOME_ADVANCED_SEARCH_SECTIONS } from '../src/home/homeAdvancedSearchSections';
-import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../src/search/shared/movieStreamers';
+import { STREAMER_ITEMS } from '../src/search/advanced/fields/movieSearchFieldUtils';
+import {
+  ALL_MOVIE_STREAMER_PROVIDER_IDS,
+  ALL_MOVIE_STREAMER_SELECTION_VALUES,
+  MOVIE_STREAMER_PROVIDER_IDS,
+  OTHER_DIRECT_STREAMERS_VALUE,
+} from '../src/search/shared/movieStreamers';
 
 jest.mock('../src/api/tmdb/client', () => ({
   tmdbClient: {
@@ -38,11 +44,24 @@ describe('Streaming Now Home section', () => {
       },
     });
     expect(streamingSection.advancedSearchParams.movieStreamers).toEqual(
-      ALL_MOVIE_STREAMER_PROVIDER_IDS,
+      ALL_MOVIE_STREAMER_SELECTION_VALUES,
     );
   });
 
-  test('asks TMDb for any supported US subscription streamer in popularity order', async () => {
+  test('shows twelve named streamers followed by the wide Other Streamers tile', () => {
+    expect(STREAMER_ITEMS).toHaveLength(13);
+    expect(STREAMER_ITEMS.slice(-3, -1).map(item => item.label)).toEqual([
+      'STARZ',
+      'MGM+',
+    ]);
+    expect(STREAMER_ITEMS.at(-1)).toMatchObject({
+      label: 'Other Streamers',
+      value: OTHER_DIRECT_STREAMERS_VALUE,
+      wide: true,
+    });
+  });
+
+  test('asks TMDB for any named US subscription streamer in popularity order', async () => {
     mockedGet.mockResolvedValueOnce({
       data: {
         page: 1,
@@ -78,7 +97,7 @@ describe('Streaming Now Home section', () => {
         beginDate: '2021-01-01',
         endDate: '2026-12-31',
         movieGenres: [],
-        movieStreamers: [...ALL_MOVIE_STREAMER_PROVIDER_IDS],
+        movieStreamers: [...ALL_MOVIE_STREAMER_SELECTION_VALUES],
         movieOriginalLanguages: ['en'],
         movieVoteCount: '',
         movieSortBy: 'popularity.desc',
@@ -92,5 +111,71 @@ describe('Streaming Now Home section', () => {
     expect(searchParams.get('watchMonetizationTypes')).toBe('flatrate');
     expect(searchParams.get('sort')).toBe('popularity');
     expect(searchParams.has('providerIds')).toBe(false);
+    expect(searchParams.has('providerGroups')).toBe(false);
+  });
+
+  test('sends Other as a direct-provider group instead of a fake TMDB provider ID', async () => {
+    globalThis.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ movies: [], nextCursor: null }),
+    })) as jest.Mock;
+
+    await fetchMovieSearchResults(
+      {
+        movieRatings: '',
+        beginDate: '2021-01-01',
+        endDate: '2026-12-31',
+        movieGenres: [],
+        movieStreamers: [OTHER_DIRECT_STREAMERS_VALUE],
+        movieOriginalLanguages: ['en'],
+        movieVoteCount: '',
+        movieSortBy: 'popularity.desc',
+      },
+      null,
+    );
+
+    const requestUrl = String(jest.mocked(globalThis.fetch).mock.calls[0][0]);
+    const searchParams = new URL(requestUrl).searchParams;
+
+    expect(searchParams.get('providerGroups')).toBe(
+      OTHER_DIRECT_STREAMERS_VALUE,
+    );
+    expect(searchParams.has('providerIds')).toBe(false);
+    expect(searchParams.has('watchMonetizationTypes')).toBe(false);
+  });
+
+  test('combines a named service and Other with one OR-capable Worker request', async () => {
+    globalThis.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ movies: [], nextCursor: null }),
+    })) as jest.Mock;
+
+    await fetchMovieSearchResults(
+      {
+        movieRatings: '',
+        beginDate: '2021-01-01',
+        endDate: '2026-12-31',
+        movieGenres: [],
+        movieStreamers: [
+          MOVIE_STREAMER_PROVIDER_IDS.netflix,
+          OTHER_DIRECT_STREAMERS_VALUE,
+        ],
+        movieOriginalLanguages: ['en'],
+        movieVoteCount: '',
+        movieSortBy: 'popularity.desc',
+      },
+      null,
+    );
+
+    const requestUrl = String(jest.mocked(globalThis.fetch).mock.calls[0][0]);
+    const searchParams = new URL(requestUrl).searchParams;
+
+    expect(searchParams.get('providerIds')).toBe(
+      MOVIE_STREAMER_PROVIDER_IDS.netflix,
+    );
+    expect(searchParams.get('providerGroups')).toBe(
+      OTHER_DIRECT_STREAMERS_VALUE,
+    );
+    expect(searchParams.has('watchMonetizationTypes')).toBe(false);
   });
 });

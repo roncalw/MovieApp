@@ -1,19 +1,17 @@
-import {
-  subscriptionRouteForProviderId,
-  subscriptionRouteLabel,
-} from '../../api/cloudflare/subscriptionRoutes';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Linking } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import { fetchStreamingLink } from '../../api/cloudflare/streamingLinkService';
 import {
-  fetchStreamingLink,
-  isStreamingProvider,
-} from '../../api/cloudflare/streamingLinkService';
+  subscriptionRouteLabel,
+  type SubscriptionRoute,
+  type WatchMonetizationType,
+} from '../../api/cloudflare/subscriptionRoutes';
 import { launchStreamingProvider } from './launchStreamingProvider';
 
 export function useStreamingProviderLaunch(movieId: number, region: string) {
   const isFocused = useIsFocused();
   const focused = useRef(isFocused);
-  focused.current = isFocused;
   const activeRequest = useRef<AbortController | null>(null);
   const [openingProviderId, setOpeningProviderId] = useState<number | null>(
     null,
@@ -21,25 +19,32 @@ export function useStreamingProviderLaunch(movieId: number, region: string) {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setOpeningProviderId(null);
-    setMessage(null);
+    focused.current = isFocused;
+    if (!isFocused) {
+      activeRequest.current?.abort();
+      activeRequest.current = null;
+      setOpeningProviderId(null);
+      setMessage(null);
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
     return () => {
-      // Navigating away can leave a detail screen mounted underneath another
-      // screen. Cancel on loss of focus too, so a late reply cannot open another app.
+      focused.current = false;
       activeRequest.current?.abort();
       activeRequest.current = null;
     };
-  }, [movieId, region, isFocused]);
+  }, [movieId, region]);
 
   const openProvider = useCallback(
-    async (providerId: number) => {
-      if (
-        !isStreamingProvider(providerId) ||
-        activeRequest.current ||
-        !focused.current
-      )
+    async (
+      providerId: number,
+      monetizationType: WatchMonetizationType,
+      route: SubscriptionRoute,
+    ) => {
+      if (!route.launchAvailable || activeRequest.current || !focused.current) {
         return;
-      const route = subscriptionRouteForProviderId(providerId)!;
+      }
       const providerName = subscriptionRouteLabel(route);
       const controller = new AbortController();
       activeRequest.current = controller;
@@ -47,27 +52,31 @@ export function useStreamingProviderLaunch(movieId: number, region: string) {
       setMessage(null);
       try {
         const result = await fetchStreamingLink(
-          { tmdbId: movieId, providerId, region },
+          { tmdbId: movieId, providerId, region, monetizationType },
+          route,
           controller.signal,
         );
         if (
           controller.signal.aborted ||
           activeRequest.current !== controller ||
           !focused.current
-        )
+        ) {
           return;
+        }
         if (!result.resolved) {
           setMessage(
             result.reason === 'no_match'
-              ? `An exact ${providerName} link is not available for this movie yet.`
+              ? `A ${providerName} destination is not available for this movie yet.`
               : `The ${providerName} link is temporarily unavailable. Tap ${providerName} to try again.`,
           );
           return;
         }
-        const destination = await launchStreamingProvider(
-          result,
-          controller.signal,
-        );
+
+        const destination =
+          result.destinationType === 'provider_homepage'
+            ? await Linking.openURL(result.webUrl).then(() => 'web' as const)
+            : await launchStreamingProvider(result, route, controller.signal);
+
         if (__DEV__) {
           console.info('[streaming-link]', {
             movieId,
@@ -75,13 +84,16 @@ export function useStreamingProviderLaunch(movieId: number, region: string) {
             displayServiceName: route.displayServiceName,
             subscriptionCategory: route.subscriptionCategory,
             playbackPlatform: route.playbackPlatform,
-            region,
+            monetizationType,
             providerContentId: result.providerContentId,
             source: result.source,
             cacheHit: result.cacheHit,
             destination,
             finalLaunchUrl:
-              destination === 'native' ? result.nativeUrl : result.webUrl,
+              result.destinationType === 'provider_homepage' ||
+              destination === 'web'
+                ? result.webUrl
+                : result.nativeUrl,
           });
         }
       } catch {
@@ -90,17 +102,19 @@ export function useStreamingProviderLaunch(movieId: number, region: string) {
           activeRequest.current === controller &&
           focused.current
         ) {
-          setMessage(`${providerName} could not be opened. Please try again.`);
+          setMessage(
+            `The ${providerName} link is temporarily unavailable. Tap ${providerName} to try again.`,
+          );
         }
       } finally {
         if (activeRequest.current === controller) {
           activeRequest.current = null;
-          setOpeningProviderId(null);
+          if (focused.current) setOpeningProviderId(null);
         }
       }
     },
     [movieId, region],
   );
 
-  return { openProvider, openingProviderId, message };
+  return { openingProviderId, message, openProvider };
 }

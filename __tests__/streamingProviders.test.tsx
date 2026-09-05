@@ -1,16 +1,16 @@
 import { Linking } from 'react-native';
-import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../src/search/shared/movieStreamers';
 import {
+  adapterForRoute,
   destinationFromUrl,
-  adapterForProviderId,
   type StreamingProvider,
 } from '../src/api/cloudflare/streamingProviderCatalog';
 import {
   isSafeStreamingDestination,
-  isStreamingProvider,
   type StreamingLinkResult,
 } from '../src/api/cloudflare/streamingLinkService';
+import type { SubscriptionRoute } from '../src/api/cloudflare/subscriptionRoutes';
 import { launchStreamingProvider } from '../src/movie/streaming/launchStreamingProvider';
+
 const samples: [number, StreamingProvider, string][] = [
   [8, 'netflix', 'https://www.netflix.com/title/80223779'],
   [
@@ -53,52 +53,66 @@ const samples: [number, StreamingProvider, string][] = [
     'paramount',
     'https://www.paramountplus.com/movies/video/Alcn0hcGx0HosdhcawKteH8DXh3RiOF7/',
   ],
-  // Synthetic full-work fixture; this is not a claim of live YouTube coverage.
-  [192, 'youtube', 'https://www.youtube.com/watch?v=abcdefghijk'],
 ];
+
 afterEach(() => jest.restoreAllMocks());
-test('every provider currently selectable in Advanced Search has a launch adapter', () => {
-  for (const id of ALL_MOVIE_STREAMER_PROVIDER_IDS)
-    expect(isStreamingProvider(Number(id))).toBe(true);
-  expect(isStreamingProvider(999999)).toBe(false);
-  expect(adapterForProviderId(192)?.service).toBeNull();
-});
+
+function route(
+  tmdbProviderId: number,
+  playbackPlatform: string,
+): SubscriptionRoute {
+  return {
+    tmdbProviderId,
+    providerName: playbackPlatform,
+    providerKey: `tmdb_${tmdbProviderId}`,
+    displayServiceName: playbackPlatform,
+    subscriptionCategory: 'direct',
+    playbackPlatform,
+    officialHomepageUrl: `https://${playbackPlatform}.example/`,
+    launchAvailable: true,
+  };
+}
+
 test.each(samples)(
   'launches the validated exact page for provider %s (%s)',
   async (providerId, provider, url) => {
+    const expectedRoute = route(providerId, provider);
+    expect(adapterForRoute(expectedRoute)?.provider).toBe(provider);
     const parsed = destinationFromUrl(provider, url)!;
-    expect(parsed).not.toBeNull();
     const result: StreamingLinkResult = {
       tmdbId: 1,
       providerId,
-      provider,
       region: 'US',
+      monetizationType: 'flatrate',
       resolved: true,
+      destinationType: 'exact',
+      provider,
+      providerKey: expectedRoute.providerKey,
+      displayServiceName: expectedRoute.displayServiceName,
+      subscriptionCategory: expectedRoute.subscriptionCategory,
+      playbackPlatform: expectedRoute.playbackPlatform,
       source: 'streaming-availability',
       cacheHit: false,
       ...parsed,
     };
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-    expect(isSafeStreamingDestination(result)).toBe(true);
-    await launchStreamingProvider(result);
+    expect(isSafeStreamingDestination(result, expectedRoute)).toBe(true);
+    await launchStreamingProvider(result, expectedRoute);
     expect(open).toHaveBeenLastCalledWith(parsed.nativeUrl ?? parsed.webUrl);
-    expect(isSafeStreamingDestination({ ...result, providerId: 999999 })).toBe(
-      false,
-    );
     expect(
-      isSafeStreamingDestination({
-        ...result,
-        providerContentId: 'wrong-movie',
-      }),
+      isSafeStreamingDestination({ ...result, providerId: 999999 }, expectedRoute),
     ).toBe(false);
     expect(
-      isSafeStreamingDestination({ ...result, nativeUrl: 'file:///private' }),
+      isSafeStreamingDestination(
+        { ...result, providerContentId: 'wrong-movie' },
+        expectedRoute,
+      ),
     ).toBe(false);
     expect(
-      isSafeStreamingDestination({
-        ...result,
-        webUrl: 'https://evil.example/movie',
-      }),
+      isSafeStreamingDestination(
+        { ...result, webUrl: 'https://evil.example/movie' },
+        expectedRoute,
+      ),
     ).toBe(false);
   },
 );

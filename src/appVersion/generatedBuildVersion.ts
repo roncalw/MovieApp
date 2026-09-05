@@ -28,13 +28,13 @@
 
 export const INSTALLED_APP_VERSION = {
   "ios": {
-    "versionName": "3.6.1",
-    "buildNumber": "4",
-    "versionCode": 4
+    "versionName": "3.7.1",
+    "buildNumber": "1",
+    "versionCode": 1
   },
   "android": {
-    "versionName": "3.6.1",
-    "buildNumber": "85",
-    "versionCode": 85
+    "versionName": "3.7.1",
+    "buildNumber": "86",
+    "versionCode": 86
   }
 } as const;

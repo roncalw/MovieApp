@@ -38,6 +38,8 @@ export const queryKeys = {
     ['movieExternalIds', movieId] as const,
   movieWatchProviders: (movieId: number | null) =>
     ['movieWatchProviders', movieId] as const,
+  streamingProviderCatalog: (region: string) =>
+    ['streamingProviderCatalog', region] as const,
   movieListImdbRating: (movieId: number | null) =>
     ['movieListImdbRating', movieId] as const,
 

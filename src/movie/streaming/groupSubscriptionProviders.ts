@@ -2,7 +2,6 @@ import type { movieWatchProviderType } from '../../types/movie/MovieTypes';
 import {
   subscriptionCategories,
   subscriptionRouteForProviderId,
-  subscriptionRoutes,
   unconfiguredSubscriptionRoute,
   type SubscriptionRoute,
 } from '../../api/cloudflare/subscriptionRoutes';
@@ -14,7 +13,7 @@ export type RoutedWatchProvider = movieWatchProviderType & {
 /** Group only this movie's TMDB rows. Equal names never merge different IDs. */
 export function groupSubscriptionProviders(
   providers: readonly movieWatchProviderType[] = [],
-  catalog: readonly SubscriptionRoute[] = subscriptionRoutes,
+  catalog: readonly SubscriptionRoute[] = [],
 ) {
   const unique = new Map<number, RoutedWatchProvider>();
   for (const provider of providers) {

@@ -72,6 +72,7 @@ export type MovieSearchStreamerTileProps = {
   source: ImageSourcePropType;
   selected: boolean;
   onPress: () => void;
+  wide?: boolean;
 };
 
 export type MovieSearchModalActionsProps = {
@@ -98,6 +99,7 @@ export type StreamerItem = {
   label: string;
   value: string;
   image: ImageSourcePropType;
+  wide?: boolean;
 };
 
 export type SortItem = {

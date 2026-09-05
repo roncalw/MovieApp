@@ -3,6 +3,7 @@ import {
   isSafeStreamingDestination,
   type StreamingLinkResult,
 } from '../../api/cloudflare/streamingLinkService';
+import type { SubscriptionRoute } from '../../api/cloudflare/subscriptionRoutes';
 
 /**
  * Ask the operating system to open the exact title. A missing provider app
@@ -11,10 +12,15 @@ import {
  */
 export async function launchStreamingProvider(
   result: StreamingLinkResult,
+  route: SubscriptionRoute,
   signal?: AbortSignal,
 ): Promise<'native' | 'web'> {
   if (signal?.aborted) throw new Error('Streaming launch was cancelled.');
-  if (!result.resolved || !isSafeStreamingDestination(result)) {
+  if (
+    !result.resolved ||
+    result.destinationType !== 'exact' ||
+    !isSafeStreamingDestination(result, route)
+  ) {
     throw new Error('No safe streaming destination is available.');
   }
   if (result.nativeUrl) {

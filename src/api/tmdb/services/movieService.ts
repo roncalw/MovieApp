@@ -42,7 +42,11 @@ import {
   getDefaultEndDate,
 } from '../../../utils/movieSearchDates';
 import { normalizeMovieOriginalLanguages } from '../../../utils/movieOriginalLanguages';
-import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../../../search/shared/movieStreamers';
+import {
+  ALL_MOVIE_STREAMER_PROVIDER_IDS,
+  ALL_MOVIE_STREAMER_SELECTION_VALUES,
+  OTHER_DIRECT_STREAMERS_VALUE,
+} from '../../../search/shared/movieStreamers';
 
 const CLOUDFLARE_MOVIE_SEARCH_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/movies/search';
@@ -170,9 +174,11 @@ export async function fetchPopularMovies(): Promise<movieType[]> {
 }
 
 /**
- * Loads movies that can be watched through any subscription streamer supported
- * by MovieApp. The pipe characters tell TMDb that a movie may match any one of
- * the providers; requiring every provider would exclude nearly everything.
+ * Loads the Home preview from the twelve subscription services displayed as
+ * named Advanced Search tiles. The pipe characters tell TMDB that a movie may
+ * match any one of them; requiring every provider would exclude nearly
+ * everything. Opening this Home section applies Add All, which also includes
+ * the smaller providers represented by Other.
  */
 export async function fetchStreamingMovies(): Promise<movieType[]> {
   const query = new URLSearchParams({
@@ -462,7 +468,15 @@ export async function fetchCloudflareMovieSearchResults(
     if (allStreamersAreSelected(movieStreamers)) {
       searchParams.set('watchMonetizationTypes', 'flatrate');
     } else if (movieStreamers.length > 0) {
-      searchParams.set('providerIds', movieStreamers.join(','));
+      const providerIds = movieStreamers.filter(
+        streamer => streamer !== OTHER_DIRECT_STREAMERS_VALUE,
+      );
+      if (providerIds.length > 0) {
+        searchParams.set('providerIds', providerIds.join(','));
+      }
+      if (movieStreamers.includes(OTHER_DIRECT_STREAMERS_VALUE)) {
+        searchParams.set('providerGroups', OTHER_DIRECT_STREAMERS_VALUE);
+      }
     }
   }
 
@@ -525,14 +539,14 @@ export async function fetchCloudflareMovieSearchResults(
 }
 
 function allStreamersAreSelected(streamerIds: string[]) {
-  if (streamerIds.length !== ALL_MOVIE_STREAMER_PROVIDER_IDS.length) {
+  if (streamerIds.length !== ALL_MOVIE_STREAMER_SELECTION_VALUES.length) {
     return false;
   }
 
   const selectedIds = new Set(streamerIds);
 
-  return ALL_MOVIE_STREAMER_PROVIDER_IDS.every(providerId =>
-    selectedIds.has(providerId),
+  return ALL_MOVIE_STREAMER_SELECTION_VALUES.every(selectionValue =>
+    selectedIds.has(selectionValue),
   );
 }
 

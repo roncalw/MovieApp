@@ -32,6 +32,7 @@ import {
   fetchMovieTitleSearchResults,
 } from '../api/tmdb/services/movieService';
 import { fetchPersonFamily } from '../api/cloudflare/personFamilyService';
+import { fetchStreamingProviderCatalog } from '../api/cloudflare/streamingProviderService';
 import type { HomeMovieGenreId } from '../types/tmdb/tmdbApiTypes';
 import type { CursorMovieSearchPage } from '../types/search/movieQueryTypes';
 import type { MovieSearchParams } from '../types/search/movieSearchParams';
@@ -196,6 +197,14 @@ export function useMovieWatchProvidersQuery(movieId: number | null) {
     queryFn: () => fetchMovieWatchProviders(movieId as number),
     staleTime: 1000 * 60 * 5,
     enabled: movieId !== null,
+  });
+}
+
+export function useStreamingProviderCatalogQuery(region: string) {
+  return useQuery({
+    queryKey: queryKeys.streamingProviderCatalog(region),
+    queryFn: ({ signal }) => fetchStreamingProviderCatalog(region, signal),
+    staleTime: 1000 * 60 * 60,
   });
 }
 

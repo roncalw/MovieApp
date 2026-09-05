@@ -2,7 +2,7 @@ import type {
   HomeAdvancedSearchSectionConfig,
   HomeAdvancedSearchSectionId,
 } from '../types/home/homeTypes';
-import { ALL_MOVIE_STREAMER_PROVIDER_IDS } from '../search/shared/movieStreamers';
+import { ALL_MOVIE_STREAMER_SELECTION_VALUES } from '../search/shared/movieStreamers';
 
 export const HOME_ADVANCED_SEARCH_SECTIONS: HomeAdvancedSearchSectionConfig[] = [
   {
@@ -22,7 +22,7 @@ export const HOME_ADVANCED_SEARCH_SECTIONS: HomeAdvancedSearchSectionConfig[] = 
     advancedSearchParams: {
       movieRatings: '',
       movieGenres: [],
-      movieStreamers: [...ALL_MOVIE_STREAMER_PROVIDER_IDS],
+      movieStreamers: [...ALL_MOVIE_STREAMER_SELECTION_VALUES],
       movieVoteCount: '',
       movieSortBy: 'popularity.desc',
     },

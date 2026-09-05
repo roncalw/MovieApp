@@ -1,11 +1,12 @@
 import {
-  adapterForProviderId,
+  adapterForRoute,
   destinationForRouteFromUrl,
+  safeHttpsUrl,
   type StreamingProvider,
 } from './streamingProviderCatalog';
 import {
-  subscriptionRouteForProviderId,
   type SubscriptionRoute,
+  type WatchMonetizationType,
 } from './subscriptionRoutes';
 /**
  * Resolves the movie the user tapped, through MovieApp's Worker. This is called
@@ -16,12 +17,14 @@ export type StreamingLinkRequest = {
   tmdbId: number;
   providerId: number;
   region: string;
+  monetizationType: WatchMonetizationType;
 };
 
 export type StreamingLinkResult = StreamingLinkRequest &
   (
     | {
         resolved: true;
+        destinationType: 'exact';
         provider: StreamingProvider;
         providerContentId: string;
         nativeUrl: string | null;
@@ -36,6 +39,21 @@ export type StreamingLinkResult = StreamingLinkRequest &
         playbackPlatform?: SubscriptionRoute['playbackPlatform'];
       }
     | {
+        resolved: true;
+        destinationType: 'provider_homepage';
+        provider: StreamingProvider | null;
+        providerContentId: null;
+        nativeUrl: null;
+        webUrl: string;
+        source: 'provider-homepage';
+        cacheHit: false;
+        providerKey: string;
+        displayServiceName: string;
+        subscriptionCategory: SubscriptionRoute['subscriptionCategory'];
+        playbackPlatform: SubscriptionRoute['playbackPlatform'];
+        fallbackReason: string;
+      }
+    | {
         resolved: false;
         provider: string | null;
         reason: string;
@@ -46,28 +64,32 @@ const STREAMING_LINK_URL =
   'https://movieapp-cloudflare.carlo-roncallo.workers.dev/streaming-link';
 const REQUEST_TIMEOUT_MS = 20000;
 
-export function isStreamingProvider(providerId: number): boolean {
-  return adapterForProviderId(providerId) !== undefined;
-}
-
 export function isSafeStreamingDestination(
   result: StreamingLinkResult,
+  expectedRoute: SubscriptionRoute,
 ): boolean {
   if (!result.resolved) return false;
-  const adapter = adapterForProviderId(result.providerId);
-  if (!adapter || adapter.provider !== result.provider) return false;
-  const route = subscriptionRouteForProviderId(result.providerId)!;
+  if (result.providerId !== expectedRoute.tmdbProviderId) return false;
   for (const key of [
     'providerKey',
     'displayServiceName',
     'subscriptionCategory',
     'playbackPlatform',
   ] as const) {
-    if (result[key] === undefined && route.subscriptionCategory === 'direct')
-      continue;
-    if (result[key] !== route[key]) return false;
+    if (result[key] !== expectedRoute[key]) return false;
   }
-  const destination = destinationForRouteFromUrl(route, result.webUrl);
+  if (result.destinationType === 'provider_homepage') {
+    const homepage = safeHttpsUrl(result.webUrl)?.href ?? null;
+    return (
+      result.providerContentId === null &&
+      result.nativeUrl === null &&
+      homepage !== null &&
+      homepage === expectedRoute.officialHomepageUrl
+    );
+  }
+  const adapter = adapterForRoute(expectedRoute);
+  if (!adapter || adapter.provider !== result.provider) return false;
+  const destination = destinationForRouteFromUrl(expectedRoute, result.webUrl);
   return (
     destination !== null &&
     destination.providerContentId === result.providerContentId &&
@@ -78,6 +100,7 @@ export function isSafeStreamingDestination(
 
 export async function fetchStreamingLink(
   request: StreamingLinkRequest,
+  expectedRoute: SubscriptionRoute,
   signal?: AbortSignal,
 ): Promise<StreamingLinkResult> {
   const controller = new AbortController();
@@ -90,6 +113,7 @@ export async function fetchStreamingLink(
       tmdbId: String(request.tmdbId),
       providerId: String(request.providerId),
       region: request.region,
+      monetizationType: request.monetizationType,
     });
     const response = await fetch(`${STREAMING_LINK_URL}?${query}`, {
       signal: controller.signal,
@@ -101,8 +125,9 @@ export async function fetchStreamingLink(
       result.tmdbId !== request.tmdbId ||
       result.providerId !== request.providerId ||
       result.region !== request.region ||
+      result.monetizationType !== request.monetizationType ||
       typeof result.resolved !== 'boolean' ||
-      (result.resolved && !isSafeStreamingDestination(result))
+      (result.resolved && !isSafeStreamingDestination(result, expectedRoute))
     ) {
       throw new Error(
         'Streaming destination did not match the selected movie.',

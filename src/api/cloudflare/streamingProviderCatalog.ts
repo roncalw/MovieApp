@@ -1,14 +1,5 @@
-/**
- * Exact movie destinations accepted by MovieApp and its Worker. Keep this file
- * identical in both repositories. A provider's home/search page is never a
- * substitute for a movie link. HTTPS also lets the OS use installed app links.
- */
-import {
-  subscriptionRouteForProviderId,
-  subscriptionRoutes,
-  type PlaybackPlatform,
-  type SubscriptionRoute,
-} from './subscriptionRoutes';
+/** Exact movie destination formats accepted by MovieApp and its Worker. */
+import type { PlaybackPlatform, SubscriptionRoute } from './subscriptionRoutes';
 export type StreamingProvider = PlaybackPlatform;
 export type ProviderDestination = {
   providerContentId: string;
@@ -18,108 +9,131 @@ export type ProviderDestination = {
 export type ProviderAdapter = {
   provider: StreamingProvider;
   name: string;
-  tmdbProviderIds: readonly number[];
   service: string | null;
   wikidataProperties: readonly string[];
 };
-const directProviderIds = (platform: PlaybackPlatform) =>
-  subscriptionRoutes
-    .filter(
-      route =>
-        route.subscriptionCategory === 'direct' &&
-        route.playbackPlatform === platform,
-    )
-    .map(route => route.tmdbProviderId);
 export const providerAdapters: readonly ProviderAdapter[] = [
   {
     provider: 'netflix',
     name: 'Netflix',
-    tmdbProviderIds: directProviderIds('netflix'),
     service: 'netflix',
     wikidataProperties: ['P1874'],
   },
   {
     provider: 'hulu',
     name: 'Hulu',
-    tmdbProviderIds: directProviderIds('hulu'),
     service: 'hulu',
     wikidataProperties: ['P6466'],
   },
   {
     provider: 'prime',
     name: 'Prime Video',
-    tmdbProviderIds: directProviderIds('prime'),
     service: 'prime',
     wikidataProperties: ['P8055', 'P14440', 'P14462'],
   },
   {
     provider: 'max',
     name: 'Max',
-    tmdbProviderIds: directProviderIds('max'),
     service: 'hbo',
     wikidataProperties: ['P8298'],
   },
   {
     provider: 'youtube',
     name: 'YouTube',
-    tmdbProviderIds: directProviderIds('youtube'),
     service: null,
     wikidataProperties: ['P953'],
   },
   {
     provider: 'disney',
     name: 'Disney+',
-    tmdbProviderIds: directProviderIds('disney'),
     service: 'disney',
     wikidataProperties: ['P13902'],
   },
   {
     provider: 'apple',
     name: 'Apple TV+',
-    tmdbProviderIds: directProviderIds('apple'),
     service: 'apple',
     wikidataProperties: ['P9586'],
   },
   {
     provider: 'peacock',
     name: 'Peacock',
-    tmdbProviderIds: directProviderIds('peacock'),
     service: 'peacock',
     wikidataProperties: ['P11815'],
   },
   {
     provider: 'amc',
     name: 'AMC+',
-    tmdbProviderIds: directProviderIds('amc'),
     service: 'amc',
     wikidataProperties: ['P953'],
   },
   {
     provider: 'paramount',
     name: 'Paramount+',
-    tmdbProviderIds: directProviderIds('paramount'),
     service: 'paramount',
     wikidataProperties: ['P13147'],
   },
   {
     provider: 'starz',
     name: 'STARZ',
-    tmdbProviderIds: directProviderIds('starz'),
     service: 'starz',
     wikidataProperties: ['P953'],
   },
   {
     provider: 'roku',
     name: 'The Roku Channel',
-    tmdbProviderIds: directProviderIds('roku'),
     service: 'roku',
     wikidataProperties: ['P953'],
   },
+  {
+    provider: 'mubi',
+    name: 'MUBI',
+    service: 'mubi',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'britbox',
+    name: 'BritBox',
+    service: 'britbox',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'curiosity',
+    name: 'Curiosity Stream',
+    service: 'curiosity',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'discovery',
+    name: 'Discovery+',
+    service: 'discovery',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'plutotv',
+    name: 'Pluto TV',
+    service: 'plutotv',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'tubi',
+    name: 'Tubi TV',
+    service: 'tubi',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'crunchyroll',
+    name: 'Crunchyroll',
+    service: 'crunchyroll',
+    wikidataProperties: [],
+  },
+  {
+    provider: 'criterion',
+    name: 'The Criterion Channel',
+    service: 'criterion',
+    wikidataProperties: [],
+  },
 ];
-export function adapterForProviderId(id: number): ProviderAdapter | undefined {
-  const route = subscriptionRouteForProviderId(id);
-  return route ? adapterForRoute(route) : undefined;
-}
 export function adapterForRoute(
   route: SubscriptionRoute,
 ): ProviderAdapter | undefined {
@@ -319,6 +333,55 @@ export function destinationFromUrl(
         '/(?:[a-z]{2}/)?(?:movies|shows)/video/([A-Za-z0-9_-]{20,64})',
       )?.[1];
       break;
+    case 'mubi':
+      if (!['mubi.com', 'www.mubi.com'].includes(host)) return null;
+      id = matchPath(path, '/(?:[a-z]{2}/[a-z]{2}/)?films/(' + slug + ')')?.[1];
+      if (id) webUrl = `https://mubi.com/films/${id}`;
+      break;
+    case 'britbox':
+      if (!['britbox.com', 'www.britbox.com'].includes(host)) return null;
+      id = matchPath(path, '/us/movie/([A-Za-z0-9%._~()-]+)')?.[1];
+      break;
+    case 'curiosity':
+      if (!['curiositystream.com', 'www.curiositystream.com'].includes(host))
+        return null;
+      id = matchPath(path, '/title/video/([1-9][0-9]{1,11})')?.[1];
+      break;
+    case 'discovery':
+      if (!['discoveryplus.com', 'www.discoveryplus.com'].includes(host))
+        return null;
+      id = matchPath(
+        path,
+        '/(?:movies/' + slug + '/|movie/)(' + uuid + ')',
+      )?.[1];
+      break;
+    case 'plutotv':
+      if (!['pluto.tv', 'www.pluto.tv'].includes(host)) return null;
+      id = matchPath(
+        path,
+        '/(?:[a-z]{2}/)?(?:movies|on-demand/movies)/([0-9a-f]{24})(?:/details)?',
+      )?.[1];
+      break;
+    case 'tubi':
+      if (!['tubitv.com', 'www.tubitv.com'].includes(host)) return null;
+      id = matchPath(
+        path,
+        '/(?:[a-z]{2}-[a-z]{2}/)?movies/([1-9][0-9]{5,11})(?:/' + slug + ')?',
+      )?.[1];
+      break;
+    case 'crunchyroll':
+      if (!['crunchyroll.com', 'www.crunchyroll.com'].includes(host))
+        return null;
+      id = matchPath(
+        path,
+        '/(?:[a-z]{2}(?:-[a-z]{2})?/)?watch/([A-Z0-9]{8,20})(?:/' + slug + ')?',
+      )?.[1];
+      break;
+    case 'criterion':
+      if (!['criterionchannel.com', 'www.criterionchannel.com'].includes(host))
+        return null;
+      id = matchPath(path, '/videos/(' + slug + ')')?.[1];
+      break;
   }
   return id ? { providerContentId: id, webUrl, nativeUrl } : null;
 }
@@ -336,8 +399,7 @@ export function destinationForRouteFromUrl(
     const playableId = new URL(destination.webUrl).searchParams.get(
       'playableId',
     );
-    if (!playableId || !route.addonIds.includes(playableId.split(':')[0]))
-      return null;
+    if (!playableId) return null;
   }
   return destination;
 }

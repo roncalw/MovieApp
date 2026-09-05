@@ -97,11 +97,34 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: scaleSize(6),
   },
+  providerOpenButton: {
+    height: scaleSize(24),
+    paddingHorizontal: scaleSize(7),
+    borderWidth: 1,
+    borderColor: colors.searchAccent,
+    borderRadius: 999,
+    backgroundColor: colors.brandTintSurface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providerOpenButtonDisabled: {
+    borderColor: colors.borderDefault,
+    backgroundColor: colors.surfaceMuted,
+  },
+  providerOpenIcon: {
+    width: scaleSize(11),
+    marginRight: scaleSize(4),
+  },
   providerOpenLabel: {
+    fontSize: scaleSize(11),
+    lineHeight: scaleSize(14),
+    fontWeight: '400',
     color: colors.brandText,
-    fontSize: scaleSize(13),
-    lineHeight: scaleSize(20),
-    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  providerOpenLabelDisabled: {
+    color: colors.disabledText,
   },
   streamingMessage: {
     color: colors.textPrimary,

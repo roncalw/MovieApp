@@ -27,7 +27,10 @@ export function StreamerField({
     onPopupVisibilityChange,
   );
 
-  const summary = useMemo(() => formatInlineSummary(value, STREAMER_ITEMS), [value]);
+  const summary = useMemo(
+    () => formatInlineSummary(value, STREAMER_ITEMS),
+    [value],
+  );
 
   function openModal() {
     setDraftValue([...value]);
@@ -46,7 +49,7 @@ export function StreamerField({
   }
 
   function toggleDraftValue(nextValue: string) {
-    setDraftValue((currentValue) => toggleArrayValue(currentValue, nextValue));
+    setDraftValue(currentValue => toggleArrayValue(currentValue, nextValue));
   }
 
   return (
@@ -67,18 +70,22 @@ export function StreamerField({
           <Pressable style={sharedStyles.modalBackdrop} onPress={closeModal} />
 
           <View style={sharedStyles.selectionModalCard}>
-            <Text allowFontScaling={false} style={sharedStyles.selectionModalTitle}>
+            <Text
+              allowFontScaling={false}
+              style={sharedStyles.selectionModalTitle}
+            >
               Search by Streamer(s)
             </Text>
 
             <View style={styles.streamerTileGroup}>
-              {STREAMER_ITEMS.map((item) => (
+              {STREAMER_ITEMS.map(item => (
                 <MovieSearchStreamerTile
                   key={item.value}
                   label={item.label}
                   source={item.image}
                   selected={draftValue.includes(item.value)}
                   onPress={() => toggleDraftValue(item.value)}
+                  wide={item.wide}
                 />
               ))}
             </View>
@@ -86,12 +93,15 @@ export function StreamerField({
             <MovieSearchBulkSelectionLinks
               onClearAll={() => setDraftValue([])}
               onAddAll={() =>
-                setDraftValue(STREAMER_ITEMS.map((item) => item.value))
+                setDraftValue(STREAMER_ITEMS.map(item => item.value))
               }
             />
           </View>
 
-          <MovieSearchModalActions onCancel={cancelModal} onClose={closeModal} />
+          <MovieSearchModalActions
+            onCancel={cancelModal}
+            onClose={closeModal}
+          />
         </View>
       </Modal>
     </>
