@@ -8,10 +8,14 @@ database implementation details, or changes that were later reversed.
 ## Apple App Store
 
 ```text
-* Open subscription movies directly from Movie Details.
+* Open streaming options directly from Movie Details.
   - Choose between direct and channel subscriptions when both are available.
-  - Open the exact movie page on the playback platform you selected.
-  - Select Other in Advanced Search to include smaller direct subscription services.
+  - Use Watch Now for subscriptions, Free (With Ads), and rentals.
+  - Open the exact movie page when available, or continue to the provider's official website.
+
+* Find movies from more streaming services in Advanced Search.
+  - Search STARZ and MGM+ directly.
+  - Select Other Streamers to include smaller direct subscription services.
 
 * Start movie trailers with fewer steps.
   - Begin playing the trailer and open it full-screen automatically.
@@ -31,8 +35,9 @@ The Google Play text is intentionally shorter so it can be pasted into the
 console's limited What's New field.
 
 ```text
+* Use Watch Now for subscriptions, Free (With Ads), and rentals.
 * Open the exact movie page for the direct or channel subscription you choose.
-* Find movies on smaller direct subscription services by selecting Other.
+* Search STARZ, MGM+, or Other Streamers in Advanced Search.
 * Start trailers and open them full-screen automatically.
 * See Favorites and Movies I Have Seen immediately while current movie information updates.
 * See alternate movie names on a separate italic a.k.a. line.
