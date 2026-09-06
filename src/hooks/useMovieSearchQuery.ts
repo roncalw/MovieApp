@@ -204,6 +204,11 @@ export function useStreamingProviderCatalogQuery(region: string) {
   return useQuery({
     queryKey: queryKeys.streamingProviderCatalog(region),
     queryFn: ({ signal }) => fetchStreamingProviderCatalog(region, signal),
+    // This request uses fetch instead of Axios, so the shared Axios retry
+    // policy cannot identify a temporary transport failure. Retry it once
+    // quietly; Movie Details intentionally shows no catalog-loading UI.
+    retry: 1,
+    retryDelay: 500,
     staleTime: 1000 * 60 * 60,
   });
 }

@@ -108,10 +108,6 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  providerOpenButtonDisabled: {
-    borderColor: colors.borderDefault,
-    backgroundColor: colors.surfaceMuted,
-  },
   providerOpenIcon: {
     width: scaleSize(11),
     marginRight: scaleSize(4),
@@ -122,9 +118,6 @@ export const movieDetailInfoSectionStyles = StyleSheet.create({
     fontWeight: '400',
     color: colors.brandText,
     textAlign: 'center',
-  },
-  providerOpenLabelDisabled: {
-    color: colors.disabledText,
   },
   streamingMessage: {
     color: colors.textPrimary,

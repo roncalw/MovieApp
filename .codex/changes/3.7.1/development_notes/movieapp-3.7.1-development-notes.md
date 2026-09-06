@@ -151,10 +151,10 @@ The grouping transformation follows these rules:
 4. Keep different provider IDs even when their displayed service names match.
 5. Render direct services first.
 6. Render only parent-platform groups that contain at least one current route.
-7. Keep a newly introduced, unconfigured TMDB provider visible, but temporarily
-   disable its button until its official homepage is entered in D1.
+7. Keep a newly introduced, unconfigured TMDB provider visible, but omit its
+   `Watch Now` button until its official homepage is entered in D1.
 8. Require every provider in the current TMDB catalog to have a reviewed
-   official homepage. The disabled state is a defensive guard and is not the
+   official homepage. A missing button is a defensive guard and is not the
    normal state for a provider shown to customers.
 
 Grouping applies only to subscription availability. Ad-supported and rental

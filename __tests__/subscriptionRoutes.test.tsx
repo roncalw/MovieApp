@@ -148,7 +148,7 @@ test('groups exact TMDB routes without merging direct and channel offers', () =>
   });
 });
 
-test('shows Watch Now on subscriptions, ad-supported offers, and rentals', async () => {
+test('keeps provider rows visible without gray actions until routing arrives', async () => {
   let finish!: (value: unknown) => void;
   globalThis.fetch = jest.fn(
     () =>
@@ -157,6 +157,12 @@ test('shows Watch Now on subscriptions, ad-supported offers, and rentals', async
       }),
   ) as typeof fetch;
   const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+
+  (useStreamingProviderCatalogQuery as jest.Mock).mockReturnValue({
+    data: undefined,
+    isError: false,
+    isLoading: true,
+  });
   act(() => {
     tree = TestRenderer.create(
       <MovieDetailInfoSections movieId={938614} movie={{} as movieType} />,
@@ -165,25 +171,52 @@ test('shows Watch Now on subscriptions, ad-supported offers, and rentals', async
 
   const text = tree!.root.findAllByType(Text).map(node => node.props.children);
   expect(text).toContain('Direct Subscriptions');
-  expect(text).toContain('Prime Video Channels');
-  expect(text).not.toContain('Apple TV Channels');
+  expect(text.filter(value => value === 'AMC+')).toHaveLength(2);
+  expect(text).toContain('Example Subscription');
+  expect(text).not.toContain('Watch Now');
+  expect(tree!.root.findAllByType(ActivityIndicator)).toHaveLength(0);
+  expect(
+    tree!.root.findAll(
+      node =>
+        typeof node.props.accessibilityLabel === 'string' &&
+        node.props.accessibilityLabel.startsWith('Watch now unavailable on'),
+    ),
+  ).toHaveLength(0);
+
+  (useStreamingProviderCatalogQuery as jest.Mock).mockReturnValue({
+    data: catalog,
+    isError: false,
+    isLoading: false,
+  });
+  act(() => {
+    tree!.update(
+      <MovieDetailInfoSections movieId={938614} movie={{} as movieType} />,
+    );
+  });
+
+  const routedText = tree!.root
+    .findAllByType(Text)
+    .map(node => node.props.children);
+  expect(routedText).toContain('Prime Video Channels');
+  expect(routedText).not.toContain('Apple TV Channels');
 
   const watchLabels = tree!.root
     .findAllByType(Text)
     .filter(node => node.props.children === 'Watch Now');
-  expect(watchLabels).toHaveLength(6);
+  expect(watchLabels).toHaveLength(5);
   expect(StyleSheet.flatten(watchLabels[0].props.style).fontWeight).toBe('400');
 
   const links = tree!.root
     .findAllByType(ScrollFriendlyTapTarget)
     .filter(node => node.props.accessibilityRole === 'link');
   expect(links).toHaveLength(5);
-  const disabled = tree!.root.find(
-    node =>
-      node.props.accessibilityLabel ===
-      'Watch now unavailable on Example Subscription',
-  );
-  expect(disabled.props.accessibilityState).toEqual({ disabled: true });
+  expect(
+    tree!.root.findAll(
+      node =>
+        node.props.accessibilityLabel ===
+        'Watch now unavailable on Example Subscription',
+    ),
+  ).toHaveLength(0);
 
   const rent = links.find(
     node => node.props.accessibilityLabel === 'Open movie on Amazon Video',

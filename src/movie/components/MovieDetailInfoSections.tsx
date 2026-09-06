@@ -317,42 +317,24 @@ function WatchProviderRows({
             </Text>
             <View style={styles.providerOpenAction}>
               {isOpening ? (
-                  <ActivityIndicator color={colors.brandText} size="small" />
-                ) : (
-                  <View
-                    accessible={!canOpen}
-                    accessibilityLabel={
-                      canOpen
-                        ? undefined
-                        : `Watch now unavailable on ${routeLabel}`
-                    }
-                    accessibilityRole={canOpen ? undefined : 'button'}
-                    accessibilityState={
-                      canOpen ? undefined : { disabled: true }
-                    }
-                    style={[
-                      styles.providerOpenButton,
-                      !canOpen && styles.providerOpenButtonDisabled,
-                    ]}
+                <ActivityIndicator color={colors.brandText} size="small" />
+              ) : canOpen ? (
+                <View style={styles.providerOpenButton}>
+                  <Ionicons
+                    color={colors.brandText}
+                    name="play"
+                    size={scaleSize(11)}
+                    style={styles.providerOpenIcon}
+                  />
+                  <Text
+                    allowFontScaling={false}
+                    numberOfLines={1}
+                    style={styles.providerOpenLabel}
                   >
-                    <Ionicons
-                      color={canOpen ? colors.brandText : colors.disabledText}
-                      name="play"
-                      size={scaleSize(11)}
-                      style={styles.providerOpenIcon}
-                    />
-                    <Text
-                      allowFontScaling={false}
-                      numberOfLines={1}
-                      style={[
-                        styles.providerOpenLabel,
-                        !canOpen && styles.providerOpenLabelDisabled,
-                      ]}
-                    >
-                      Watch Now
-                    </Text>
-                  </View>
-              )}
+                    Watch Now
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </>
         );
