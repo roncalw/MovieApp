@@ -6,7 +6,7 @@ export function MovieFavoritesScreen() {
   return (
     <StoredMovieListScreen
       title="My Movie Favorites"
-      emptyMessage="No favorite movies yet."
+      emptyMessage="No favorites found."
       storageKey={MOVIE_FAVORITES_STORAGE_KEY}
     />
   );

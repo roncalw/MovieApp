@@ -103,6 +103,10 @@ android {
     }
     buildTypes {
         debug {
+            // A separate app identity keeps development installs from replacing
+            // the production app or touching its saved data. Reuse the existing
+            // emulator test identity so its development data is preserved too.
+            applicationIdSuffix ".codextest"
             signingConfig signingConfigs.debug
         }
         release {

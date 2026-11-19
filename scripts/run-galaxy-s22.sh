@@ -22,7 +22,8 @@ else
 fi
 
 adb -s "${ADB_DEVICE_ID}" wait-for-device
-npx react-native run-android --device "${ADB_DEVICE_ID}"
+# Match the debug applicationIdSuffix in Gradle when launching the installed app.
+npx react-native run-android --device "${ADB_DEVICE_ID}" --mode debug --appId com.codefest.movieapp.codextest
 
 if [[ "${emulator_started_by_this_task}" == "1" ]]; then
   echo "${AVD_NAME} is still running. This task will stay open until the emulator window is closed."

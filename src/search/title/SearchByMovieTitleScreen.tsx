@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import {
+  useFocusEffect,
   useRoute,
   useNavigation,
   type RouteProp,
@@ -17,7 +18,6 @@ import {
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import Ionicons from '@react-native-vector-icons/ionicons/static';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQueryClient } from '@tanstack/react-query';
 import { MovieResults } from '../results/MovieResults';
 import { HeaderActionRow } from '../../shared/header/HeaderActionRow';
 import { HeaderNavButton } from '../../shared/header/HeaderNavButton';
@@ -33,20 +33,41 @@ import { usePageRefresh } from '../../shared/refresh/usePageRefresh';
 import { useSearchPageReset } from '../shared/useSearchPageReset';
 import { useRegisterSearchPageReset } from '../shared/SearchPageResetCoordinator';
 import { queryKeys } from '../../query/queryKeys';
-import { prepareMovieImages } from '../../utils/movieImageLoading';
-import { fetchMovieTitleSearchResults } from '../../api/tmdb/services/movieService';
-import { refreshActiveInfiniteSearch } from '../shared/refreshActiveInfiniteSearch';
 import { rankTitleSearchMovies } from './titleSearchResults';
 
 export function SearchByMovieTitleScreen() {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const { openMovieDetail } = useDetailNavigation();
   const route = useRoute<RouteProp<AppDrawerParamList, 'SearchByMovieTitle'>>();
+  const titleInputRef = useRef<TextInput>(null);
+  const returningFromDetailRef = useRef(false);
+  const focusFrameRef = useRef<number | null>(null);
+  const focusTitleInput = useCallback(() => {
+    if (focusFrameRef.current !== null)
+      cancelAnimationFrame(focusFrameRef.current);
+    focusFrameRef.current = requestAnimationFrame(() => {
+      focusFrameRef.current = null;
+      titleInputRef.current?.focus();
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Returning from a movie keeps the results ready to browse without reopening the keyboard.
+      if (!returningFromDetailRef.current) focusTitleInput();
+      returningFromDetailRef.current = false;
+      return () => {
+        if (focusFrameRef.current !== null) {
+          cancelAnimationFrame(focusFrameRef.current);
+          focusFrameRef.current = null;
+        }
+      };
+    }, [focusTitleInput]),
+  );
+
   const [draftTitle, setDraftTitle] = useState('');
   const [submittedTitle, setSubmittedTitle] = useState('');
-  const [imageRefreshGeneration, setImageRefreshGeneration] = useState(0);
   const { data, isLoading, isError, error } = useMovieTitleSearchQuery(
     submittedTitle,
     submittedTitle.length > 0,
@@ -70,28 +91,11 @@ export function SearchByMovieTitleScreen() {
     queryKey: queryKeys.movieTitleSearchRoot,
     resetLocalState: resetLocalSearchState,
   });
-  const refreshTitleSearch = useCallback(async () => {
-    if (!submittedTitle) {
-      return;
-    }
-
-    resetCardDataState();
-    const activeQueryKey = queryKeys.movieTitleSearch(submittedTitle.trim());
-
-    const refreshedResults = await refreshActiveInfiniteSearch({
-      queryClient,
-      queryKey: activeQueryKey,
-      firstPageParam: 1,
-      fetchFirstPage: () =>
-        fetchMovieTitleSearchResults(submittedTitle.trim(), {
-          bypassCache: true,
-        }),
-    });
-
-    await prepareMovieImages([refreshedResults.movies]);
-    setImageRefreshGeneration(currentGeneration => currentGeneration + 1);
-  }, [queryClient, resetCardDataState, submittedTitle]);
-  const pageRefresh = usePageRefresh(refreshTitleSearch);
+  const handleClearTitle = useCallback(() => {
+    resetSearchPage();
+    focusTitleInput();
+  }, [resetSearchPage, focusTitleInput]);
+  const pageRefresh = usePageRefresh(handleClearTitle);
 
   useRegisterSearchPageReset('SearchByMovieTitle', resetSearchPage);
 
@@ -111,7 +115,13 @@ export function SearchByMovieTitleScreen() {
     setSubmittedTitle(nextSubmittedTitle);
   }
 
-  const handleClearTitle = resetSearchPage;
+  const handleMoviePress = useCallback(
+    (movie: Parameters<typeof openMovieDetail>[0]) => {
+      returningFromDetailRef.current = true;
+      openMovieDetail(movie);
+    },
+    [openMovieDetail],
+  );
   const isLoadingResults = isLoading;
   const searchFeedback = isLoadingResults ? (
     <View style={styles.centered}>
@@ -198,6 +208,7 @@ export function SearchByMovieTitleScreen() {
       <View style={styles.searchRow}>
         <View style={styles.searchInputFrame}>
           <TextInput
+            ref={titleInputRef}
             value={draftTitle}
             onChangeText={setDraftTitle}
             onSubmitEditing={handleSubmitSearch}
@@ -247,8 +258,7 @@ export function SearchByMovieTitleScreen() {
       ListEmptyComponent={searchFeedback}
       cardVariant="posterRating"
       showRatingBadge
-      imageRefreshGeneration={imageRefreshGeneration}
-      onMoviePress={openMovieDetail}
+      onMoviePress={handleMoviePress}
       {...pageRefresh}
     />
   );

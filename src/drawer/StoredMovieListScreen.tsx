@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import {
   DrawerActions,
@@ -30,6 +30,11 @@ import type { AppDrawerParamList } from '../types/navigation/navigationTypes';
 import type { StoredMovieListScreenProps } from '../types/drawer/drawerScreenTypes';
 import { usePageRefresh } from '../shared/refresh/usePageRefresh';
 import { RefreshableScrollView } from '../shared/refresh/RefreshableScrollView';
+import {
+  FavoritesWatchOptions,
+  type FavoritesWatchOption,
+} from './FavoritesWatchOptions';
+import { MOVIE_FAVORITES_STORAGE_KEY } from '../utils/storage/movieUserListsStorage';
 import { findStoredMovieListMembershipChanges } from './storedMovieListReconciliation';
 
 export function StoredMovieListScreen({
@@ -40,6 +45,21 @@ export function StoredMovieListScreen({
   const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const { openMovieDetail } = useDetailNavigation();
   const [movies, setMovies] = useState<movieType[]>([]);
+  const [watchOption, setWatchOption] =
+    useState<FavoritesWatchOption>('Show All');
+  const isFavorites = storageKey === MOVIE_FAVORITES_STORAGE_KEY;
+  const visibleMovies = useMemo(
+    () =>
+      !isFavorites || watchOption === 'Show All'
+        ? movies
+        : movies.filter(
+            movie =>
+              movie.available_without_rent_or_purchase ===
+              (watchOption === 'Direct Subscriptions'),
+          ),
+    [isFavorites, movies, watchOption],
+  );
+  const returningFromDetailRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const moviesRef = useRef<movieType[]>([]);
   const hasCompletedInitialLoadRef = useRef(false);
@@ -120,6 +140,7 @@ export function StoredMovieListScreen({
   );
 
   const refreshAllMovies = useCallback(async () => {
+    setWatchOption('Show All');
     const runId = ++dataLoadRunIdRef.current;
     const moviesWithCardData = await loadAllMovies(true);
 
@@ -136,6 +157,11 @@ export function StoredMovieListScreen({
     useCallback(() => {
       const runId = ++dataLoadRunIdRef.current;
       let isActive = true;
+      // Detail temporarily covers this list; returning should preserve its filter and scroll position.
+      if (!returningFromDetailRef.current) {
+        setWatchOption('Show All');
+      }
+      returningFromDetailRef.current = false;
 
       async function synchronizeVisibleList() {
         if (!hasCompletedInitialLoadRef.current) {
@@ -270,6 +296,14 @@ export function StoredMovieListScreen({
     }, [commitMovies, loadAllMovies, storageKey, title]),
   );
 
+  const handleMoviePress = useCallback(
+    (movie: movieType) => {
+      returningFromDetailRef.current = true;
+      openMovieDetail(movie);
+    },
+    [openMovieDetail],
+  );
+
   function handleOpenTitleSearch() {
     navigation.navigate('SearchByMovieTitle', {
       returnTo:
@@ -278,18 +312,25 @@ export function StoredMovieListScreen({
   }
 
   const screenHeader = (
-    <DrawerScreenHeader
-      title={title}
-      leftButtonVariant="menu"
-      onLeftButtonPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-      right={
-        <HeaderNavButton
-          variant="search"
-          anchored={false}
-          onPress={handleOpenTitleSearch}
-        />
-      }
-    />
+    <>
+      <DrawerScreenHeader
+        title={title}
+        leftButtonVariant="menu"
+        onLeftButtonPress={() =>
+          navigation.dispatch(DrawerActions.openDrawer())
+        }
+        right={
+          <HeaderNavButton
+            variant="search"
+            anchored={false}
+            onPress={handleOpenTitleSearch}
+          />
+        }
+      />
+      {isFavorites ? (
+        <FavoritesWatchOptions value={watchOption} onChange={setWatchOption} />
+      ) : null}
+    </>
   );
 
   const loadingStatus = isLoading ? (
@@ -303,14 +344,14 @@ export function StoredMovieListScreen({
 
   return (
     <View style={styles.screen}>
-      {movies.length > 0 ? (
+      {visibleMovies.length > 0 ? (
         <MovieResults
-          movies={movies}
+          movies={visibleMovies}
           cardVariant="posterRating"
           ListHeaderComponent={<>{screenHeader}</>}
           ListHeaderComponentStyle={styles.storedMovieListHeader}
           {...pageRefresh}
-          onMoviePress={openMovieDetail}
+          onMoviePress={handleMoviePress}
         />
       ) : (
         <RefreshableScrollView

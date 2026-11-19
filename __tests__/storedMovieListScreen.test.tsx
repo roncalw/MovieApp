@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import TestRenderer, { act } from 'react-test-renderer';
+import { FavoritesWatchOptions } from '../src/drawer/FavoritesWatchOptions';
 import { StoredMovieListScreen } from '../src/drawer/StoredMovieListScreen';
 import { loadMovieCardDataForMovies } from '../src/utils/storage/movieCardData';
 import {
@@ -33,6 +34,7 @@ jest.mock('../src/utils/storage/movieCardData', () => ({
 }));
 
 jest.mock('../src/utils/storage/movieUserListsStorage', () => ({
+  MOVIE_FAVORITES_STORAGE_KEY: 'movieFavoritesData',
   getStoredMovieListData: jest.fn(),
   saveRefreshedStoredMovieList: jest.fn(),
   storedMovieHasCompleteCardData: (storedMovie: movieType) =>
@@ -55,10 +57,15 @@ jest.mock('../src/search/results/MovieResults', () => {
   const { View: MockView } = require('react-native');
 
   return {
-    MovieResults: ({ movies, ListHeaderComponent, onRefresh }: any) =>
+    MovieResults: ({
+      movies,
+      ListHeaderComponent,
+      onRefresh,
+      onMoviePress,
+    }: any) =>
       MockReact.createElement(
         MockView,
-        { testID: 'stored-movie-results', movies, onRefresh },
+        { testID: 'stored-movie-results', movies, onRefresh, onMoviePress },
         ListHeaderComponent,
       ),
   };
@@ -326,8 +333,7 @@ describe('StoredMovieListScreen focus synchronization', () => {
     }).props.movies as movieType[];
 
     expect(refreshedMovies.map(renderedMovie => renderedMovie.id)).toEqual([
-      2,
-      1,
+      2, 1,
     ]);
     expect(
       refreshedMovies.map(renderedMovie => renderedMovie.imdb_rating),
@@ -381,4 +387,156 @@ describe('StoredMovieListScreen focus synchronization', () => {
     act(() => cleanup?.());
     act(() => component.unmount());
   });
+});
+
+test('Favorites filters availability without changing storage and resets on return', async () => {
+  const streaming = movie(1);
+  const purchase = { ...movie(2), available_without_rent_or_purchase: false };
+  const unknown = { ...movie(3), available_without_rent_or_purchase: null };
+  jest
+    .mocked(getStoredMovieListData)
+    .mockResolvedValue(storedData([streaming, purchase, unknown]));
+  jest
+    .mocked(loadMovieCardDataForMovies)
+    .mockImplementation(async movies => movies);
+  jest.mocked(saveRefreshedStoredMovieList).mockResolvedValue(true);
+  let component!: TestRenderer.ReactTestRenderer;
+  await act(async () => {
+    component = TestRenderer.create(
+      <StoredMovieListScreen
+        title="Favorites"
+        emptyMessage="No favorites."
+        storageKey="movieFavoritesData"
+      />,
+    );
+  });
+  const cleanup = await runCurrentFocusEffect();
+  jest.mocked(saveRefreshedStoredMovieList).mockClear();
+  const visibleIds = () =>
+    component.root
+      .findByProps({ testID: 'stored-movie-results' })
+      .props.movies.map((item: movieType) => item.id);
+  expect(visibleIds()).toEqual([1, 2, 3]);
+  act(() =>
+    component.root
+      .findByType(FavoritesWatchOptions)
+      .props.onChange('Rent, Buy, or Not Showing'),
+  );
+  expect(visibleIds()).toEqual([2]);
+  act(() =>
+    component.root
+      .findByType(FavoritesWatchOptions)
+      .props.onChange('Direct Subscriptions'),
+  );
+  expect(visibleIds()).toEqual([1]);
+  expect(saveRefreshedStoredMovieList).not.toHaveBeenCalled();
+  act(() => cleanup?.());
+  await runCurrentFocusEffect();
+  expect(component.root.findByType(FavoritesWatchOptions).props.value).toBe(
+    'Show All',
+  );
+  expect(visibleIds()).toEqual([1, 2, 3]);
+  act(() => component.unmount());
+});
+
+test.each(['Rent, Buy, or Not Showing', 'Direct Subscriptions'] as const)(
+  'pull-to-refresh resets %s before the refresh finishes',
+  async option => {
+    const savedMovies = [
+      movie(1),
+      { ...movie(2), available_without_rent_or_purchase: false },
+    ];
+    jest
+      .mocked(getStoredMovieListData)
+      .mockResolvedValue(storedData(savedMovies));
+    jest.mocked(saveRefreshedStoredMovieList).mockResolvedValue(true);
+    let component!: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      component = TestRenderer.create(
+        <StoredMovieListScreen
+          title="Favorites"
+          emptyMessage="No favorites."
+          storageKey="movieFavoritesData"
+        />,
+      );
+    });
+    const cleanup = await runCurrentFocusEffect();
+    act(() =>
+      component.root.findByType(FavoritesWatchOptions).props.onChange(option),
+    );
+    let finishRefresh!: (movies: movieType[]) => void;
+    jest.mocked(loadMovieCardDataForMovies).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishRefresh = resolve;
+        }),
+    );
+    let refresh!: Promise<void>;
+    await act(async () => {
+      refresh = component.root
+        .findByProps({ testID: 'stored-movie-results' })
+        .props.onRefresh();
+      await Promise.resolve();
+    });
+    expect(component.root.findByType(FavoritesWatchOptions).props.value).toBe(
+      'Show All',
+    );
+    expect(
+      component.root.findByProps({ testID: 'stored-movie-results' }).props
+        .movies,
+    ).toHaveLength(2);
+    await act(async () => {
+      finishRefresh(savedMovies);
+      await refresh;
+    });
+    expect(component.root.findByType(FavoritesWatchOptions).props.value).toBe(
+      'Show All',
+    );
+    act(() => {
+      cleanup?.();
+      component.unmount();
+    });
+  },
+);
+
+test('returning from Movie Detail preserves the Favorites filter and visible list', async () => {
+  const savedMovies = [
+    movie(1),
+    { ...movie(2), available_without_rent_or_purchase: false },
+  ];
+  jest
+    .mocked(getStoredMovieListData)
+    .mockResolvedValue(storedData(savedMovies));
+  let component!: TestRenderer.ReactTestRenderer;
+  await act(async () => {
+    component = TestRenderer.create(
+      <StoredMovieListScreen
+        title="Favorites"
+        emptyMessage="No favorites."
+        storageKey="movieFavoritesData"
+      />,
+    );
+  });
+  const cleanup = await runCurrentFocusEffect();
+  act(() =>
+    component.root
+      .findByType(FavoritesWatchOptions)
+      .props.onChange('Direct Subscriptions'),
+  );
+  const results = () =>
+    component.root.findByProps({ testID: 'stored-movie-results' });
+  const filteredMovies = results().props.movies;
+  act(() => results().props.onMoviePress(savedMovies[0]));
+  act(() => cleanup?.());
+  const detailReturnCleanup = await runCurrentFocusEffect();
+  expect(component.root.findByType(FavoritesWatchOptions).props.value).toBe(
+    'Direct Subscriptions',
+  );
+  expect(results().props.movies).toBe(filteredMovies);
+  act(() => detailReturnCleanup?.());
+  await runCurrentFocusEffect();
+  expect(component.root.findByType(FavoritesWatchOptions).props.value).toBe(
+    'Show All',
+  );
+  act(() => component.unmount());
 });
